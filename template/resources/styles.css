@@ -1,0 +1,12 @@
+/* Add your custom styles here */
+
+body {
+    max-width: 720px;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    margin-inline: auto;
+}
+
+img {
+    max-width: 100%;
+}
