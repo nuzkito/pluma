@@ -4,10 +4,12 @@ namespace App\Console\Commands;
 
 use App\Domain\Page\PageRepository;
 use App\Domain\Page\SiteGenerator;
+use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
 use Illuminate\Process\Pool;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use ReflectionClass;
 
 class ServeCommand extends Command
 {
@@ -35,11 +37,22 @@ class ServeCommand extends Command
         $previewPort = parse_url($previewUrl, PHP_URL_PORT) ?? 8001;
         $siteDirectory = $disk->path('site');
 
-        Process::pool(function (Pool $pool) use ($path, $editorHost, $editorPort, $previewHost, $previewPort, $siteDirectory) {
+        $autoloadPath = dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2).'/autoload.php';
+
+        Process::pool(function (Pool $pool) use (
+            $path,
+            $editorHost,
+            $editorPort,
+            $previewHost,
+            $previewPort,
+            $siteDirectory,
+            $autoloadPath,
+        ) {
             $pool->path(base_path())
                 ->forever()
                 ->env([
                     'CURRENT_PATH' => $path,
+                    'AUTOLOAD_PATH' => $autoloadPath,
                 ])
                 ->tty(Process::supportsTty())
                 ->command("php artisan serve --host=$editorHost --port=$editorPort --no-reload");
