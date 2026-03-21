@@ -62,7 +62,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    let pagePath = @json($page->path);
+    let pagePath = '{{ $page->path }}';
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const saveStatus = document.getElementById('save-status');
     const pathError = document.getElementById('path-error');
