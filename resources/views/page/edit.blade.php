@@ -67,7 +67,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveStatus = document.getElementById('save-status');
     const pathError = document.getElementById('path-error');
     const deleteForm = document.getElementById('delete-form');
-    let pathManuallyEdited = @json($page->path !== \Illuminate\Support\Str::slug($page->title));
+    const slugify = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    let savedTitle = document.getElementById('title').value
+    let savedSlug = document.getElementById('path').value
     let saveTimeout = null;
     var publishBtn = document.getElementById('publish-btn');
     var unpublishBtn = document.getElementById('unpublish-btn');
@@ -152,21 +154,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('title').addEventListener('input', function () {
         var data = { title: this.value };
+        var generatedPath = slugify(this.value)
 
-        if (!pathManuallyEdited) {
-            var generatedPath = this.value.toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
+        if (slugify(savedTitle) === savedSlug) {
             document.getElementById('path').value = generatedPath;
             data.path = generatedPath;
+            savedSlug = generatedPath
         }
+
+        savedTitle = this.value
 
         autoSave(data);
     });
 
     document.getElementById('path').addEventListener('input', function () {
-        pathManuallyEdited = true;
+        savedSlug = this.value
         autoSave({ path: this.value });
     });
 
