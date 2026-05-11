@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "nuzkito/pluma",
-    "type": "project",
+    "type": "library",
     "description": "Markdown powered static site generator with a built-in web editor",
     "keywords": [
         "laravel",

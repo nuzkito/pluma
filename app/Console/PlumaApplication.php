@@ -5,21 +5,23 @@ namespace App\Console;
 use App\Console\Commands\GenerateCommand;
 use App\Console\Commands\NewCommand;
 use App\Console\Commands\ServeCommand;
+use Composer\InstalledVersions;
 use Illuminate\Console\Application as IlluminateConsoleApplication;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Symfony\Component\Console\Command\HelpCommand;
 use Symfony\Component\Console\Command\ListCommand;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class PlumaApplication extends IlluminateConsoleApplication
 {
-    private const VERSION = '0.1.0';
-
     public function __construct(Container $laravel, Dispatcher $events)
     {
-        parent::__construct($laravel, $events, self::VERSION);
+        $version = InstalledVersions::getVersion('nuzkito/pluma');
+
+        parent::__construct($laravel, $events, $version);
 
         $this->setName('Pluma');
 
@@ -31,7 +33,7 @@ class PlumaApplication extends IlluminateConsoleApplication
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         if ($input->hasParameterOption(['--help', '-h']) && ! $input->getFirstArgument()) {
-            $input = new \Symfony\Component\Console\Input\ArrayInput(['command' => 'list']);
+            $input = new ArrayInput(['command' => 'list']);
         }
 
         return parent::doRun($input, $output);
