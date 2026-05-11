@@ -4,9 +4,12 @@ namespace App\Providers;
 
 use App\Domain\Page\PageRepository;
 use App\Domain\Page\SiteGenerator;
+use App\Domain\Page\YoutubeNocookieEmbedAdapter;
 use App\SiteConfigLoader;
+use Embed\Embed;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
+use League\CommonMark\Extension\Embed\Bridge\OscaroteroEmbedAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +25,21 @@ class AppServiceProvider extends ServiceProvider
             fn () => new SiteGenerator(
                 app(PageRepository::class),
             ),
+        );
+
+        $this->app->singletonIf(
+            YoutubeNocookieEmbedAdapter::class,
+            function () {
+                $embed = new Embed;
+                $embed->setSettings([
+                    'oembed:query_parameters' => [
+                        'maxwidth' => 1280,
+                        'maxheight' => 720,
+                    ],
+                ]);
+
+                return new YoutubeNocookieEmbedAdapter(new OscaroteroEmbedAdapter($embed));
+            },
         );
     }
 

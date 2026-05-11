@@ -3,6 +3,7 @@
 namespace App\Domain\Page;
 
 use Illuminate\Support\Str;
+use League\CommonMark\Extension\Embed\EmbedExtension;
 
 class Markdown
 {
@@ -15,6 +16,12 @@ class Markdown
 
     public function html(): string
     {
-        return Str::of($this->value)->markdown();
+        return Str::of($this->value)->markdown([
+            'embed' => [
+                'adapter' => app(YoutubeNocookieEmbedAdapter::class),
+            ],
+        ], [
+            new EmbedExtension,
+        ]);
     }
 }
