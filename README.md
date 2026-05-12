@@ -13,7 +13,7 @@ It ships with a built‑in web editor, auto‑save, RSS feed generation, customi
 
 ## Requirements
 
-- PHP 8.2 or newer
+- PHP 8.4 or newer
 
 ## Installation
 
