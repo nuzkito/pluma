@@ -33,4 +33,7 @@
     .badge-published {
         @apply bg-[#06d6a0] text-white;
     }
+    .badge-tag {
+        @apply bg-gray-200 text-gray-800;
+    }
 }

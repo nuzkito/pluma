@@ -14,6 +14,7 @@ class Page
         public Carbon $created_at,
         public ?Carbon $published_at = null,
         public bool $rss = false,
+        public array $tags = [],
     ) {}
 
     public static function draft(string $title): self
@@ -45,6 +46,11 @@ class Page
     public function toggleRss(bool $enabled): void
     {
         $this->rss = $enabled;
+    }
+
+    public function withTags(array $tags): void
+    {
+        $this->tags = array_values($tags);
     }
 
     public function publish(Carbon $publishedAt): void
@@ -81,6 +87,10 @@ class Page
 
         if ($this->published_at) {
             $metadata['published_at'] = $this->published_at->toIso8601String();
+        }
+
+        if (! empty($this->tags)) {
+            $metadata['tags'] = $this->tags;
         }
 
         return $metadata;

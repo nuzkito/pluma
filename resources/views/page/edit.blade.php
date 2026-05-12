@@ -36,6 +36,12 @@
     </div>
 
     <div class="mb-4">
+        <label for="tags-input" class="block mb-1 font-semibold text-sm">Tags</label>
+        <input type="text" id="tags-input" placeholder="Add tags..." class="w-full px-2 py-1.5 border border-gray-300 rounded text-base">
+        <div id="tags-list"></div>
+    </div>
+
+    <div class="mb-4">
         <label class="flex items-center gap-2 text-sm">
             <input type="checkbox" id="rss" {{ $page->rss ? 'checked' : '' }}>
             Include in RSS feed
@@ -180,6 +186,63 @@ document.addEventListener('DOMContentLoaded', function () {
     if (publishedAtInput) {
         publishedAtInput.addEventListener('change', function () {
             autoSave({ published_at: this.value || null });
+        });
+    }
+
+    function getTagsFromDOM() {
+        return Array.from(document.querySelectorAll('#tags-list input[type="text"][disabled]')).map(function (el) { return el.value; });
+    }
+
+    function addTagChip(tag) {
+        var tagsList = document.getElementById('tags-list');
+        var chip = document.createElement('span');
+        chip.className = 'inline-flex items-center gap-1 mr-2 mb-1 badge badge-tag';
+
+        var tagInput = document.createElement('input');
+        tagInput.type = 'text';
+        tagInput.value = tag;
+        tagInput.disabled = true;
+
+        chip.appendChild(tagInput);
+
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.style.cssText = 'background: none; border: none; cursor: pointer; font-size: 1rem; color: #6b7280; padding: 0 0.1rem; line-height: 1;';
+        removeBtn.addEventListener('click', function () {
+            chip.remove();
+            autoSave({ tags: getTagsFromDOM() });
+        });
+        chip.appendChild(removeBtn);
+
+        tagsList.appendChild(chip);
+    }
+
+    @foreach($page->tags as $tag)
+    addTagChip('{{ addslashes($tag) }}');
+    @endforeach
+
+    var tagsInput = document.getElementById('tags-input');
+    if (tagsInput) {
+        tagsInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                var value = this.value.trim().replace(/,/g, '');
+                if (value && !getTagsFromDOM().includes(value)) {
+                    addTagChip(value);
+                    autoSave({ tags: getTagsFromDOM() });
+                }
+                this.value = '';
+            }
+        });
+
+        tagsInput.addEventListener('blur', function () {
+            var value = this.value.trim().replace(/,/g, '');
+            if (value && !getTagsFromDOM().includes(value)) {
+                addTagChip(value);
+                autoSave({ tags: getTagsFromDOM() });
+            }
+            this.value = '';
         });
     }
 

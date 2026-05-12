@@ -153,3 +153,51 @@ test('converts to array with published_at when published', function () {
 
     expect($array)->toHaveKey('published_at', '2025-06-01T12:00:00+00:00');
 });
+
+test('sets tags on a page', function () {
+    $page = Page::draft('My Post');
+
+    $page->withTags(['php', 'laravel']);
+
+    expect($page->tags)->toBe(['php', 'laravel']);
+});
+
+test('strips keys from tags array', function () {
+    $page = Page::draft('My Post');
+
+    $page->withTags([1 => 'php', 3 => 'laravel']);
+
+    expect($page->tags)->toBe(['php', 'laravel']);
+});
+
+test('toArray includes tags when present', function () {
+    $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
+
+    $page = new Page(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown('Some content'),
+        created_at: $createdAt,
+        tags: ['php', 'laravel'],
+    );
+
+    $array = $page->toArray();
+
+    expect($array)->toHaveKey('tags', ['php', 'laravel']);
+});
+
+test('toArray excludes empty tags array', function () {
+    $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
+
+    $page = new Page(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown('Some content'),
+        created_at: $createdAt,
+        tags: [],
+    );
+
+    $array = $page->toArray();
+
+    expect($array)->not->toHaveKey('tags');
+});

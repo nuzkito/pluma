@@ -11,6 +11,7 @@
             <tr class="bg-gray-200 text-left">
                 <th class="p-3">Title</th>
                 <th class="p-3">Status</th>
+                <th class="p-3">Tags</th>
                 <th class="p-3">Created</th>
                 <th class="p-3">Published</th>
             </tr>
@@ -27,6 +28,11 @@
                     @else
                         <span class="badge badge-draft">Draft</span>
                     @endif
+                </td>
+                <td class="p-3">
+                    @foreach($page->tags as $tag)
+                        <span class="badge badge-tag">{{ $tag }}</span>
+                    @endforeach
                 </td>
                 <td class="p-3">{{ $page->created_at->format('Y-m-d H:i') }}</td>
                 <td class="p-3">{{ $page->published_at?->format('Y-m-d H:i') ?? '-' }}</td>

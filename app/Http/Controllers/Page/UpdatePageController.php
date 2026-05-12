@@ -52,6 +52,10 @@ class UpdatePageController
             }
         }
 
+        if (isset($validated['tags'])) {
+            $page->withTags(array_values($validated['tags']));
+        }
+
         $repository->save($page, $path);
 
         if ($page->isPublished()) {

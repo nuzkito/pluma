@@ -176,3 +176,53 @@ test('clearing published_at unpublishes a page', function () {
     expect($updated->published_at)->toBeNull()
         ->and($updated->isDraft())->toBeTrue();
 });
+
+test('tags are saved and persisted', function () {
+    $repository = initializeSite();
+
+    $page = Page::draft('Test Page');
+    $repository->save($page);
+
+    $this->putJson("/pages/{$page->path}", [
+        'tags' => ['php', 'laravel', '  trimmed  '],
+    ])
+        ->assertSuccessful()
+        ->assertJson(['success' => true]);
+
+    $updated = $repository->findByPath((string) $page->path);
+
+    expect($updated->tags)->toBe(['php', 'laravel', 'trimmed']);
+});
+
+test('empty tags array is stored correctly', function () {
+    $repository = initializeSite();
+
+    $page = new Page(
+        title: 'Test Page',
+        path: new PagePath('test-page'),
+        content: new Markdown('# Content'),
+        created_at: Carbon::now(),
+        tags: ['old-tag'],
+    );
+    $repository->save($page);
+
+    $this->putJson('/pages/test-page', [
+        'tags' => [],
+    ])
+        ->assertSuccessful();
+
+    $updated = $repository->findByPath('test-page');
+
+    expect($updated->tags)->toBe([]);
+});
+
+test('tags are parsed from frontmatter', function () {
+    $repository = initializeSite();
+
+    $disk = Storage::disk('current');
+    $disk->put('pages/tagged.md', "---\ntitle: Tagged Page\npath: tagged\ncreated_at: 2025-01-01T00:00:00+00:00\ntags:\n  - php\n  - testing\n---\n\n# Content");
+
+    $page = $repository->findByPath('tagged');
+
+    expect($page->tags)->toBe(['php', 'testing']);
+});
