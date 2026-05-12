@@ -4,6 +4,7 @@ use App\Domain\Attachment\Attachment;
 use App\Domain\Attachment\AttachmentRepository;
 use App\Domain\Attachment\NewAttachment;
 use App\Domain\Page\Page;
+use App\Domain\Page\PageRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,7 +12,7 @@ test('saves an attachment and returns slugified filename', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     $file = UploadedFile::fake()->create('My Document.pdf', 100);
     $attachment = new NewAttachment(pagePath: $page->path, name: 'my-document.pdf', file: $file);
@@ -25,7 +26,7 @@ test('saves an attachment without extension', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     $file = UploadedFile::fake()->createWithContent('Makefile', 'all:');
     $attachment = new NewAttachment(pagePath: $page->path, name: 'makefile', file: $file);
@@ -39,7 +40,7 @@ test('deletes an attachment', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     $disk = Storage::disk('current');
     $disk->put("assets/{$page->path}/test.txt", 'hello');
@@ -54,7 +55,7 @@ test('returns false when deleting non-existent attachment', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     $result = $attachments->delete(new Attachment(pagePath: $page->path, name: 'non-existent.txt'));
 
@@ -65,7 +66,7 @@ test('checks if attachment exists', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/test.txt", 'hello');
 
@@ -77,7 +78,7 @@ test('returns absolute path for attachment', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/test.txt", 'hello');
 
@@ -91,7 +92,7 @@ test('returns all attachments for a page', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     $disk = Storage::disk('current');
     $disk->put("assets/{$page->path}/file1.txt", 'a');
@@ -111,7 +112,7 @@ test('returns empty array when page has no attachments', function () {
     initializeSite();
     $attachments = new AttachmentRepository;
     $page = Page::draft('Test Page');
-    app(App\Domain\Page\PageRepository::class)->save($page);
+    app(PageRepository::class)->save($page);
 
     expect($attachments->all($page->path))->toBe([]);
 });

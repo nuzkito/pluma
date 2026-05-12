@@ -3,6 +3,7 @@
 use App\Domain\Page\PageRepository;
 use App\SiteConfigLoader;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
 use function Pest\Laravel\artisan;
 
@@ -17,8 +18,8 @@ use function Pest\Laravel\artisan;
 |
 */
 
-pest()->extend(Tests\TestCase::class)->in('Feature');
-pest()->extend(Tests\TestCase::class)->in('Unit');
+pest()->extend(TestCase::class)->in('Feature');
+pest()->extend(TestCase::class)->in('Unit');
 
 /*
 |--------------------------------------------------------------------------
