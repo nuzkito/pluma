@@ -30,6 +30,10 @@ class Page
 
     public function rename(string $newTitle): void
     {
+        if (Str::slug($this->title) === (string) $this->path) {
+            $this->moveToPath(new PagePath(Str::slug($newTitle)));
+        }
+
         $this->title = $newTitle;
     }
 

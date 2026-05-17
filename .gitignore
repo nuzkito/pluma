@@ -6,6 +6,7 @@
 .mcp.json
 .phpactor.json
 .phpunit.result.cache
+/.agents
 /.claude
 /.fleet
 /.idea
@@ -20,6 +21,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+AGENTS.md
 CLAUDE.md
 Homestead.json
 Homestead.yaml

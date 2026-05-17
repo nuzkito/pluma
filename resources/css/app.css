@@ -1,39 +1,10 @@
 @import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+@import 'easymde/dist/easymde.min.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-    --color-sidebar: #1a1a2e;
-}
-
-@layer components {
-    .btn {
-        @apply inline-block px-4 py-2 rounded cursor-pointer text-sm no-underline border-none;
-    }
-    .btn-primary {
-        @apply bg-[#4361ee] text-white hover:bg-[#3a56d4];
-    }
-    .btn-success {
-        @apply bg-[#2ec4b6] text-white hover:bg-[#25a99d];
-    }
-    .btn-danger {
-        @apply bg-[#e63946] text-white hover:bg-[#c1303b];
-    }
-    .badge {
-        @apply inline-block px-2 py-0.5 rounded text-xs font-semibold;
-    }
-    .badge-draft {
-        @apply bg-[#ffd166] text-gray-800;
-    }
-    .badge-published {
-        @apply bg-[#06d6a0] text-white;
-    }
-    .badge-tag {
-        @apply bg-gray-200 text-gray-800;
-    }
-}
