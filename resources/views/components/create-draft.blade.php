@@ -8,7 +8,7 @@ use Livewire\Component;
 new class extends Component {
     public string $variant = 'subtle';
 
-    public ?string $size = null;
+    public string $size = 'base';
 
     public function create(PageRepository $repository, DraftNameGenerator $generator)
     {
@@ -21,4 +21,4 @@ new class extends Component {
 };
 ?>
 
-<flux:button wire:click="create" :variant="$this->variant" :size="$this->size" icon="plus" class="{{ $attributes->get('class') }}">New page</flux:button>
+<flux:button wire:click="create" variant="{{ $this->variant }}" size="{{ $this->size }}" icon="plus" class="{{ $attributes->get('class') }}">New page</flux:button>
