@@ -42,6 +42,8 @@ new class extends Component {
 
     public string $oldPath;
 
+    public array $availableTags = [];
+
     #[Validate(['newAttachments.*' => 'file|max:20480'])]
     public array $newAttachments = [];
 
@@ -61,6 +63,12 @@ new class extends Component {
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
         $this->tags = $page->tags;
         $this->attachments = $attachmentRepo->all($page->path);
+        $this->availableTags = $repository->all()
+            ->flatMap(fn (Page $p) => $p->tags)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     public function render(PageRepository $repository, AttachmentRepository $attachmentRepo)

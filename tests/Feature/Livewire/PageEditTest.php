@@ -295,6 +295,119 @@ describe('tags', function () {
     });
 });
 
+describe('tag datalist autocomplete', function () {
+    test('all tags from all pages are available in the component for autocompletion', function () {
+        $repository = initializeSite();
+
+        $page1 = new Page(
+            title: 'Page One',
+            path: new PagePath('page-one'),
+            content: new Markdown('# Content 1'),
+            created_at: Carbon::now(),
+        );
+        $repository->save($page1);
+
+        $page2 = new Page(
+            title: 'Page Two With Tags',
+            path: new PagePath('page-two-with-tags'),
+            content: new Markdown('# Content 2'),
+            created_at: Carbon::now(),
+            tags: ['livewire', 'php'],
+        );
+        $repository->save($page2);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page1->path])
+            ->assertSeeHtml('<option value="livewire">livewire</option>')
+            ->assertSeeHtml('<option value="php">php</option>');
+    });
+
+    test('tags from the edited page are excluded from the datalist options', function () {
+        Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+
+        $repository = initializeSite();
+
+        $page1 = new Page(
+            title: 'Page One With Tags',
+            path: new PagePath('page-one-with-tags'),
+            content: new Markdown('# Content 1'),
+            created_at: Carbon::now(),
+            tags: ['php', 'laravel'],
+        );
+        $repository->save($page1);
+
+        $page2 = new Page(
+            title: 'Page Two With Tags',
+            path: new PagePath('page-two-with-tags'),
+            content: new Markdown('# Content 2'),
+            created_at: Carbon::now(),
+            tags: ['livewire', 'php'],
+        );
+        $repository->save($page2);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page1->path])
+            ->assertSeeHtml('<option value="livewire">livewire</option>')
+            ->assertDontSeeHtml('<option value="php"')
+            ->assertDontSeeHtml('<option value="laravel"');
+
+        Carbon::setTestNow(null);
+    });
+
+    test('editing a page with no tags shows all other pages tags in datalist', function () {
+        Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+
+        $repository = initializeSite();
+
+        $page1 = new Page(
+            title: 'Page Without Tags',
+            path: new PagePath('no-tags-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            tags: [],
+        );
+        $repository->save($page1);
+
+        $page2 = new Page(
+            title: 'Page With Tags',
+            path: new PagePath('with-tags-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            tags: ['php', 'laravel'],
+        );
+        $repository->save($page2);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page1->path])
+            ->assertSeeHtml('<option value="php">php</option>')
+            ->assertSeeHtml('<option value="laravel">laravel</option>');
+
+        Carbon::setTestNow(null);
+    });
+
+    test('tag datalist options are sorted alphabetically by name', function () {
+        $repository = initializeSite();
+
+        $page1 = new Page(
+            title: 'Page One',
+            path: new PagePath('page-one'),
+            content: new Markdown('# Content 1'),
+            created_at: Carbon::now(),
+            tags: ['zebra', 'alpha'],
+        );
+        $repository->save($page1);
+
+        $page2 = new Page(
+            title: 'Page Two',
+            path: new PagePath('page-two'),
+            content: new Markdown('# Content 2'),
+            created_at: Carbon::now(),
+            tags: ['beta', 'gamma'],
+        );
+        $repository->save($page2);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page1->path])
+            ->assertSeeHtmlInOrder(['alpha', 'beta', 'gamma', 'zebra']);
+    });
+});
+
 describe('rss checkbox', function () {
     test('checking unchecked rss checkbox sets page.rss to true', function () {
         $repository = initializeSite();

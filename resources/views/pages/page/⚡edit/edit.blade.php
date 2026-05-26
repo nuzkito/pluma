@@ -35,7 +35,12 @@
 
     <flux:field>
         <flux:label>Tags</flux:label>
-        <flux:input x-on:keydown.enter.prevent="$wire.addTag($el.value); $el.value = ''" x-on:blur="$wire.addTag($el.value); $el.value = ''" />
+        <flux:input x-on:keydown.enter.prevent="$wire.addTag($el.value); $el.value = ''" x-on:blur="$wire.addTag($el.value); $el.value = ''" list="available-tags" />
+        <datalist id="available-tags">
+            @foreach(array_diff($this->availableTags, $this->tags) as $tag)
+                <option value="{{ $tag }}">{{ $tag }}</option>
+            @endforeach
+        </datalist>
         <div id="tags-list" class="mt-1 flex flex-wrap gap-2">
             @foreach($this->tags as $index => $tag)
                 <flux:badge wire:key="tag-{{ $index }}">
