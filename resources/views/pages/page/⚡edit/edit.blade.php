@@ -43,7 +43,7 @@
         </datalist>
         <div id="tags-list" class="mt-1 flex flex-wrap gap-2">
             @foreach($this->tags as $index => $tag)
-                <flux:badge wire:key="tag-{{ $index }}">
+                <flux:badge :wire-key="'tag-' . $tag">
                     {{ $tag }}
                     <flux:badge.close wire:click="removeTag({{ $index }})" />
                 </flux:badge>
@@ -64,7 +64,7 @@
         <div class="mt-2 text-sm text-zinc-500 not-data-loading:hidden" wire:loading wire:target="newAttachments">Uploading {{ count($newAttachments) }} file(s)...</div>
         <div id="attachments-list" class="mt-2 space-y-2">
             @foreach($attachments as $attachment)
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50">
+                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50" wire:key="attachment-{{ $attachment['filename'] }}">
                     @if($this->isImage($attachment['filename']))
                         <img src="{{ $attachment['url'] }}" alt="{{ $attachment['filename'] }}" class="w-8 h-8 shrink-0 rounded object-cover" loading="lazy" />
                     @else
@@ -73,8 +73,8 @@
                         </div>
                     @endif
                     <span class="min-w-0 flex-1 truncate text-sm">{{ $attachment['filename'] }}</span>
-                    <flux:button wire:key="insert-{{ $loop->index }}" size="xs" x-on:click="insertAttachment('{{ $attachment['filename'] }}')">Insertar</flux:button>
-                    <flux:button wire:key="delete-{{ $loop->index }}" wire:click="deleteAttachment('{{ $attachment['filename'] }}')" size="xs" variant="danger">Eliminar</flux:button>
+                    <flux:button :wire-key="'insert-' . $attachment['filename']" size="xs" x-on:click="insertAttachment('{{ $attachment['filename'] }}')">Insertar</flux:button>
+                    <flux:button :wire-key="'delete-' . $attachment['filename']" wire:click="deleteAttachment('{{ $attachment['filename'] }}')" size="xs" variant="danger">Eliminar</flux:button>
                 </div>
             @endforeach
         </div>
