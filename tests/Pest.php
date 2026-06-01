@@ -1,6 +1,7 @@
 <?php
 
-use App\Domain\Page\PageRepository;
+use App\Domain\Editor\Page\PageRepository as EditorPageRepository;
+use App\Domain\Generator\Page\PageRepository as GeneratorPageRepository;
 use App\SiteConfigLoader;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -32,7 +33,7 @@ pest()->extend(TestCase::class)->in('Unit');
 |
 */
 
-function initializeSite(): PageRepository
+function initializeSite(): EditorPageRepository
 {
     Storage::fake('current');
     artisan('pluma:new');
@@ -41,8 +42,11 @@ function initializeSite(): PageRepository
     $resolver = new SiteConfigLoader(Storage::disk('current'));
     app()->instance(SiteConfigLoader::class, $resolver);
 
-    $repository = new PageRepository;
-    app()->instance(PageRepository::class, $repository);
+    $editorRepository = new EditorPageRepository;
+    app()->instance(EditorPageRepository::class, $editorRepository);
 
-    return $repository;
+    $generatorRepository = new GeneratorPageRepository;
+    app()->instance(GeneratorPageRepository::class, $generatorRepository);
+
+    return $editorRepository;
 }

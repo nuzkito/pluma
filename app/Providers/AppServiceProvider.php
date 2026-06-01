@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\Domain\Page\PageRepository;
-use App\Domain\Page\SiteGenerator;
-use App\Domain\Page\YoutubeNocookieEmbedAdapter;
+use App\Domain\Generator\Page\PageRepository;
+use App\Domain\Generator\Page\YoutubeNocookieEmbedAdapter;
+use App\Domain\Generator\SiteGenerator;
 use App\SiteConfigLoader;
 use Embed\Embed;
 use Illuminate\Support\Facades\Storage;

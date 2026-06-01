@@ -1,8 +1,8 @@
 <?php
 
-use App\Domain\Page\Markdown;
-use App\Domain\Page\Page;
-use App\Domain\Page\PagePath;
+use App\Domain\Editor\Page\Markdown;
+use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 

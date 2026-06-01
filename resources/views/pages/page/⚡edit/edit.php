@@ -1,20 +1,20 @@
 <?php
 
-use App\Domain\Attachment\AttachmentRepository;
-use App\Domain\Attachment\DeleteAttachment;
-use App\Domain\Attachment\UploadAttachment;
-use App\Domain\Page\AddPageTag;
-use App\Domain\Page\DeletePage;
-use App\Domain\Page\Page;
-use App\Domain\Page\PageRepository;
-use App\Domain\Page\PublishPage;
-use App\Domain\Page\RemovePageTag;
-use App\Domain\Page\UnpublishPage;
-use App\Domain\Page\UpdatePageContent;
-use App\Domain\Page\UpdatePagePath;
-use App\Domain\Page\UpdatePagePublishedAt;
-use App\Domain\Page\UpdatePageRss;
-use App\Domain\Page\UpdatePageTitle;
+use App\Domain\Editor\Attachment\AttachmentRepository;
+use App\Domain\Editor\Attachment\DeleteAttachment;
+use App\Domain\Editor\Attachment\UploadAttachment;
+use App\Domain\Editor\Page\AddPageTag;
+use App\Domain\Editor\Page\DeletePage;
+use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\PageRepository;
+use App\Domain\Editor\Page\PublishPage;
+use App\Domain\Editor\Page\RemovePageTag;
+use App\Domain\Editor\Page\UnpublishPage;
+use App\Domain\Editor\Page\UpdatePageContent;
+use App\Domain\Editor\Page\UpdatePagePath;
+use App\Domain\Editor\Page\UpdatePagePublishedAt;
+use App\Domain\Editor\Page\UpdatePageRss;
+use App\Domain\Editor\Page\UpdatePageTitle;
 use Illuminate\Support\Arr;
 use Livewire\Attributes\Validate;
 use Livewire\Component;

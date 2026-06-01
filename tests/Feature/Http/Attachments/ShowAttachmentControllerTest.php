@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Page\Page;
+use App\Domain\Editor\Page\Page;
 use Illuminate\Support\Facades\Storage;
 
 test('serves an attachment', function () {

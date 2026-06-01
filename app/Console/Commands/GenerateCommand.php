@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Page\PageRepository;
-use App\Domain\Page\SiteGenerator;
+use App\Domain\Generator\Page\PageRepository;
+use App\Domain\Generator\SiteGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 

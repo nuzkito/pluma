@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Page\PageRepository;
+use App\Domain\Editor\Page\PageRepository;
 use Livewire\Component;
 
 new class extends Component {

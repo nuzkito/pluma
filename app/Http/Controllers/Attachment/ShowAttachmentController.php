@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Attachment;
 
-use App\Domain\Attachment\AttachmentRepository;
-use App\Domain\Page\PageRepository;
+use App\Domain\Editor\Attachment\AttachmentRepository;
+use App\Domain\Editor\Page\PageRepository;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ShowAttachmentController

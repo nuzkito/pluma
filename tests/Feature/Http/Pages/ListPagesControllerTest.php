@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Page\Page;
+use App\Domain\Editor\Page\Page;
 
 test('shows the pages index', function () {
     $repository = initializeSite();

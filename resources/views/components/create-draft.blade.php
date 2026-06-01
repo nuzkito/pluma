@@ -1,8 +1,8 @@
 <?php
 
-use App\Domain\Page\DraftNameGenerator;
-use App\Domain\Page\Page;
-use App\Domain\Page\PageRepository;
+use App\Domain\Editor\Page\DraftNameGenerator;
+use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\PageRepository;
 use Livewire\Component;
 
 new class extends Component {
