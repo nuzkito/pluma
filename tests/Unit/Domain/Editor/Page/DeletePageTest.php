@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\DeletePage;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Generator\SiteGenerator;
 use Illuminate\Support\Facades\Storage;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 test('delete page removes it from repository', function () {
     $repository = initializeSite();
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $action = new DeletePage($repository, app(SiteGenerator::class));
@@ -22,7 +22,7 @@ test('delete page removes generated site files', function () {
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     new PublishPage($repository, app(SiteGenerator::class))->__invoke((string) $page->path);
@@ -39,10 +39,10 @@ test('delete page regenerates index when deleting published page', function () {
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page1 = Page::draft('First Page');
+    $page1 = ContentPage::draft('First Page');
     $repository->save($page1);
 
-    $page2 = Page::draft('Second Page');
+    $page2 = ContentPage::draft('Second Page');
     $repository->save($page2);
 
     new PublishPage($repository, app(SiteGenerator::class))->__invoke((string) $page1->path);
@@ -62,7 +62,7 @@ test('delete page does not touch site files when deleting draft', function () {
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = Page::draft('Draft Page');
+    $page = ContentPage::draft('Draft Page');
     $repository->save($page);
 
     $action = new DeletePage($repository, app(SiteGenerator::class));

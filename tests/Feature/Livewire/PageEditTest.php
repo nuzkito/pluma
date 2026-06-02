@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
@@ -12,7 +12,7 @@ describe('title and path', function () {
     test('edit page shows current title in title field', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('My Original Title');
+        $page = ContentPage::draft('My Original Title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -22,7 +22,7 @@ describe('title and path', function () {
     test('editing title updates page title in repository', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Original Title');
+        $page = ContentPage::draft('Original Title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -41,7 +41,7 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $page = Page::draft('My Original Title');
+        $page = ContentPage::draft('My Original Title');
         expect((string) $page->path)->toBe('my-original-title');
 
         $repository->save($page);
@@ -64,7 +64,7 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Original Title',
             path: new PagePath('custom-path'),
             content: new Markdown('# Content'),
@@ -89,7 +89,7 @@ describe('title and path', function () {
     test('changing title to same slug does not affect path', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Same Slug Title');
+        $page = ContentPage::draft('Same Slug Title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -108,7 +108,7 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Original Title',
             path: new PagePath('preserve-test'),
             content: new Markdown('# Original Content'),
@@ -139,7 +139,7 @@ describe('title and path', function () {
     test('title change dispatches url-changed event when path changes', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Title That Changes Path');
+        $page = ContentPage::draft('Title That Changes Path');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -155,10 +155,10 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $pageA = Page::draft('Existing Title');
+        $pageA = ContentPage::draft('Existing Title');
         $repository->save($pageA);
 
-        $pageB = new Page(
+        $pageB = new ContentPage(
             title: 'Different Title',
             path: new PagePath('different-title'),
             content: new Markdown('# Content'),
@@ -182,7 +182,7 @@ describe('tags', function () {
     test('adding first tag to draft page saves it correctly', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Draft With Tags');
+        $page = ContentPage::draft('Draft With Tags');
         $repository->save($page);
 
         expect($page->tags)->toBe([]);
@@ -196,10 +196,55 @@ describe('tags', function () {
         expect($updated->tags)->toBe(['first-tag']);
     });
 
+    test('adding a tag creates its tag page file', function () {
+        $repository = initializeSite();
+        config()->set('pluma.create_tag_pages', true);
+
+        $page = ContentPage::draft('Page Creating Tag');
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('addTag', 'Cosas varias')
+            ->assertOk();
+
+        expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeTrue();
+    });
+
+    test('adding a tag does not create its tag page file when the option is disabled', function () {
+        $repository = initializeSite();
+        config()->set('pluma.create_tag_pages', false);
+
+        $page = ContentPage::draft('Page Without Tag Page');
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('addTag', 'Cosas varias')
+            ->assertOk();
+
+        expect($repository->findByPath('page-without-tag-page')->tags)->toBe(['Cosas varias'])
+            ->and(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeFalse();
+    });
+
+    test('adding a tag whose page already exists does not fail', function () {
+        $repository = initializeSite();
+        config()->set('pluma.create_tag_pages', true);
+
+        $page = ContentPage::draft('Page Reusing Tag');
+        $repository->save($page);
+
+        Storage::disk('current')->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nExisting description");
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('addTag', 'Laravel')
+            ->assertOk();
+
+        expect(Storage::disk('current')->get('pages/tags/laravel.tag.md'))->toContain('Existing description');
+    });
+
     test('adding second tag to page with existing tag results in two tags', function () {
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Page With One Tag',
             path: new PagePath('one-tag-page'),
             content: new Markdown('# Content'),
@@ -220,7 +265,7 @@ describe('tags', function () {
     test('adding two tags sequentially saves both correctly', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Multi Tag Page');
+        $page = ContentPage::draft('Multi Tag Page');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -237,7 +282,7 @@ describe('tags', function () {
     test('removing a tag removes it from the page', function () {
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Page To Remove Tag From',
             path: new PagePath('remove-tag-page'),
             content: new Markdown('# Content'),
@@ -259,7 +304,7 @@ describe('tags', function () {
     test('removing all tags results in empty array', function () {
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Clear All Tags',
             path: new PagePath('clear-tags'),
             content: new Markdown('# Content'),
@@ -282,7 +327,7 @@ describe('tags', function () {
     test('duplicate tags are prevented by addTag', function () {
         $repository = initializeSite();
 
-        $page = Page::draft('Duplicate Tags');
+        $page = ContentPage::draft('Duplicate Tags');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -299,7 +344,7 @@ describe('tag datalist autocomplete', function () {
     test('all tags from all pages are available in the component for autocompletion', function () {
         $repository = initializeSite();
 
-        $page1 = new Page(
+        $page1 = new ContentPage(
             title: 'Page One',
             path: new PagePath('page-one'),
             content: new Markdown('# Content 1'),
@@ -307,7 +352,7 @@ describe('tag datalist autocomplete', function () {
         );
         $repository->save($page1);
 
-        $page2 = new Page(
+        $page2 = new ContentPage(
             title: 'Page Two With Tags',
             path: new PagePath('page-two-with-tags'),
             content: new Markdown('# Content 2'),
@@ -326,7 +371,7 @@ describe('tag datalist autocomplete', function () {
 
         $repository = initializeSite();
 
-        $page1 = new Page(
+        $page1 = new ContentPage(
             title: 'Page One With Tags',
             path: new PagePath('page-one-with-tags'),
             content: new Markdown('# Content 1'),
@@ -335,7 +380,7 @@ describe('tag datalist autocomplete', function () {
         );
         $repository->save($page1);
 
-        $page2 = new Page(
+        $page2 = new ContentPage(
             title: 'Page Two With Tags',
             path: new PagePath('page-two-with-tags'),
             content: new Markdown('# Content 2'),
@@ -357,7 +402,7 @@ describe('tag datalist autocomplete', function () {
 
         $repository = initializeSite();
 
-        $page1 = new Page(
+        $page1 = new ContentPage(
             title: 'Page Without Tags',
             path: new PagePath('no-tags-page'),
             content: new Markdown('# Content'),
@@ -366,7 +411,7 @@ describe('tag datalist autocomplete', function () {
         );
         $repository->save($page1);
 
-        $page2 = new Page(
+        $page2 = new ContentPage(
             title: 'Page With Tags',
             path: new PagePath('with-tags-page'),
             content: new Markdown('# Content'),
@@ -385,7 +430,7 @@ describe('tag datalist autocomplete', function () {
     test('tag datalist options are sorted alphabetically by name', function () {
         $repository = initializeSite();
 
-        $page1 = new Page(
+        $page1 = new ContentPage(
             title: 'Page One',
             path: new PagePath('page-one'),
             content: new Markdown('# Content 1'),
@@ -394,7 +439,7 @@ describe('tag datalist autocomplete', function () {
         );
         $repository->save($page1);
 
-        $page2 = new Page(
+        $page2 = new ContentPage(
             title: 'Page Two',
             path: new PagePath('page-two'),
             content: new Markdown('# Content 2'),
@@ -412,7 +457,7 @@ describe('rss checkbox', function () {
     test('checking unchecked rss checkbox sets page.rss to true', function () {
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'RSS Disabled Page',
             path: new PagePath('rss-disabled'),
             content: new Markdown('# Content'),
@@ -435,7 +480,7 @@ describe('rss checkbox', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'RSS Enabled Page',
             path: new PagePath('rss-enabled'),
             content: new Markdown('# Content'),
@@ -463,7 +508,7 @@ describe('published at', function () {
 
         $repository = initializeSite();
 
-        $page = Page::draft('Draft To Publish');
+        $page = ContentPage::draft('Draft To Publish');
         expect($page->isDraft())->toBeTrue();
         $repository->save($page);
 
@@ -485,7 +530,7 @@ describe('published at', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Published To Unpublish',
             path: new PagePath('published-to-unpublish'),
             content: new Markdown('# Content'),
@@ -512,7 +557,7 @@ describe('published at', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Update Published Date',
             path: new PagePath('update-published-date'),
             content: new Markdown('# Content'),
@@ -539,7 +584,7 @@ describe('content', function () {
     test('edit page shows current content in textarea', function () {
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Page With Content',
             path: new PagePath('with-content'),
             content: new Markdown('# Hello World'),
@@ -556,7 +601,7 @@ describe('content', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Content Update Test',
             path: new PagePath('content-update'),
             content: new Markdown('# Old Content'),
@@ -581,7 +626,7 @@ describe('content', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Clear Content',
             path: new PagePath('clear-content'),
             content: new Markdown('# Has Content'),
@@ -608,7 +653,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Page With Attachments',
             path: new PagePath('with-attachments'),
             content: new Markdown('# Content'),
@@ -637,7 +682,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Upload Test Page',
             path: new PagePath('upload-test'),
             content: new Markdown('# Content'),
@@ -661,7 +706,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Multi Upload Test',
             path: new PagePath('multi-upload'),
             content: new Markdown('# Content'),
@@ -687,7 +732,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Delete Attachment Test',
             path: new PagePath('delete-attachment'),
             content: new Markdown('# Content'),
@@ -715,7 +760,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Clear Attachments Test',
             path: new PagePath('clear-attachments'),
             content: new Markdown('# Content'),
@@ -740,7 +785,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Empty Dir Cleanup Test',
             path: new PagePath('empty-dir-cleanup'),
             content: new Markdown('# Content'),
@@ -767,7 +812,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Published Delete Site Disk Test',
             path: new PagePath('published-delete-site-disk'),
             content: new Markdown('# Content'),
@@ -795,7 +840,7 @@ describe('attachments', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Draft Delete No Site Disk Test',
             path: new PagePath('draft-delete-no-site-disk'),
             content: new Markdown('# Content'),
@@ -822,7 +867,7 @@ describe('publish / unpublish', function () {
 
         $repository = initializeSite();
 
-        $page = Page::draft('Draft To Publish Via Button');
+        $page = ContentPage::draft('Draft To Publish Via Button');
         expect($page->isDraft())->toBeTrue();
         $repository->save($page);
 
@@ -845,7 +890,7 @@ describe('publish / unpublish', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Published To Unpublish Via Button',
             path: new PagePath('published-to-unpublish-via-button'),
             content: new Markdown('# Content'),
@@ -874,7 +919,7 @@ describe('delete', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Page To Delete Via Button',
             path: new PagePath('delete-via-button'),
             content: new Markdown('# Content'),
@@ -895,7 +940,7 @@ describe('delete', function () {
 
         $repository = initializeSite();
 
-        $page = new Page(
+        $page = new ContentPage(
             title: 'Published Delete Test',
             path: new PagePath('published-delete'),
             content: new Markdown('# Content'),

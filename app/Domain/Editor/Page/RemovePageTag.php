@@ -12,9 +12,11 @@ class RemovePageTag
         private SiteGenerator $siteGenerator,
     ) {}
 
-    public function __invoke(string $path, int $index): Page
+    public function __invoke(string $path, int $index): ContentPage
     {
         $page = $this->repository->findByPath($path);
+
+        $removedTag = $page->tags[$index] ?? null;
 
         $tags = Arr::except($page->tags, $index);
 
@@ -24,6 +26,11 @@ class RemovePageTag
 
         if ($page->isPublished()) {
             $this->siteGenerator->generatePage((string) $page->path);
+
+            if ($removedTag !== null) {
+                $this->siteGenerator->generateTagPage((string) TagPage::create($removedTag)->path);
+            }
+
             $this->siteGenerator->regenerateIndex();
         }
 

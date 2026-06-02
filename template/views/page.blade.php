@@ -9,7 +9,13 @@
     @if($page->tags)
         <ul>
             @foreach($page->tags as $tag)
-                <li>{{ $tag }}</li>
+                <li>
+                    @if(config('pluma.create_tag_pages'))
+                        <a href="{{ $baseUrl }}/{{ config('pluma.tag_pages_path') }}/{{ \Illuminate\Support\Str::slug($tag) }}/">{{ $tag }}</a>
+                    @else
+                        {{ $tag }}
+                    @endif
+                </li>
             @endforeach
         </ul>
     @endif

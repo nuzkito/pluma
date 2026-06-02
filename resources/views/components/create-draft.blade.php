@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\DraftNameGenerator;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PageRepository;
 use Livewire\Component;
 
@@ -13,7 +13,7 @@ new class extends Component {
     public function create(PageRepository $repository, DraftNameGenerator $generator)
     {
         $title = $generator();
-        $page = Page::draft($title);
+        $page = ContentPage::draft($title);
         $repository->save($page);
 
         return redirect()->route('pages.edit', $page->path);

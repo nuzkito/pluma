@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePageRss;
@@ -13,7 +13,7 @@ test('enables RSS when enabled is true', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'RSS Enable Test',
         path: new PagePath('rss-enable-test'),
         content: new Markdown('# Content'),
@@ -39,7 +39,7 @@ test('disables RSS when enabled is false', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'RSS Disable Test',
         path: new PagePath('rss-disable-test'),
         content: new Markdown('# Content'),

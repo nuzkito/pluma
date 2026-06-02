@@ -1,12 +1,12 @@
 <?php
 
-use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\ContentPage;
 use Illuminate\Support\Facades\Storage;
 
 test('shows the edit page', function () {
     $repository = initializeSite();
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $this->get("/pages/{$page->path}/edit")
@@ -24,7 +24,7 @@ test('returns 404 for non-existent page edit', function () {
 test('shows existing attachments on edit page', function () {
     $repository = initializeSite();
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $disk = Storage::disk('current');
@@ -40,7 +40,7 @@ test('shows existing attachments on edit page', function () {
 test('shows edit page without attachments when none exist', function () {
     $repository = initializeSite();
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $this->get("/pages/{$page->path}/edit")

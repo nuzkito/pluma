@@ -4,6 +4,7 @@ namespace App\Domain\Generator;
 
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PageRepository;
+use App\Domain\Generator\Page\TagPage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Factory;
@@ -29,6 +30,10 @@ class SiteGenerator
             $this->writePage($page);
         }
 
+        foreach ($this->pageRepository->tags() as $tag) {
+            $this->writeTagPage($tag, $pages);
+        }
+
         if ($pages->contains(fn ($page) => $page->rss)) {
             $this->generateRss($pages->filter(fn ($page) => $page->rss));
         }
@@ -48,6 +53,17 @@ class SiteGenerator
         }
 
         $this->writePage($page);
+    }
+
+    public function generateTagPage(string $path): void
+    {
+        $tag = $this->pageRepository->findTagByPath($path);
+
+        if ($tag === null) {
+            return;
+        }
+
+        $this->writeTagPage($tag, $this->pageRepository->published());
     }
 
     private function writePage(Page $page): void
@@ -74,6 +90,32 @@ class SiteGenerator
                 $disk->copy($file, "$pagePath/$filename");
             }
         }
+    }
+
+    /**
+     * @param  Collection<int, Page>  $publishedPages
+     */
+    private function writeTagPage(TagPage $tag, Collection $publishedPages): void
+    {
+        $this->ensureSiteDirectory();
+        $this->registerViewPaths();
+
+        $posts = $publishedPages
+            ->filter(fn (Page $page) => in_array($tag->title, $page->tags, true))
+            ->values();
+
+        $disk = Storage::disk('current');
+        $tagPath = "site/{$tag->path}";
+
+        $disk->makeDirectory($tagPath);
+
+        $html = $this->renderView('tag', [
+            'tag' => $tag,
+            'pages' => $posts,
+            'baseUrl' => $this->baseUrl(),
+        ]);
+
+        $disk->put("$tagPath/index.html", $html);
     }
 
     /**

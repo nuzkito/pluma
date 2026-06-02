@@ -30,7 +30,7 @@ class PageRepository
         }
 
         return collect($this->disk->files('pages'))
-            ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
+            ->filter(fn (string $file) => Str::of($file)->endsWith('.md') && ! Str::of($file)->endsWith('.tag.md'))
             ->map($this->fromFile(...))
             ->sortByDesc('created_at')
             ->values();
@@ -60,7 +60,7 @@ class PageRepository
         $this->disk->makeDirectory('pages');
         $this->disk->makeDirectory('assets');
 
-        $newFilePath = "pages/{$page->path}.md";
+        $newFilePath = "pages/{$page->filename()}";
 
         if ($oldPath !== null && $oldPath !== $page->path->__toString()) {
             $oldFilePath = "pages/$oldPath.md";
@@ -88,6 +88,11 @@ class PageRepository
             ->isNotEmpty();
     }
 
+    public function tagExists(string $slug): bool
+    {
+        return $this->disk->exists("pages/$slug.tag.md");
+    }
+
     private function toMarkdownFile(Page $page): string
     {
         $yaml = Yaml::dump($page->toArray());
@@ -103,7 +108,7 @@ class PageRepository
         $metadata = $parsed->getFrontMatter();
         $content = $parsed->getContent();
 
-        return new Page(
+        return new ContentPage(
             title: $metadata['title'],
             path: new PagePath($metadata['path']),
             content: new Markdown($content),

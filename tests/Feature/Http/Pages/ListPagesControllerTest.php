@@ -1,11 +1,11 @@
 <?php
 
-use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\ContentPage;
 
 test('shows the pages index', function () {
     $repository = initializeSite();
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $this->get('/')

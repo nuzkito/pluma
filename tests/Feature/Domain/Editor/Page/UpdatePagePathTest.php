@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePagePath;
@@ -15,7 +15,7 @@ test('returns Ok with page when path is updated successfully', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = Page::draft('Path Update Test');
+    $page = ContentPage::draft('Path Update Test');
     $repository->save($page);
 
     $action = new UpdatePagePath(
@@ -26,7 +26,7 @@ test('returns Ok with page when path is updated successfully', function () {
     $result = $action->__invoke('path-update-test', 'new-path');
 
     expect($result)->toBeInstanceOf(Ok::class)
-        ->and($result->unwrap())->toBeInstanceOf(Page::class);
+        ->and($result->unwrap())->toBeInstanceOf(ContentPage::class);
 
     Carbon::setTestNow(null);
 });
@@ -36,10 +36,10 @@ test('returns Error when new path already exists for another page', function () 
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $pageA = Page::draft('Existing Page');
+    $pageA = ContentPage::draft('Existing Page');
     $repository->save($pageA);
 
-    $pageB = new Page(
+    $pageB = new ContentPage(
         title: 'Another Page',
         path: new PagePath('existing-page'),
         content: new Markdown('# Content'),

@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Process;
@@ -12,7 +12,7 @@ use function Pest\Laravel\artisan;
 test('generates the site and starts the development servers', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),
@@ -34,7 +34,7 @@ test('generates the site and starts the development servers', function () {
 test('uses default host and port when config is not set', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),
@@ -59,7 +59,7 @@ test('uses default host and port when config is not set', function () {
 test('passes CURRENT_PATH as process environment variable', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),

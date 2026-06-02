@@ -4,8 +4,9 @@ use App\Domain\Editor\Attachment\AttachmentRepository;
 use App\Domain\Editor\Attachment\DeleteAttachment;
 use App\Domain\Editor\Attachment\UploadAttachment;
 use App\Domain\Editor\Page\AddPageTag;
+use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\DeletePage;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\RemovePageTag;
@@ -64,7 +65,7 @@ new class extends Component {
         $this->tags = $page->tags;
         $this->attachments = $attachmentRepo->all($page->path);
         $this->availableTags = $repository->all()
-            ->flatMap(fn (Page $p) => $p->tags)
+            ->flatMap(fn (ContentPage $p) => $p->tags)
             ->unique()
             ->sort()
             ->values()
@@ -85,7 +86,7 @@ new class extends Component {
         $result = $action->__invoke($this->oldPath, $value);
 
         $result->match(
-            ok: function (Page $page) {
+            ok: function (ContentPage $page) {
                 $this->oldPath = $page->path->__toString();
                 $this->path = $page->path->__toString();
                 $this->dispatch('url-changed', $page->path->__toString());
@@ -124,13 +125,14 @@ new class extends Component {
         $action->__invoke($this->path, $value);
     }
 
-    public function addTag(AddPageTag $addTagAction, string $tag)
+    public function addTag(AddPageTag $addTagAction, CreateTagPage $createTagPage, string $tag)
     {
         if (trim($tag) === '') {
             return;
         }
 
         $page = $addTagAction->__invoke($this->path, $tag);
+        $createTagPage->__invoke($tag);
 
         $this->tags = $page->tags;
     }

@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\DraftNameGenerator;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PageRepository;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,7 +20,7 @@ test('returns Draft when no pages exist', function () {
 test('returns Draft when no drafts named Draft exist', function () {
     $repository = new PageRepository;
 
-    $page = Page::draft('My custom page');
+    $page = ContentPage::draft('My custom page');
     $repository->save($page);
 
     $generator = new DraftNameGenerator($repository);
@@ -31,7 +31,7 @@ test('returns Draft when no drafts named Draft exist', function () {
 test('returns Draft 2 when Draft exists', function () {
     $repository = new PageRepository;
 
-    $page = Page::draft('Draft');
+    $page = ContentPage::draft('Draft');
     $repository->save($page);
 
     $generator = new DraftNameGenerator($repository);
@@ -42,8 +42,8 @@ test('returns Draft 2 when Draft exists', function () {
 test('returns next sequential number', function () {
     $repository = new PageRepository;
 
-    $repository->save(Page::draft('Draft'));
-    $repository->save(Page::draft('Draft 2'));
+    $repository->save(ContentPage::draft('Draft'));
+    $repository->save(ContentPage::draft('Draft 2'));
 
     $generator = new DraftNameGenerator($repository);
 
@@ -53,8 +53,8 @@ test('returns next sequential number', function () {
 test('uses highest number even with gaps', function () {
     $repository = new PageRepository;
 
-    $repository->save(Page::draft('Draft'));
-    $repository->save(Page::draft('Draft 5'));
+    $repository->save(ContentPage::draft('Draft'));
+    $repository->save(ContentPage::draft('Draft 5'));
 
     $generator = new DraftNameGenerator($repository);
 
@@ -64,7 +64,7 @@ test('uses highest number even with gaps', function () {
 test('treats non-numeric Draft suffix as zero', function () {
     $repository = new PageRepository;
 
-    $repository->save(Page::draft('Draft especial'));
+    $repository->save(ContentPage::draft('Draft especial'));
 
     $generator = new DraftNameGenerator($repository);
 
@@ -74,9 +74,9 @@ test('treats non-numeric Draft suffix as zero', function () {
 test('handles mix of numbered and unnumbered drafts', function () {
     $repository = new PageRepository;
 
-    $repository->save(Page::draft('Draft'));
-    $repository->save(Page::draft('Draft 3'));
-    $repository->save(Page::draft('Draft especial'));
+    $repository->save(ContentPage::draft('Draft'));
+    $repository->save(ContentPage::draft('Draft 3'));
+    $repository->save(ContentPage::draft('Draft especial'));
 
     $generator = new DraftNameGenerator($repository);
 

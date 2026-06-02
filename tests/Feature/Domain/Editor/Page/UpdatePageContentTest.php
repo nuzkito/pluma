@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePageContent;
@@ -13,7 +13,7 @@ test('updates page content successfully', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Content Update Test',
         path: new PagePath('content-test'),
         content: new Markdown('# Old Content'),
@@ -38,7 +38,7 @@ test('clears content when empty string is provided', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Clear Content Test',
         path: new PagePath('clear-content-test'),
         content: new Markdown('# Has Content'),

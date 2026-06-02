@@ -31,8 +31,27 @@ class PageRepository
 
         return collect($this->disk->files('pages'))
             ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
+            ->reject(fn (string $file) => Str::of($file)->endsWith('.tag.md'))
             ->map($this->fromFile(...))
             ->sortByDesc('created_at')
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, TagPage>
+     */
+    public function tags(): Collection
+    {
+        $tagsDirectory = 'pages/'.config('pluma.tag_pages_path');
+
+        if (! $this->disk->exists($tagsDirectory)) {
+            return collect();
+        }
+
+        return collect($this->disk->files($tagsDirectory))
+            ->filter(fn (string $file) => Str::of($file)->endsWith('.tag.md'))
+            ->map($this->tagPageFromFile(...))
+            ->sortBy('title')
             ->values();
     }
 
@@ -53,6 +72,17 @@ class PageRepository
         }
 
         return $this->fromFile($filePath);
+    }
+
+    public function findTagByPath(string $path): ?TagPage
+    {
+        $filePath = "pages/$path.tag.md";
+
+        if (! $this->disk->exists($filePath)) {
+            return null;
+        }
+
+        return $this->tagPageFromFile($filePath);
     }
 
     public function save(Page $page, ?string $oldPath = null): void
@@ -111,6 +141,22 @@ class PageRepository
             published_at: isset($metadata['published_at']) ? Carbon::parse($metadata['published_at']) : null,
             rss: $metadata['rss'] ?? false,
             tags: $metadata['tags'] ?? [],
+        );
+    }
+
+    private function tagPageFromFile(string $filePath): TagPage
+    {
+        $raw = $this->disk->get($filePath);
+        $parser = new FrontMatterParser(new SymfonyYamlFrontMatterParser);
+        $parsed = $parser->parse($raw);
+        $metadata = $parsed->getFrontMatter();
+        $content = $parsed->getContent();
+
+        return new TagPage(
+            title: $metadata['title'],
+            path: new PagePath($metadata['path']),
+            content: new Markdown($content),
+            created_at: Carbon::parse($metadata['created_at']),
         );
     }
 

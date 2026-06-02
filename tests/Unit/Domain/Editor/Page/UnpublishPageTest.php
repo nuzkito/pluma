@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\UnpublishPage;
 use App\Domain\Generator\SiteGenerator;
@@ -10,7 +10,7 @@ test('unpublish page clears published_at and syncs site generation', function ()
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $generator = app(SiteGenerator::class);
@@ -33,7 +33,7 @@ test('unpublish regenerates index', function () {
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     $repository->save($page);
 
     $generator = app(SiteGenerator::class);

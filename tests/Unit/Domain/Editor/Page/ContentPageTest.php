@@ -1,12 +1,12 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 
 test('creates a draft with slug path and empty content', function () {
-    $page = Page::draft('My New Post');
+    $page = ContentPage::draft('My New Post');
 
     expect($page->title)->toBe('My New Post')
         ->and((string) $page->path)->toBe('my-new-post')
@@ -16,7 +16,7 @@ test('creates a draft with slug path and empty content', function () {
 });
 
 test('renames the page', function () {
-    $page = Page::draft('Original Title');
+    $page = ContentPage::draft('Original Title');
 
     $page->rename('Updated Title');
 
@@ -24,7 +24,7 @@ test('renames the page', function () {
 });
 
 test('moves the page to a new path', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     $page->moveToPath(new PagePath('custom-path'));
 
@@ -32,7 +32,7 @@ test('moves the page to a new path', function () {
 });
 
 test('sets the page content', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     $page->setContent(new Markdown('New content'));
 
@@ -40,7 +40,7 @@ test('sets the page content', function () {
 });
 
 test('sets the page content to empty string', function () {
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Test',
         path: new PagePath('test'),
         content: new Markdown('Some content'),
@@ -53,7 +53,7 @@ test('sets the page content to empty string', function () {
 });
 
 test('toggles the rss flag', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     $page->toggleRss(false);
 
@@ -63,7 +63,7 @@ test('toggles the rss flag', function () {
 test('publishes a page', function () {
     Carbon::setTestNow(Carbon::parse('2025-06-01 12:00:00'));
 
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
     $page->publish(Carbon::now());
 
     Carbon::setTestNow(null);
@@ -73,7 +73,7 @@ test('publishes a page', function () {
 });
 
 test('unpublishes a page', function () {
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
@@ -87,7 +87,7 @@ test('unpublishes a page', function () {
 });
 
 test('is published when published_at is set', function () {
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
@@ -100,7 +100,7 @@ test('is published when published_at is set', function () {
 });
 
 test('is draft when published_at is null', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     expect($page->isDraft())->toBeTrue()
         ->and($page->isPublished())->toBeFalse();
@@ -109,7 +109,7 @@ test('is draft when published_at is null', function () {
 test('converts to array without published_at when draft', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -130,7 +130,7 @@ test('converts to array without published_at when draft', function () {
 test('converts to array with published_at when published', function () {
     $now = Carbon::parse('2025-06-01T12:00:00+00:00');
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown(''),
@@ -144,7 +144,7 @@ test('converts to array with published_at when published', function () {
 });
 
 test('sets tags on a page', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     $page->withTags(['php', 'laravel']);
 
@@ -152,7 +152,7 @@ test('sets tags on a page', function () {
 });
 
 test('strips keys from tags array', function () {
-    $page = Page::draft('My Post');
+    $page = ContentPage::draft('My Post');
 
     $page->withTags([1 => 'php', 3 => 'laravel']);
 
@@ -162,7 +162,7 @@ test('strips keys from tags array', function () {
 test('toArray includes tags when present', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -178,7 +178,7 @@ test('toArray includes tags when present', function () {
 test('toArray excludes empty tags array', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),

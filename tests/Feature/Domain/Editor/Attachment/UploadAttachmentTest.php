@@ -2,14 +2,14 @@
 
 use App\Domain\Editor\Attachment\AttachmentRepository;
 use App\Domain\Editor\Attachment\UploadAttachment;
-use App\Domain\Editor\Page\Page;
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\PageRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 test('uploads a single file', function () {
     initializeSite();
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     app(PageRepository::class)->save($page);
 
     $file = UploadedFile::fake()->createWithContent('my-file.txt', 'content');
@@ -27,7 +27,7 @@ test('uploads a single file', function () {
 
 test('uploads multiple files', function () {
     initializeSite();
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     app(PageRepository::class)->save($page);
 
     $files = [
@@ -48,7 +48,7 @@ test('uploads multiple files', function () {
 
 test('saves files to correct assets directory', function () {
     initializeSite();
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     app(PageRepository::class)->save($page);
 
     $files = [
@@ -68,7 +68,7 @@ test('saves files to correct assets directory', function () {
 
 test('returns url with correct route', function () {
     initializeSite();
-    $page = Page::draft('Test Page');
+    $page = ContentPage::draft('Test Page');
     app(PageRepository::class)->save($page);
 
     $files = [UploadedFile::fake()->createWithContent('my-file.txt', 'content')];

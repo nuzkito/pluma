@@ -13,7 +13,7 @@ class AddPageTag
         private SiteGenerator $siteGenerator,
     ) {}
 
-    public function __invoke(string $path, string $tag): Page
+    public function __invoke(string $path, string $tag): ContentPage
     {
         $page = $this->repository->findByPath($path);
 
@@ -27,6 +27,7 @@ class AddPageTag
 
         if ($page->isPublished()) {
             $this->siteGenerator->generatePage((string) $page->path);
+            $this->siteGenerator->generateTagPage((string) TagPage::create($tag)->path);
             $this->siteGenerator->regenerateIndex();
         }
 

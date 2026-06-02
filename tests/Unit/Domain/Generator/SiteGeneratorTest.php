@@ -82,6 +82,67 @@ test('regenerates rss feed excluding pages with rss disabled', function () {
         ->and($disk->get('site/feed.xml'))->not->toContain('No RSS Page');
 });
 
+test('generates a tag page listing only the posts with that tag', function () {
+    initializeSite();
+    chdir(Storage::disk('current')->path('/'));
+
+    $generator = app(SiteGenerator::class);
+    $repository = app(PageRepository::class);
+
+    $repository->save(new Page(
+        title: 'Tagged Post',
+        path: new PagePath('tagged-post'),
+        content: new Markdown('# Tagged'),
+        created_at: Carbon::now(),
+        published_at: Carbon::now(),
+        tags: ['Laravel'],
+    ));
+
+    $repository->save(new Page(
+        title: 'Other Post',
+        path: new PagePath('other-post'),
+        content: new Markdown('# Other'),
+        created_at: Carbon::now(),
+        published_at: Carbon::now(),
+        tags: ['PHP'],
+    ));
+
+    Storage::disk('current')->put(
+        'pages/tags/laravel.tag.md',
+        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
+    );
+
+    $generator->generateAll();
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
+        ->and($disk->get('site/tags/laravel/index.html'))
+        ->toContain('Laravel')
+        ->toContain('All about Laravel')
+        ->toContain('Tagged Post')
+        ->not->toContain('Other Post');
+});
+
+test('does not render a description when the tag page has empty content', function () {
+    initializeSite();
+    chdir(Storage::disk('current')->path('/'));
+
+    $generator = app(SiteGenerator::class);
+
+    Storage::disk('current')->put(
+        'pages/tags/laravel.tag.md',
+        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\n"
+    );
+
+    $generator->generateAll();
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
+        ->and($disk->get('site/tags/laravel/index.html'))->not->toContain('<div>');
+});
+
 test('deletes feed.xml when last rss page has rss disabled', function () {
     initializeSite();
     chdir(Storage::disk('current')->path('/'));

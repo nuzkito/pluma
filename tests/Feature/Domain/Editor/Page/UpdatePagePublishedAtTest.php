@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePagePublishedAt;
@@ -13,7 +13,7 @@ test('publishes page when published_at is provided', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = Page::draft('Publish Test');
+    $page = ContentPage::draft('Publish Test');
     expect($page->isDraft())->toBeTrue();
     $repository->save($page);
 
@@ -35,7 +35,7 @@ test('unpublishes page when published_at is null', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'Unpublish Test',
         path: new PagePath('unpublish-test'),
         content: new Markdown('# Content'),

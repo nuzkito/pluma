@@ -12,7 +12,7 @@ class PublishPage
         private SiteGenerator $siteGenerator,
     ) {}
 
-    public function __invoke(string $pagePath): Page
+    public function __invoke(string $pagePath): ContentPage
     {
         $page = $this->repository->findByPath($pagePath);
 

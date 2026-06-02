@@ -1,8 +1,9 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
+use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -11,7 +12,7 @@ use function Pest\Laravel\artisan;
 test('generates the static site', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),
@@ -20,7 +21,7 @@ test('generates the static site', function () {
         rss: true,
     ));
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Draft Page',
         path: new PagePath('draft-page'),
         content: new Markdown('This is a draft'),
@@ -42,7 +43,7 @@ test('generates the static site', function () {
 test('generates RSS feed when pages have rss enabled', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),
@@ -52,7 +53,7 @@ test('generates RSS feed when pages have rss enabled', function () {
         rss: true,
     ));
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Draft Page',
         path: new PagePath('draft-page'),
         content: new Markdown('This is a draft'),
@@ -84,10 +85,78 @@ test('copies resource files to site directory', function () {
         ->and($disk->exists('site/scripts.js'))->toBeTrue();
 });
 
+test('generates tag pages with their posts', function () {
+    $repository = initializeSite();
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+        tags: ['Laravel'],
+    ));
+
+    $repository->save(TagPage::create('Laravel'));
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
+        ->and($disk->get('site/tags/laravel/index.html'))
+        ->toContain('Laravel')
+        ->toContain('Hello World');
+});
+
+test('links page tags to their tag page when create_tag_pages is enabled', function () {
+    $repository = initializeSite();
+    config()->set('pluma.create_tag_pages', true);
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+        tags: ['Laravel'],
+    ));
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    $html = Storage::disk('current')->get('site/hello-world/index.html');
+
+    expect($html)->toContain('href="http://localhost:8001/tags/laravel/"');
+});
+
+test('does not link page tags when create_tag_pages is disabled', function () {
+    $repository = initializeSite();
+    config()->set('pluma.create_tag_pages', false);
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+        tags: ['Laravel'],
+    ));
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    $html = Storage::disk('current')->get('site/hello-world/index.html');
+
+    expect($html)->toContain('Laravel')
+        ->not->toContain('/tags/laravel/');
+});
+
 test('renders markdown content as html', function () {
     $repository = initializeSite();
 
-    $repository->save(new Page(
+    $repository->save(new ContentPage(
         title: 'Hello World',
         path: new PagePath('hello-world'),
         content: new Markdown('# Hello World'),
