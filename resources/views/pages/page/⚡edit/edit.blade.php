@@ -1,10 +1,7 @@
 <div class="grid gap-6">
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-            <flux:breadcrumbs>
-                <flux:breadcrumbs.item separator="slash" icon="home"></flux:breadcrumbs.item>
-                <flux:breadcrumbs.item>{{ $page->path }}</flux:breadcrumbs.item>
-            </flux:breadcrumbs>
+            <x-path-breadcrumbs :path="$page->path" />
 
             @if($page->isPublished())
                 <flux:badge color="emerald">Published</flux:badge>

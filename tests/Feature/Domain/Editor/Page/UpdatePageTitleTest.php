@@ -15,7 +15,7 @@ test('returns Ok with page when title is updated successfully', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = ContentPage::draft('Original Title');
+    $page = ContentPage::draft('Original Title', 'original-title');
     $repository->save($page);
 
     $action = new UpdatePageTitle(
@@ -62,7 +62,7 @@ test('returns Error when new title generates conflicting slug with another page'
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $pageA = ContentPage::draft('Existing Title');
+    $pageA = ContentPage::draft('Existing Title', 'existing-title');
     $repository->save($pageA);
 
     $pageB = new ContentPage(

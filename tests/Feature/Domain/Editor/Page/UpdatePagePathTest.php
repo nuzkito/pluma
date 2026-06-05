@@ -15,7 +15,7 @@ test('returns Ok with page when path is updated successfully', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = ContentPage::draft('Path Update Test');
+    $page = ContentPage::draft('Path Update Test', 'path-update-test');
     $repository->save($page);
 
     $action = new UpdatePagePath(
@@ -36,7 +36,7 @@ test('returns Error when new path already exists for another page', function () 
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $pageA = ContentPage::draft('Existing Page');
+    $pageA = ContentPage::draft('Existing Page', 'existing-page');
     $repository->save($pageA);
 
     $pageB = new ContentPage(

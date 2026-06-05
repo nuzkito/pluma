@@ -120,6 +120,25 @@ test('detects duplicate paths', function () {
         ->and($repository->pathExists('other-path'))->toBeFalse();
 });
 
+test('detects duplicate paths inside a directory', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(new ContentPage(
+        title: 'Post',
+        path: new PagePath('posts/shared-path'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    expect($repository->pathExists('posts/shared-path'))->toBeTrue()
+        ->and($repository->pathExists('posts/shared-path', 'posts/shared-path'))->toBeFalse()
+        ->and($repository->pathExists('posts/other-path'))->toBeFalse()
+        ->and($repository->pathExists('shared-path'))->toBeFalse();
+});
+
 test('moves page file and assets when path changes', function () {
     Storage::fake('current');
     Storage::disk('current')->makeDirectory('pages');
@@ -128,7 +147,7 @@ test('moves page file and assets when path changes', function () {
     $repository = new PageRepository;
     $disk = Storage::disk('current');
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $disk->put("assets/{$page->path}/image.jpg", 'fake image');
@@ -150,7 +169,7 @@ test('moves page file when path changes with no assets directory', function () {
     $repository = new PageRepository;
     $disk = Storage::disk('current');
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
     $oldPath = (string) $page->path;
 
@@ -169,7 +188,7 @@ test('deletes page file and assets directory', function () {
     $repository = new PageRepository;
     $disk = Storage::disk('current');
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $disk->put("assets/{$page->path}/image.jpg", 'fake image');
@@ -187,7 +206,7 @@ test('deletes page file when no assets directory exists', function () {
     $repository = new PageRepository;
     $disk = Storage::disk('current');
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $repository->delete((string) $page->path);
@@ -213,7 +232,7 @@ test('ignores non-markdown files in all()', function () {
 
     $disk->put('pages/readme.txt', 'some text');
 
-    $page = ContentPage::draft('Real Page');
+    $page = ContentPage::draft('Real Page', 'real-page');
     $repository->save($page);
 
     expect($repository->all())->toHaveCount(1);
@@ -278,11 +297,59 @@ test('excludes tag pages from all()', function () {
 
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Regular Page'));
+    $repository->save(ContentPage::draft('Regular Page', 'regular-page'));
     $repository->save(TagPage::create('Cosas varias'));
 
     expect($repository->all())->toHaveCount(1)
         ->and($repository->all()->first()->title)->toBe('Regular Page');
+});
+
+test('searchByDirectory returns only pages directly in that directory', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(ContentPage::draft('Root Page', 'root-page'));
+
+    $repository->save(new ContentPage(
+        title: 'Posts Page',
+        path: new PagePath('posts/posts-page'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    $repository->save(new ContentPage(
+        title: 'Nested Page',
+        path: new PagePath('posts/2025/nested-page'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    $inPosts = $repository->searchByDirectory('posts');
+
+    expect($inPosts)->toHaveCount(1)
+        ->and($inPosts->first()->title)->toBe('Posts Page');
+});
+
+test('all() is equivalent to searchByDirectory() at the root', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(ContentPage::draft('Root One', 'root-one'));
+
+    $repository->save(new ContentPage(
+        title: 'Posts Page',
+        path: new PagePath('posts/posts-page'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    expect($repository->all()->pluck('title')->all())
+        ->toBe($repository->searchByDirectory('')->pluck('title')->all())
+        ->and($repository->all())->toHaveCount(1);
 });
 
 test('tagExists reflects whether a tag page file is present', function () {

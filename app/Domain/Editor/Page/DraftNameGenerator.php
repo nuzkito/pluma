@@ -8,9 +8,9 @@ class DraftNameGenerator
 {
     public function __construct(private PageRepository $repository) {}
 
-    public function __invoke(): string
+    public function __invoke(string $directory): string
     {
-        $existingDrafts = $this->repository->all()
+        $existingDrafts = $this->repository->searchByDirectory($directory)
             ->filter(fn (ContentPage $page) => Str::of($page->title)->startsWith('Draft'))
             ->map(fn (ContentPage $page) => $page->title);
 

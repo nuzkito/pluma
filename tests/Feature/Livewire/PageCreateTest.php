@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 describe('create draft', function () {
@@ -63,5 +64,30 @@ describe('create draft', function () {
         expect(collect($drafts)->pluck('title')->all())->toEqualCanonicalizing(['Draft', 'Draft 2']);
 
         Carbon::setTestNow(null);
+    });
+
+    test('creates the draft inside the given directory', function () {
+        $repository = initializeSite();
+        Storage::disk('current')->makeDirectory('pages/posts');
+
+        Livewire::test('create-draft', ['directory' => 'posts'])
+            ->call('create')
+            ->assertRedirectToRoute('pages.edit', 'posts/draft');
+
+        $page = $repository->searchByDirectory('posts')->first();
+
+        expect((string) $page->path)->toBe('posts/draft')
+            ->and($repository->all())->toBeEmpty();
+    });
+
+    test('numbers drafts independently per directory', function () {
+        $repository = initializeSite();
+        Storage::disk('current')->makeDirectory('pages/posts');
+
+        Livewire::test('create-draft')->call('create');
+        Livewire::test('create-draft', ['directory' => 'posts'])->call('create');
+
+        expect((string) $repository->all()->first()->path)->toBe('draft')
+            ->and((string) $repository->searchByDirectory('posts')->first()->path)->toBe('posts/draft');
     });
 });

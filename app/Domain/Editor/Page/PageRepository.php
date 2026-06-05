@@ -13,6 +13,8 @@ use Symfony\Component\Yaml\Yaml;
 
 class PageRepository
 {
+    private const string BASE_DIRECTORY = 'pages';
+
     private Filesystem $disk;
 
     public function __construct()
@@ -25,11 +27,21 @@ class PageRepository
      */
     public function all(): Collection
     {
-        if (! $this->disk->exists('pages')) {
+        return $this->searchByDirectory('');
+    }
+
+    /**
+     * @return Collection<int, Page>
+     */
+    public function searchByDirectory(string $directory): Collection
+    {
+        $path = $directory === '' ? self::BASE_DIRECTORY : self::BASE_DIRECTORY."/$directory";
+
+        if (! $this->disk->exists($path)) {
             return collect();
         }
 
-        return collect($this->disk->files('pages'))
+        return collect($this->disk->files($path))
             ->filter(fn (string $file) => Str::of($file)->endsWith('.md') && ! Str::of($file)->endsWith('.tag.md'))
             ->map($this->fromFile(...))
             ->sortByDesc('created_at')
@@ -46,7 +58,7 @@ class PageRepository
 
     public function findByPath(string $path): ?Page
     {
-        $filePath = "pages/$path.md";
+        $filePath = self::BASE_DIRECTORY."/$path.md";
 
         if (! $this->disk->exists($filePath)) {
             return null;
@@ -57,13 +69,13 @@ class PageRepository
 
     public function save(Page $page, ?string $oldPath = null): void
     {
-        $this->disk->makeDirectory('pages');
+        $this->disk->makeDirectory(self::BASE_DIRECTORY);
         $this->disk->makeDirectory('assets');
 
-        $newFilePath = "pages/{$page->filename()}";
+        $newFilePath = self::BASE_DIRECTORY."/{$page->filename()}";
 
         if ($oldPath !== null && $oldPath !== $page->path->__toString()) {
-            $oldFilePath = "pages/$oldPath.md";
+            $oldFilePath = self::BASE_DIRECTORY."/$oldPath.md";
 
             if ($this->disk->exists($oldFilePath)) {
                 $this->disk->move($oldFilePath, $newFilePath);
@@ -77,20 +89,22 @@ class PageRepository
 
     public function delete(string $path): void
     {
-        $this->disk->delete("pages/$path.md");
+        $this->disk->delete(self::BASE_DIRECTORY."/$path.md");
         $this->disk->deleteDirectory("assets/$path");
     }
 
     public function pathExists(string $path, ?string $excludePath = null): bool
     {
-        return $this->all()
+        $directory = Str::contains($path, '/') ? Str::beforeLast($path, '/') : '';
+
+        return $this->searchByDirectory($directory)
             ->filter(fn (Page $page) => (string) $page->path === $path && (string) $page->path !== $excludePath)
             ->isNotEmpty();
     }
 
     public function tagExists(string $slug): bool
     {
-        return $this->disk->exists("pages/$slug.tag.md");
+        return $this->disk->exists(self::BASE_DIRECTORY."/$slug.tag.md");
     }
 
     private function toMarkdownFile(Page $page): string

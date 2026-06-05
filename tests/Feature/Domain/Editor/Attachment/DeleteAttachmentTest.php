@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 test('deletes an attachment', function () {
     initializeSite();
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
@@ -25,7 +25,7 @@ test('deletes an attachment', function () {
 
 test('deletes attachment and removes empty assets directory', function () {
     initializeSite();
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
@@ -42,7 +42,7 @@ test('deletes attachment and removes empty assets directory', function () {
 
 test('deletes attachment from site directory when page is published', function () {
     initializeSite();
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
@@ -63,7 +63,7 @@ test('deletes attachment from site directory when page is published', function (
 
 test('does not delete site file when page is not published', function () {
     initializeSite();
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');

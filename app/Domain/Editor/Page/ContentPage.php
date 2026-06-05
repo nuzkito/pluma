@@ -17,11 +17,11 @@ class ContentPage implements Page
         public array $tags = [],
     ) {}
 
-    public static function draft(string $title): self
+    public static function draft(string $title, string $path): self
     {
         return new ContentPage(
             title: $title,
-            path: new PagePath(Str::slug($title)),
+            path: new PagePath($path),
             content: new Markdown(''),
             created_at: Carbon::now(),
             rss: true,
@@ -30,8 +30,15 @@ class ContentPage implements Page
 
     public function rename(string $newTitle): void
     {
-        if (Str::slug($this->title) === (string) $this->path) {
-            $this->moveToPath(new PagePath(Str::slug($newTitle)));
+        $path = (string) $this->path;
+
+        if (Str::slug($this->title) === Str::afterLast($path, '/')) {
+            $newSlug = Str::slug($newTitle);
+            $newPath = Str::contains($path, '/')
+                ? Str::beforeLast($path, '/').'/'.$newSlug
+                : $newSlug;
+
+            $this->moveToPath(new PagePath($newPath));
         }
 
         $this->title = $newTitle;

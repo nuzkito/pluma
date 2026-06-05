@@ -29,7 +29,7 @@ class PageRepository
             return collect();
         }
 
-        return collect($this->disk->files('pages'))
+        return collect($this->disk->allFiles('pages'))
             ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
             ->reject(fn (string $file) => Str::of($file)->endsWith('.tag.md'))
             ->map($this->fromFile(...))

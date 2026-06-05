@@ -12,7 +12,7 @@ describe('title and path', function () {
     test('edit page shows current title in title field', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('My Original Title');
+        $page = ContentPage::draft('My Original Title', 'my-original-title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -22,7 +22,7 @@ describe('title and path', function () {
     test('editing title updates page title in repository', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Original Title');
+        $page = ContentPage::draft('Original Title', 'original-title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -41,7 +41,7 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $page = ContentPage::draft('My Original Title');
+        $page = ContentPage::draft('My Original Title', 'my-original-title');
         expect((string) $page->path)->toBe('my-original-title');
 
         $repository->save($page);
@@ -89,7 +89,7 @@ describe('title and path', function () {
     test('changing title to same slug does not affect path', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Same Slug Title');
+        $page = ContentPage::draft('Same Slug Title', 'same-slug-title');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -139,7 +139,7 @@ describe('title and path', function () {
     test('title change dispatches url-changed event when path changes', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Title That Changes Path');
+        $page = ContentPage::draft('Title That Changes Path', 'title-that-changes-path');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -155,7 +155,7 @@ describe('title and path', function () {
 
         $repository = initializeSite();
 
-        $pageA = ContentPage::draft('Existing Title');
+        $pageA = ContentPage::draft('Existing Title', 'existing-title');
         $repository->save($pageA);
 
         $pageB = new ContentPage(
@@ -182,7 +182,7 @@ describe('tags', function () {
     test('adding first tag to draft page saves it correctly', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Draft With Tags');
+        $page = ContentPage::draft('Draft With Tags', 'draft-with-tags');
         $repository->save($page);
 
         expect($page->tags)->toBe([]);
@@ -200,7 +200,7 @@ describe('tags', function () {
         $repository = initializeSite();
         config()->set('pluma.create_tag_pages', true);
 
-        $page = ContentPage::draft('Page Creating Tag');
+        $page = ContentPage::draft('Page Creating Tag', 'page-creating-tag');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -214,7 +214,7 @@ describe('tags', function () {
         $repository = initializeSite();
         config()->set('pluma.create_tag_pages', false);
 
-        $page = ContentPage::draft('Page Without Tag Page');
+        $page = ContentPage::draft('Page Without Tag Page', 'page-without-tag-page');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -229,7 +229,7 @@ describe('tags', function () {
         $repository = initializeSite();
         config()->set('pluma.create_tag_pages', true);
 
-        $page = ContentPage::draft('Page Reusing Tag');
+        $page = ContentPage::draft('Page Reusing Tag', 'page-reusing-tag');
         $repository->save($page);
 
         Storage::disk('current')->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nExisting description");
@@ -265,7 +265,7 @@ describe('tags', function () {
     test('adding two tags sequentially saves both correctly', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Multi Tag Page');
+        $page = ContentPage::draft('Multi Tag Page', 'multi-tag-page');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -327,7 +327,7 @@ describe('tags', function () {
     test('duplicate tags are prevented by addTag', function () {
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Duplicate Tags');
+        $page = ContentPage::draft('Duplicate Tags', 'duplicate-tags');
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
@@ -508,7 +508,7 @@ describe('published at', function () {
 
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Draft To Publish');
+        $page = ContentPage::draft('Draft To Publish', 'draft-to-publish');
         expect($page->isDraft())->toBeTrue();
         $repository->save($page);
 
@@ -867,7 +867,7 @@ describe('publish / unpublish', function () {
 
         $repository = initializeSite();
 
-        $page = ContentPage::draft('Draft To Publish Via Button');
+        $page = ContentPage::draft('Draft To Publish Via Button', 'draft-to-publish-via-button');
         expect($page->isDraft())->toBeTrue();
         $repository->save($page);
 

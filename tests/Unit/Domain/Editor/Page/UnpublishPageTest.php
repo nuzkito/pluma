@@ -10,7 +10,7 @@ test('unpublish page clears published_at and syncs site generation', function ()
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $generator = app(SiteGenerator::class);
@@ -33,7 +33,7 @@ test('unpublish regenerates index', function () {
     $repository = initializeSite();
     chdir(Storage::disk('current')->path('/'));
 
-    $page = ContentPage::draft('Test Page');
+    $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $generator = app(SiteGenerator::class);

@@ -6,7 +6,7 @@ use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 
 test('creates a draft with slug path and empty content', function () {
-    $page = ContentPage::draft('My New Post');
+    $page = ContentPage::draft('My New Post', 'my-new-post');
 
     expect($page->title)->toBe('My New Post')
         ->and((string) $page->path)->toBe('my-new-post')
@@ -16,15 +16,39 @@ test('creates a draft with slug path and empty content', function () {
 });
 
 test('renames the page', function () {
-    $page = ContentPage::draft('Original Title');
+    $page = ContentPage::draft('Original Title', 'original-title');
 
     $page->rename('Updated Title');
 
-    expect($page->title)->toBe('Updated Title');
+    expect($page->title)->toBe('Updated Title')
+        ->and((string) $page->path)->toBe('updated-title');
+});
+
+test('renaming a page inside a directory keeps the directory', function () {
+    $page = ContentPage::draft('Draft', 'posts/draft');
+
+    $page->rename('My New Post');
+
+    expect($page->title)->toBe('My New Post')
+        ->and((string) $page->path)->toBe('posts/my-new-post');
+});
+
+test('renaming does not change a manually customized path', function () {
+    $page = new ContentPage(
+        title: 'Original Title',
+        path: new PagePath('posts/custom-path'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    );
+
+    $page->rename('My New Post');
+
+    expect($page->title)->toBe('My New Post')
+        ->and((string) $page->path)->toBe('posts/custom-path');
 });
 
 test('moves the page to a new path', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     $page->moveToPath(new PagePath('custom-path'));
 
@@ -32,7 +56,7 @@ test('moves the page to a new path', function () {
 });
 
 test('sets the page content', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     $page->setContent(new Markdown('New content'));
 
@@ -53,7 +77,7 @@ test('sets the page content to empty string', function () {
 });
 
 test('toggles the rss flag', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     $page->toggleRss(false);
 
@@ -63,7 +87,7 @@ test('toggles the rss flag', function () {
 test('publishes a page', function () {
     Carbon::setTestNow(Carbon::parse('2025-06-01 12:00:00'));
 
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
     $page->publish(Carbon::now());
 
     Carbon::setTestNow(null);
@@ -100,7 +124,7 @@ test('is published when published_at is set', function () {
 });
 
 test('is draft when published_at is null', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     expect($page->isDraft())->toBeTrue()
         ->and($page->isPublished())->toBeFalse();
@@ -144,7 +168,7 @@ test('converts to array with published_at when published', function () {
 });
 
 test('sets tags on a page', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     $page->withTags(['php', 'laravel']);
 
@@ -152,7 +176,7 @@ test('sets tags on a page', function () {
 });
 
 test('strips keys from tags array', function () {
-    $page = ContentPage::draft('My Post');
+    $page = ContentPage::draft('My Post', 'my-post');
 
     $page->withTags([1 => 'php', 3 => 'laravel']);
 

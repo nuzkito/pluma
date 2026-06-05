@@ -14,71 +14,71 @@ test('returns Draft when no pages exist', function () {
     $repository = new PageRepository;
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft');
+    expect($generator->__invoke(''))->toBe('Draft');
 });
 
 test('returns Draft when no drafts named Draft exist', function () {
     $repository = new PageRepository;
 
-    $page = ContentPage::draft('My custom page');
+    $page = ContentPage::draft('My custom page', 'my-custom-page');
     $repository->save($page);
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft');
+    expect($generator->__invoke(''))->toBe('Draft');
 });
 
 test('returns Draft 2 when Draft exists', function () {
     $repository = new PageRepository;
 
-    $page = ContentPage::draft('Draft');
+    $page = ContentPage::draft('Draft', 'draft');
     $repository->save($page);
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft 2');
+    expect($generator->__invoke(''))->toBe('Draft 2');
 });
 
 test('returns next sequential number', function () {
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Draft'));
-    $repository->save(ContentPage::draft('Draft 2'));
+    $repository->save(ContentPage::draft('Draft', 'draft'));
+    $repository->save(ContentPage::draft('Draft 2', 'draft-2'));
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft 3');
+    expect($generator->__invoke(''))->toBe('Draft 3');
 });
 
 test('uses highest number even with gaps', function () {
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Draft'));
-    $repository->save(ContentPage::draft('Draft 5'));
+    $repository->save(ContentPage::draft('Draft', 'draft'));
+    $repository->save(ContentPage::draft('Draft 5', 'draft-5'));
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft 6');
+    expect($generator->__invoke(''))->toBe('Draft 6');
 });
 
 test('treats non-numeric Draft suffix as zero', function () {
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Draft especial'));
+    $repository->save(ContentPage::draft('Draft especial', 'draft-especial'));
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft 1');
+    expect($generator->__invoke(''))->toBe('Draft 1');
 });
 
 test('handles mix of numbered and unnumbered drafts', function () {
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Draft'));
-    $repository->save(ContentPage::draft('Draft 3'));
-    $repository->save(ContentPage::draft('Draft especial'));
+    $repository->save(ContentPage::draft('Draft', 'draft'));
+    $repository->save(ContentPage::draft('Draft 3', 'draft-3'));
+    $repository->save(ContentPage::draft('Draft especial', 'draft-especial'));
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator())->toBe('Draft 4');
+    expect($generator->__invoke(''))->toBe('Draft 4');
 });

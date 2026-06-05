@@ -13,7 +13,7 @@ test('publishes page when published_at is provided', function () {
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
-    $page = ContentPage::draft('Publish Test');
+    $page = ContentPage::draft('Publish Test', 'publish-test');
     expect($page->isDraft())->toBeTrue();
     $repository->save($page);
 

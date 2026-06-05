@@ -1,28 +1,60 @@
 <?php
 
+use App\Domain\Editor\Page\DirectoryRepository;
 use App\Domain\Editor\Page\PageRepository;
 use Livewire\Component;
 
 new class extends Component {
-    public function render(PageRepository $repository)
+    public string $directory = '';
+
+    public function mount(string $directory = ''): void
+    {
+        $this->directory = trim($directory, '/');
+    }
+
+    public function render(PageRepository $pages, DirectoryRepository $directories)
     {
         return $this->view([
-            'pages' => $repository->all(),
+            'pages' => $pages->searchByDirectory($this->directory),
+            'directories' => $directories->searchByDirectory($this->directory),
         ]);
     }
 };
 ?>
 
 <div class="grid gap-6">
-    <flux:breadcrumbs>
-        <flux:breadcrumbs.item separator="slash" icon="home"></flux:breadcrumbs.item>
-        <flux:breadcrumbs.item></flux:breadcrumbs.item>
-    </flux:breadcrumbs>
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <x-path-breadcrumbs :path="$directory" />
+        </div>
+        <div class="flex gap-2">
+            <flux:button :href="route('directories.create', ['directory' => $directory])" icon="folder-plus" wire:navigate>New directory</flux:button>
+            <livewire:create-draft :directory="$directory" variant="primary" />
+        </div>
+    </div>
 
-    @if($pages->isEmpty())
-        <flux:text class="text-center">No pages yet. Create your first page.</flux:text>
-        <livewire:create-draft variant="primary" class="mx-auto" />
-    @else
+    @if($directories->isNotEmpty())
+        <flux:table>
+            <flux:table.columns>
+                <flux:table.column>Directory</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach($directories as $folder)
+                    <flux:table.row>
+                        <flux:table.cell align="start">
+                            <a href="{{ route('pages.index', ['directory' => $folder->path]) }}" wire:navigate class="flex items-center gap-2 text-blue-600 hover:underline">
+                                <flux:icon name="folder" variant="micro" />
+                                {{ $folder->name() }}
+                            </a>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    @endif
+
+    @if($pages->isNotEmpty())
         <flux:table>
             <flux:table.columns>
                 <flux:table.column>Title</flux:table.column>
