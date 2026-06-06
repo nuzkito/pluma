@@ -7,4 +7,6 @@ return [
     'description' => '',
     'create_tag_pages' => false,
     'tag_pages_path' => 'tags',
+    'enable_embedded_content' => false,
+    'allowed_domains_for_embedding' => ['youtube.com', 'x.com', 'github.com'],
 ];
