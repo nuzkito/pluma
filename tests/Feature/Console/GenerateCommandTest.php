@@ -42,6 +42,7 @@ test('generates the static site', function () {
 
 test('generates RSS feed when pages have rss enabled', function () {
     $repository = initializeSite();
+    config(['pluma.enable_rss' => true]);
 
     $repository->save(new ContentPage(
         title: 'Hello World',

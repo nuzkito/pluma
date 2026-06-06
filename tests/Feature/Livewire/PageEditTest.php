@@ -500,6 +500,38 @@ describe('rss checkbox', function () {
 
         Carbon::setTestNow(null);
     });
+
+    test('shows the rss checkbox when rss is enabled', function () {
+        $repository = initializeSite();
+        config(['pluma.enable_rss' => true]);
+
+        $page = new ContentPage(
+            title: 'Page',
+            path: new PagePath('a-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+        );
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertSee('Include in RSS feed');
+    });
+
+    test('hides the rss checkbox when rss is disabled', function () {
+        $repository = initializeSite();
+        config(['pluma.enable_rss' => false]);
+
+        $page = new ContentPage(
+            title: 'Page',
+            path: new PagePath('a-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+        );
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertDontSee('Include in RSS feed');
+    });
 });
 
 describe('published at', function () {

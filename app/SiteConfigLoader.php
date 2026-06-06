@@ -25,6 +25,7 @@ class SiteConfigLoader
             'pluma.description' => $siteConfig['description'] ?? config('pluma.description'),
             'pluma.create_tag_pages' => $siteConfig['create_tag_pages'] ?? config('pluma.create_tag_pages'),
             'pluma.tag_pages_path' => $siteConfig['tag_pages_path'] ?? config('pluma.tag_pages_path'),
+            'pluma.enable_rss' => $siteConfig['enable_rss'] ?? config('pluma.enable_rss'),
             'pluma.enable_embedded_content' => $siteConfig['enable_embedded_content'] ?? config('pluma.enable_embedded_content'),
             'pluma.allowed_domains_for_embedding' => $siteConfig['allowed_domains_for_embedding'] ?? config('pluma.allowed_domains_for_embedding'),
         ]);

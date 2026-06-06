@@ -48,6 +48,7 @@ test('generates 404 without prior generatePage call', function () {
 
 test('regenerates rss feed excluding pages with rss disabled', function () {
     initializeSite();
+    config(['pluma.enable_rss' => true]);
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
@@ -80,6 +81,28 @@ test('regenerates rss feed excluding pages with rss disabled', function () {
     expect($disk->exists('site/feed.xml'))->toBeTrue()
         ->and($disk->get('site/feed.xml'))->toContain('RSS Page')
         ->and($disk->get('site/feed.xml'))->not->toContain('No RSS Page');
+});
+
+test('does not generate rss feed when rss is disabled', function () {
+    initializeSite();
+    config(['pluma.enable_rss' => false]);
+    chdir(Storage::disk('current')->path('/'));
+
+    $generator = app(SiteGenerator::class);
+    $repository = app(PageRepository::class);
+
+    $repository->save(new Page(
+        title: 'RSS Page',
+        path: new PagePath('rss-page'),
+        content: new Markdown('# RSS Page'),
+        created_at: Carbon::now(),
+        published_at: Carbon::now(),
+        rss: true,
+    ));
+
+    $generator->regenerateIndex();
+
+    expect(Storage::disk('current')->exists('site/feed.xml'))->toBeFalse();
 });
 
 test('generates a tag page listing only the posts with that tag', function () {

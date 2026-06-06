@@ -159,6 +159,10 @@ class SiteGenerator
      */
     public function generateRss(Collection $pages): void
     {
+        if (! config('pluma.enable_rss')) {
+            return;
+        }
+
         $xml = $this->renderView('feed', [
             'pages' => $pages,
             'baseUrl' => $this->baseUrl(),
