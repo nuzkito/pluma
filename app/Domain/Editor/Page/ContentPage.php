@@ -15,6 +15,7 @@ class ContentPage implements Page
         public ?Carbon $published_at = null,
         public bool $rss = false,
         public array $tags = [],
+        public ?string $cover_image = null,
     ) {}
 
     public static function draft(string $title, string $path): self
@@ -64,6 +65,16 @@ class ContentPage implements Page
         $this->tags = array_values($tags);
     }
 
+    public function changeCoverImage(string $coverImage): void
+    {
+        $this->cover_image = $coverImage;
+    }
+
+    public function removeCoverImage(): void
+    {
+        $this->cover_image = null;
+    }
+
     public function publish(Carbon $publishedAt): void
     {
         $this->published_at = $publishedAt;
@@ -97,6 +108,7 @@ class ContentPage implements Page
         $metadata = [
             'title' => $this->title,
             'path' => (string) $this->path,
+            'cover_image' => $this->cover_image,
             'created_at' => $this->created_at->toIso8601String(),
             'rss' => $this->rss,
         ];

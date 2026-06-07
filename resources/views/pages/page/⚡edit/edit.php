@@ -10,6 +10,7 @@ use App\Domain\Editor\Page\DeletePage;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\RemovePageTag;
+use App\Domain\Editor\Page\ChangePageCoverImage;
 use App\Domain\Editor\Page\UnpublishPage;
 use App\Domain\Editor\Page\UpdatePageContent;
 use App\Domain\Editor\Page\UpdatePagePath;
@@ -39,6 +40,8 @@ new class extends Component {
 
     public array $tags;
 
+    public ?string $cover_image = null;
+
     public array $attachments;
 
     public string $oldPath;
@@ -63,6 +66,7 @@ new class extends Component {
         $this->rss = $page->rss;
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
         $this->tags = $page->tags;
+        $this->cover_image = $page->cover_image;
         $this->attachments = $attachmentRepo->all($page->path);
         $this->availableTags = $repository->all()
             ->flatMap(fn (ContentPage $p) => $p->tags)
@@ -182,6 +186,17 @@ new class extends Component {
         $deleteAttachment->__invoke($this->path, $filename);
 
         $this->attachments = array_values(array_filter($this->attachments, fn($a) => $a['filename'] !== $filename));
+
+        if ($this->cover_image === $filename) {
+            $this->cover_image = null;
+        }
+    }
+
+    public function setCoverImage(ChangePageCoverImage $changePageCoverImage, string $filename)
+    {
+        $page = $changePageCoverImage->__invoke($this->path, $filename);
+
+        $this->cover_image = $page->cover_image;
     }
 
     private function isImage(string $filename): bool

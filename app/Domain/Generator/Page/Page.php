@@ -14,6 +14,7 @@ class Page
         public ?Carbon $published_at = null,
         public bool $rss = false,
         public array $tags = [],
+        public ?string $cover_image = null,
     ) {}
 
     public function isPublished(): bool

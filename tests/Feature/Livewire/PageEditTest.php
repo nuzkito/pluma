@@ -893,6 +893,134 @@ describe('attachments', function () {
     });
 });
 
+describe('cover image', function () {
+    test('cover image is null by default', function () {
+        $repository = initializeSite();
+
+        $page = ContentPage::draft('No Cover Page', 'no-cover-page');
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertSet('cover_image', null);
+    });
+
+    test('edit page loads the existing cover image', function () {
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Page With Cover',
+            path: new PagePath('page-with-cover'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            cover_image: 'header.png',
+        );
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertSet('cover_image', 'header.png');
+    });
+
+    test('setting an image as cover saves it on the page', function () {
+        $repository = initializeSite();
+
+        $page = ContentPage::draft('Set Cover Page', 'set-cover-page');
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('setCoverImage', 'header.png')
+            ->assertSet('cover_image', 'header.png');
+
+        expect($repository->findByPath('set-cover-page')->cover_image)->toBe('header.png');
+    });
+
+    test('shows the add as cover image button for images that are not the cover', function () {
+        $repository = initializeSite();
+
+        $page = ContentPage::draft('Cover Button Page', 'cover-button-page');
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/photo.png", 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertSee('Add as cover image');
+    });
+
+    test('does not show the add as cover image button for non-image attachments', function () {
+        $repository = initializeSite();
+
+        $page = ContentPage::draft('No Image Cover Page', 'no-image-cover-page');
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/document.txt", 'content');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertDontSee('Add as cover image');
+    });
+
+    test('hides the add as cover image button for the image already set as cover', function () {
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Already Cover Page',
+            path: new PagePath('already-cover-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            cover_image: 'header.png',
+        );
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertDontSee('Add as cover image');
+    });
+
+    test('deleting the cover image attachment clears the cover image', function () {
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Delete Cover Page',
+            path: new PagePath('delete-cover-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            cover_image: 'header.png',
+        );
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('deleteAttachment', 'header.png')
+            ->assertSet('cover_image', null);
+
+        expect($repository->findByPath('delete-cover-page')->cover_image)->toBeNull();
+    });
+
+    test('deleting a non-cover attachment keeps the cover image', function () {
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Keep Cover Page',
+            path: new PagePath('keep-cover-page'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+            cover_image: 'header.png',
+        );
+        $repository->save($page);
+
+        Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
+        Storage::disk('current')->put("assets/{$page->path}/other.txt", 'content');
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('deleteAttachment', 'other.txt')
+            ->assertSet('cover_image', 'header.png');
+
+        expect($repository->findByPath('keep-cover-page')->cover_image)->toBe('header.png');
+    });
+});
+
 describe('publish / unpublish', function () {
     test('publishing a draft page sets published_at and marks as published', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));

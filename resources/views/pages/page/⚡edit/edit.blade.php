@@ -9,7 +9,7 @@
                 <flux:badge color="amber">Draft</flux:badge>
             @endif
 
-            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedNewAttachments">
+            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedNewAttachments,setCoverImage,deleteAttachment">
                 <span wire:loading.delay>Saving...</span>
                 <span wire:loading.delay.remove>Saved</span>
             </span>
@@ -72,6 +72,11 @@
                         </div>
                     @endif
                     <span class="min-w-0 flex-1 truncate text-sm">{{ $attachment['filename'] }}</span>
+                    @if($cover_image === $attachment['filename'])
+                        <flux:badge :wire-key="'cover-' . $attachment['filename']" size="sm" color="emerald" icon="photo">Cover image</flux:badge>
+                    @elseif($this->isImage($attachment['filename']))
+                        <flux:button :wire-key="'cover-' . $attachment['filename']" wire:click="setCoverImage('{{ $attachment['filename'] }}')" size="xs">Add as cover image</flux:button>
+                    @endif
                     <flux:button :wire-key="'insert-' . $attachment['filename']" size="xs" x-on:click="insertAttachment('{{ $attachment['filename'] }}')">Insertar</flux:button>
                     <flux:button :wire-key="'delete-' . $attachment['filename']" wire:click="deleteAttachment('{{ $attachment['filename'] }}')" size="xs" variant="danger">Eliminar</flux:button>
                 </div>

@@ -141,6 +141,7 @@ class PageRepository
             published_at: isset($metadata['published_at']) ? Carbon::parse($metadata['published_at']) : null,
             rss: $metadata['rss'] ?? false,
             tags: $metadata['tags'] ?? [],
+            cover_image: $metadata['cover_image'] ?? null,
         );
     }
 

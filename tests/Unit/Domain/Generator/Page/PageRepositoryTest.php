@@ -56,3 +56,30 @@ test('all() excludes tag pages even when nested', function () {
     expect($repository->all())->toHaveCount(1)
         ->and((string) $repository->all()->first()->path)->toBe('posts/post-page');
 });
+
+test('reads the cover image from the front matter', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    Storage::disk('current')->put('pages/cover-page.md', "---\ntitle: Cover Page\npath: cover-page\ncreated_at: '2025-01-01T00:00:00+00:00'\ncover_image: header.png\n---\n\n# Content");
+
+    $repository = new PageRepository;
+
+    expect($repository->findByPath('cover-page')->cover_image)->toBe('header.png');
+});
+
+test('retrieved page has null cover image when not set', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(new Page(
+        title: 'No Cover Page',
+        path: new PagePath('no-cover-page'),
+        content: new Markdown('# Content'),
+        created_at: Carbon::now(),
+    ));
+
+    expect($repository->findByPath('no-cover-page')->cover_image)->toBeNull();
+});

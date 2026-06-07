@@ -146,6 +146,7 @@ test('converts to array without published_at when draft', function () {
     expect($array)->toBe([
         'title' => 'My Post',
         'path' => 'my-post',
+        'cover_image' => null,
         'created_at' => '2025-01-01T00:00:00+00:00',
         'rss' => true,
     ]);
@@ -213,4 +214,63 @@ test('toArray excludes empty tags array', function () {
     $array = $page->toArray();
 
     expect($array)->not->toHaveKey('tags');
+});
+
+test('cover image is null by default', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+
+    expect($page->cover_image)->toBeNull();
+});
+
+test('changes the cover image', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+
+    $page->changeCoverImage('header.png');
+
+    expect($page->cover_image)->toBe('header.png');
+});
+
+test('removes the cover image', function () {
+    $page = new ContentPage(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+        cover_image: 'header.png',
+    );
+
+    $page->removeCoverImage();
+
+    expect($page->cover_image)->toBeNull();
+});
+
+test('toArray includes cover_image when present', function () {
+    $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
+
+    $page = new ContentPage(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown('Some content'),
+        created_at: $createdAt,
+        cover_image: 'header.png',
+    );
+
+    $array = $page->toArray();
+
+    expect($array)->toHaveKey('cover_image', 'header.png');
+});
+
+test('toArray includes a null cover_image when not set', function () {
+    $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
+
+    $page = new ContentPage(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown('Some content'),
+        created_at: $createdAt,
+    );
+
+    $array = $page->toArray();
+
+    expect($array)->toHaveKey('cover_image', null);
 });

@@ -41,6 +41,25 @@ test('saves and retrieves a page', function () {
         ->and((string) $retrieved->path)->toBe('test-page');
 });
 
+test('saves and retrieves a page cover image', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $page = new ContentPage(
+        title: 'Test Page',
+        path: new PagePath('test-page'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        cover_image: 'header.png',
+    );
+
+    $repository->save($page);
+
+    expect($repository->findByPath('test-page')->cover_image)->toBe('header.png');
+});
+
 test('lists all pages sorted by created_at descending', function () {
     Storage::fake('current');
     Storage::disk('current')->makeDirectory('pages');
