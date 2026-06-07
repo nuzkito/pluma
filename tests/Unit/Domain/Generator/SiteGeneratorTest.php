@@ -3,7 +3,6 @@
 use App\Domain\Generator\Page\Markdown;
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PagePath;
-use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -52,27 +51,16 @@ test('regenerates rss feed excluding pages with rss disabled', function () {
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
-    $repository = app(PageRepository::class);
 
-    $pageWithRss = new Page(
-        title: 'RSS Page',
-        path: new PagePath('rss-page'),
-        content: new Markdown('# RSS Page'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        rss: true,
+    Storage::disk('current')->put(
+        'pages/rss-page.md',
+        "---\ntitle: RSS Page\npath: rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\n---\n\n# RSS Page"
     );
-    $repository->save($pageWithRss);
 
-    $pageWithoutRss = new Page(
-        title: 'No RSS Page',
-        path: new PagePath('no-rss-page'),
-        content: new Markdown('# No RSS'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        rss: false,
+    Storage::disk('current')->put(
+        'pages/no-rss-page.md',
+        "---\ntitle: No RSS Page\npath: no-rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: false\n---\n\n# No RSS"
     );
-    $repository->save($pageWithoutRss);
 
     $generator->regenerateIndex();
 
@@ -89,16 +77,11 @@ test('does not generate rss feed when rss is disabled', function () {
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
-    $repository = app(PageRepository::class);
 
-    $repository->save(new Page(
-        title: 'RSS Page',
-        path: new PagePath('rss-page'),
-        content: new Markdown('# RSS Page'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        rss: true,
-    ));
+    Storage::disk('current')->put(
+        'pages/rss-page.md',
+        "---\ntitle: RSS Page\npath: rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\n---\n\n# RSS Page"
+    );
 
     $generator->regenerateIndex();
 
@@ -110,25 +93,16 @@ test('generates a tag page listing only the posts with that tag', function () {
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
-    $repository = app(PageRepository::class);
 
-    $repository->save(new Page(
-        title: 'Tagged Post',
-        path: new PagePath('tagged-post'),
-        content: new Markdown('# Tagged'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        tags: ['Laravel'],
-    ));
+    Storage::disk('current')->put(
+        'pages/tagged-post.md',
+        "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - Laravel\n---\n\n# Tagged"
+    );
 
-    $repository->save(new Page(
-        title: 'Other Post',
-        path: new PagePath('other-post'),
-        content: new Markdown('# Other'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        tags: ['PHP'],
-    ));
+    Storage::disk('current')->put(
+        'pages/other-post.md',
+        "---\ntitle: Other Post\npath: other-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - PHP\n---\n\n# Other"
+    );
 
     Storage::disk('current')->put(
         'pages/tags/laravel.tag.md',
@@ -171,21 +145,15 @@ test('deletes feed.xml when last rss page has rss disabled', function () {
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
-    $repository = app(PageRepository::class);
 
     $disk = Storage::disk('current');
     $disk->makeDirectory('site');
     $disk->put('site/feed.xml', '<rss>old feed</rss>');
 
-    $page = new Page(
-        title: 'Former RSS Page',
-        path: new PagePath('former-rss-page'),
-        content: new Markdown('# Former RSS'),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        rss: false,
+    $disk->put(
+        'pages/former-rss-page.md',
+        "---\ntitle: Former RSS Page\npath: former-rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: false\n---\n\n# Former RSS"
     );
-    $repository->save($page);
 
     $generator->regenerateIndex();
 

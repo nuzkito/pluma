@@ -26,27 +26,4 @@ class Page
     {
         return ! $this->isPublished();
     }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $metadata = [
-            'title' => $this->title,
-            'path' => (string) $this->path,
-            'created_at' => $this->created_at->toIso8601String(),
-            'rss' => $this->rss,
-        ];
-
-        if ($this->published_at) {
-            $metadata['published_at'] = $this->published_at->toIso8601String();
-        }
-
-        if (! empty($this->tags)) {
-            $metadata['tags'] = $this->tags;
-        }
-
-        return $metadata;
-    }
 }

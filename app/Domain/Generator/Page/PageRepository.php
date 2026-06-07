@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
-use Symfony\Component\Yaml\Yaml;
 
 class PageRepository
 {
@@ -85,46 +84,6 @@ class PageRepository
         return $this->tagPageFromFile($filePath);
     }
 
-    public function save(Page $page, ?string $oldPath = null): void
-    {
-        $this->disk->makeDirectory('pages');
-        $this->disk->makeDirectory('assets');
-
-        $newFilePath = "pages/{$page->path}.md";
-
-        if ($oldPath !== null && $oldPath !== $page->path->__toString()) {
-            $oldFilePath = "pages/$oldPath.md";
-
-            if ($this->disk->exists($oldFilePath)) {
-                $this->disk->move($oldFilePath, $newFilePath);
-            }
-
-            $this->moveAssetsDirectory($oldPath, $page->path);
-        }
-
-        $this->disk->put($newFilePath, $this->toMarkdownFile($page));
-    }
-
-    public function delete(string $path): void
-    {
-        $this->disk->delete("pages/$path.md");
-        $this->disk->deleteDirectory("assets/$path");
-    }
-
-    public function pathExists(string $path, ?string $excludePath = null): bool
-    {
-        return $this->all()
-            ->filter(fn (Page $page) => (string) $page->path === $path && (string) $page->path !== $excludePath)
-            ->isNotEmpty();
-    }
-
-    private function toMarkdownFile(Page $page): string
-    {
-        $yaml = Yaml::dump($page->toArray());
-
-        return "---\n$yaml---\n\n{$page->content}";
-    }
-
     private function fromFile(string $filePath): Page
     {
         $raw = $this->disk->get($filePath);
@@ -159,24 +118,5 @@ class PageRepository
             content: new Markdown($content),
             created_at: Carbon::parse($metadata['created_at']),
         );
-    }
-
-    private function moveAssetsDirectory(string $oldPath, PagePath $newPath): void
-    {
-        $oldAssetsDir = "assets/$oldPath";
-        $newAssetsDir = "assets/$newPath";
-
-        if (! $this->disk->exists($oldAssetsDir)) {
-            return;
-        }
-
-        $this->disk->makeDirectory($newAssetsDir);
-
-        foreach ($this->disk->files($oldAssetsDir) as $file) {
-            $filename = basename($file);
-            $this->disk->move($file, "$newAssetsDir/$filename");
-        }
-
-        $this->disk->deleteDirectory($oldAssetsDir);
     }
 }
