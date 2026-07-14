@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/pages');
 
+Route::livewire('/settings', 'pages::settings')->name('settings.index');
+
 Route::livewire('/pages/{path}/edit', 'pages::page.edit')->where('path', '.*')->name('pages.edit');
 
 Route::get('/pages/{path}/attachments/{filename}', ShowAttachmentController::class)->where('path', '.*')->name('attachments.show');

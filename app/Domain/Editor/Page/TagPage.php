@@ -17,7 +17,7 @@ class TagPage implements Page
     public static function create(string $title): self
     {
         return new TagPage(
-            path: new PagePath(config('pluma.tag_pages_path').'/'.Str::slug($title)),
+            path: new PagePath(config('pluma.tags.pages_path').'/'.Str::slug($title)),
             title: $title,
             content: new Markdown(''),
             created_at: Carbon::now(),

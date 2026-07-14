@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 test('creates a tag page file with the slug-based name', function () {
     initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     $action = app(CreateTagPage::class);
 
@@ -20,7 +20,7 @@ test('creates a tag page file with the slug-based name', function () {
 
 test('does not create a tag page when the option is disabled', function () {
     initializeSite();
-    config()->set('pluma.create_tag_pages', false);
+    config()->set('pluma.tags.create_pages', false);
 
     $action = app(CreateTagPage::class);
 
@@ -31,7 +31,7 @@ test('does not create a tag page when the option is disabled', function () {
 
 test('stores title, path and created_at in the frontmatter with empty content', function () {
     initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
@@ -54,7 +54,7 @@ test('stores title, path and created_at in the frontmatter with empty content', 
 
 test('does not overwrite an existing tag page', function () {
     initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     Storage::disk('current')->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nMy description");
 
@@ -67,7 +67,7 @@ test('does not overwrite an existing tag page', function () {
 
 test('generates the tag page in the static site with its posts', function () {
     $repository = initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     $repository->save(new ContentPage(
         title: 'Tagged Post',
@@ -90,7 +90,7 @@ test('generates the tag page in the static site with its posts', function () {
 
 test('does not show tag pages in the regular page listing', function () {
     $repository = initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     $action = app(CreateTagPage::class);
 

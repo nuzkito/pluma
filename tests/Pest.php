@@ -2,7 +2,7 @@
 
 use App\Domain\Editor\Page\PageRepository as EditorPageRepository;
 use App\Domain\Generator\Page\PageRepository as GeneratorPageRepository;
-use App\SiteConfigLoader;
+use App\Domain\Settings\SiteConfigLoader;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 

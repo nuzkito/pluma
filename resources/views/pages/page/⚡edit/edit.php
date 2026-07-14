@@ -4,13 +4,13 @@ use App\Domain\Editor\Attachment\AttachmentRepository;
 use App\Domain\Editor\Attachment\DeleteAttachment;
 use App\Domain\Editor\Attachment\UploadAttachment;
 use App\Domain\Editor\Page\AddPageTag;
+use App\Domain\Editor\Page\ChangePageCoverImage;
 use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\DeletePage;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\RemovePageTag;
-use App\Domain\Editor\Page\ChangePageCoverImage;
 use App\Domain\Editor\Page\UnpublishPage;
 use App\Domain\Editor\Page\UpdatePageContent;
 use App\Domain\Editor\Page\UpdatePagePath;
@@ -22,7 +22,8 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component {
+new class extends Component
+{
     use WithFileUploads;
 
     #[Validate('required|string|max:255')]
@@ -55,7 +56,7 @@ new class extends Component {
     {
         $page = $repository->findByPath($path);
 
-        if (!$page) {
+        if (! $page) {
             abort(404);
         }
 
@@ -95,7 +96,7 @@ new class extends Component {
                 $this->path = $page->path->__toString();
                 $this->dispatch('url-changed', $page->path->__toString());
             },
-            error: fn(string $error) => $this->addError('title', $error),
+            error: fn (string $error) => $this->addError('title', $error),
         );
     }
 
@@ -110,7 +111,7 @@ new class extends Component {
                 $this->dispatch('url-changed', $newPath);
                 $this->oldPath = $newPath;
             },
-            error: fn(string $error) => $this->addError('path', $error),
+            error: fn (string $error) => $this->addError('path', $error),
         );
     }
 
@@ -175,7 +176,7 @@ new class extends Component {
 
         $this->attachments = Arr::sort(
             array_values([...$this->attachments, ...$newAttachments]),
-            fn($attachment) => $attachment['filename'],
+            fn ($attachment) => $attachment['filename'],
         );
 
         $this->newAttachments = [];
@@ -185,7 +186,7 @@ new class extends Component {
     {
         $deleteAttachment->__invoke($this->path, $filename);
 
-        $this->attachments = array_values(array_filter($this->attachments, fn($a) => $a['filename'] !== $filename));
+        $this->attachments = array_values(array_filter($this->attachments, fn ($a) => $a['filename'] !== $filename));
 
         if ($this->cover_image === $filename) {
             $this->cover_image = null;

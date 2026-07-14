@@ -47,7 +47,7 @@ test('generates 404 without prior generatePage call', function () {
 
 test('regenerates rss feed excluding pages with rss disabled', function () {
     initializeSite();
-    config(['pluma.enable_rss' => true]);
+    config(['pluma.rss.enabled' => true]);
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
@@ -73,7 +73,7 @@ test('regenerates rss feed excluding pages with rss disabled', function () {
 
 test('does not generate rss feed when rss is disabled', function () {
     initializeSite();
-    config(['pluma.enable_rss' => false]);
+    config(['pluma.rss.enabled' => false]);
     chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);

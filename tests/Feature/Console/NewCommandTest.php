@@ -20,16 +20,16 @@ test('copies template files to the target directory', function () {
         ->and($disk->exists('resources/styles.css'))->toBeTrue()
         ->and($disk->exists('resources/scripts.js'))->toBeTrue()
         ->and($disk->exists('.gitignore'))->toBeTrue()
-        ->and($disk->exists('config.php'))->toBeTrue();
+        ->and($disk->exists('pluma-settings.json'))->toBeTrue();
 });
 
-test('creates config.php with correct content', function () {
+test('creates pluma-settings.json with correct content', function () {
     Storage::fake('current');
 
     artisan('pluma:new')
         ->assertSuccessful();
 
-    $configContent = Storage::disk('current')->get('config.php');
+    $configContent = Storage::disk('current')->get('pluma-settings.json');
 
     expect($configContent)->toContain('editor_url')
         ->and($configContent)->toContain('url');

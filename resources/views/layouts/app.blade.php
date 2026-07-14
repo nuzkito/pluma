@@ -20,8 +20,8 @@
         </flux:sidebar.brand>
 
         <flux:navlist>
-            <flux:navlist.item href="{{ route('pages.index') }}" wire:navigate>Pages</flux:navlist.item>
-            <livewire:create-draft variant="subtle" size="sm" class="w-full justify-start cursor-pointer" />
+            <flux:navlist.item href="{{ route('pages.index') }}" class="pl-10" wire:navigate>Pages</flux:navlist.item>
+            <flux:navlist.item href="{{ route('settings.index') }}" icon="cog-6-tooth" wire:navigate>Settings</flux:navlist.item>
         </flux:navlist>
 
         <flux:spacer />
@@ -31,6 +31,8 @@
     <flux:main class="flex-1 overflow-y-auto p-6">
         {{ $slot }}
     </flux:main>
+
+    <flux:toast />
 
     @livewireScripts
     @fluxScripts

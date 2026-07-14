@@ -98,7 +98,7 @@ test('adds tag to published page and regenerates site', function () {
 
 test('updates the static tag page when adding a tag to a published page', function () {
     $repository = initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     Storage::disk('current')->put(
         'pages/tags/laravel.tag.md',

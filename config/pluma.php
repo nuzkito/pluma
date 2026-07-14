@@ -5,9 +5,15 @@ return [
     'url' => 'http://localhost:8001',
     'title' => '',
     'description' => '',
-    'create_tag_pages' => false,
-    'tag_pages_path' => 'tags',
-    'enable_rss' => false,
-    'enable_embedded_content' => false,
-    'allowed_domains_for_embedding' => ['youtube.com', 'x.com', 'github.com'],
+    'tags' => [
+        'create_pages' => false,
+        'pages_path' => 'tags',
+    ],
+    'rss' => [
+        'enabled' => false,
+    ],
+    'embedding' => [
+        'enabled' => false,
+        'allowed_domains' => ['youtube.com', 'x.com', 'github.com'],
+    ],
 ];

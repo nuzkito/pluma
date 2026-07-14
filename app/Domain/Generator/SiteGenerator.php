@@ -159,7 +159,7 @@ class SiteGenerator
      */
     public function generateRss(Collection $pages): void
     {
-        if (! config('pluma.enable_rss')) {
+        if (! config('pluma.rss.enabled')) {
             return;
         }
 

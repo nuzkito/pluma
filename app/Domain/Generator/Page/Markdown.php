@@ -16,14 +16,14 @@ class Markdown
 
     public function html(): string
     {
-        if (! config('pluma.enable_embedded_content')) {
+        if (! config('pluma.embedding.enabled')) {
             return Str::of($this->value)->markdown();
         }
 
         return Str::of($this->value)->markdown([
             'embed' => [
                 'adapter' => app(YoutubeNocookieEmbedAdapter::class),
-                'allowed_domains' => config('pluma.allowed_domains_for_embedding'),
+                'allowed_domains' => config('pluma.embedding.allowed_domains'),
             ],
         ], [
             new EmbedExtension,

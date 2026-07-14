@@ -1,9 +1,8 @@
 <?php
 
 use App\Providers\AppServiceProvider;
-
-use Livewire\LivewireServiceProvider;
 use Flux\FluxServiceProvider;
+use Livewire\LivewireServiceProvider;
 
 return [
     LivewireServiceProvider::class,

@@ -17,7 +17,7 @@ test('converts markdown to html', function () {
 });
 
 test('embeds youtube urls as iframe', function () {
-    config(['pluma.enable_embedded_content' => true]);
+    config(['pluma.embedding.enabled' => true]);
 
     $fakeAdapter = new class implements EmbedAdapterInterface
     {
@@ -43,7 +43,7 @@ test('embeds youtube urls as iframe', function () {
 });
 
 test('does not embed content when embedded content is disabled', function () {
-    config(['pluma.enable_embedded_content' => false]);
+    config(['pluma.embedding.enabled' => false]);
 
     $markdown = new Markdown('https://www.youtube.com/watch?v=W7yxJiPnxpA');
     $result = $markdown->html();

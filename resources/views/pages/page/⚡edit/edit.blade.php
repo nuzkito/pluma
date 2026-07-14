@@ -28,7 +28,7 @@
 
     <flux:input type="text" id="path" wire:model.live.blur="path" label="Path" />
 
-    @if(config('pluma.enable_rss'))
+    @if(config('pluma.rss.enabled'))
         <flux:checkbox wire:model.live="rss" label="Include in RSS feed" />
     @endif
 

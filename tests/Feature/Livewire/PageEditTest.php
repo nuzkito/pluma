@@ -198,7 +198,7 @@ describe('tags', function () {
 
     test('adding a tag creates its tag page file', function () {
         $repository = initializeSite();
-        config()->set('pluma.create_tag_pages', true);
+        config()->set('pluma.tags.create_pages', true);
 
         $page = ContentPage::draft('Page Creating Tag', 'page-creating-tag');
         $repository->save($page);
@@ -212,7 +212,7 @@ describe('tags', function () {
 
     test('adding a tag does not create its tag page file when the option is disabled', function () {
         $repository = initializeSite();
-        config()->set('pluma.create_tag_pages', false);
+        config()->set('pluma.tags.create_pages', false);
 
         $page = ContentPage::draft('Page Without Tag Page', 'page-without-tag-page');
         $repository->save($page);
@@ -227,7 +227,7 @@ describe('tags', function () {
 
     test('adding a tag whose page already exists does not fail', function () {
         $repository = initializeSite();
-        config()->set('pluma.create_tag_pages', true);
+        config()->set('pluma.tags.create_pages', true);
 
         $page = ContentPage::draft('Page Reusing Tag', 'page-reusing-tag');
         $repository->save($page);
@@ -503,7 +503,7 @@ describe('rss checkbox', function () {
 
     test('shows the rss checkbox when rss is enabled', function () {
         $repository = initializeSite();
-        config(['pluma.enable_rss' => true]);
+        config(['pluma.rss.enabled' => true]);
 
         $page = new ContentPage(
             title: 'Page',
@@ -519,7 +519,7 @@ describe('rss checkbox', function () {
 
     test('hides the rss checkbox when rss is disabled', function () {
         $repository = initializeSite();
-        config(['pluma.enable_rss' => false]);
+        config(['pluma.rss.enabled' => false]);
 
         $page = new ContentPage(
             title: 'Page',

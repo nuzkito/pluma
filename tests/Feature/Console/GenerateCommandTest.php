@@ -42,7 +42,7 @@ test('generates the static site', function () {
 
 test('generates RSS feed when pages have rss enabled', function () {
     $repository = initializeSite();
-    config(['pluma.enable_rss' => true]);
+    config(['pluma.rss.enabled' => true]);
 
     $repository->save(new ContentPage(
         title: 'Hello World',
@@ -113,7 +113,7 @@ test('generates tag pages with their posts', function () {
 
 test('links page tags to their tag page when create_tag_pages is enabled', function () {
     $repository = initializeSite();
-    config()->set('pluma.create_tag_pages', true);
+    config()->set('pluma.tags.create_pages', true);
 
     $repository->save(new ContentPage(
         title: 'Hello World',
@@ -134,7 +134,7 @@ test('links page tags to their tag page when create_tag_pages is enabled', funct
 
 test('does not link page tags when create_tag_pages is disabled', function () {
     $repository = initializeSite();
-    config()->set('pluma.create_tag_pages', false);
+    config()->set('pluma.tags.create_pages', false);
 
     $repository->save(new ContentPage(
         title: 'Hello World',

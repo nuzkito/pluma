@@ -41,7 +41,7 @@ class PageRepository
      */
     public function tags(): Collection
     {
-        $tagsDirectory = 'pages/'.config('pluma.tag_pages_path');
+        $tagsDirectory = 'pages/'.config('pluma.tags.pages_path');
 
         if (! $this->disk->exists($tagsDirectory)) {
             return collect();

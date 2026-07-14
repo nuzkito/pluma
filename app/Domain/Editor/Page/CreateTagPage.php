@@ -13,7 +13,7 @@ class CreateTagPage
 
     public function __invoke(string $tagName): void
     {
-        if (! config('pluma.create_tag_pages')) {
+        if (! config('pluma.tags.create_pages')) {
             return;
         }
 
