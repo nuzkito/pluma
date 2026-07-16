@@ -64,3 +64,20 @@ By default, urls are:
 You can config urls and ports in `config.php` file.
 
 Any changes you make to pages with the editor are automatically rebuilt and reflected in the preview.
+
+## Local development with Docker
+
+To try Pluma while developing it, run:
+
+```bash
+docker compose up --build
+```
+
+This scaffolds a test site with `pluma new` inside the container and starts `pluma serve`:
+
+- Editor: http://localhost:8000
+- Site preview: http://localhost:8001
+
+The repository is bind-mounted into the container, so code changes are picked up on the next request. Frontend changes require `npm run build` (or a running `npm run dev`) on the host.
+
+The test site lives only inside the container: it survives `docker compose stop`/`start` and is reset to a fresh scaffold when the container is recreated (e.g. after `--build` or `--force-recreate`).

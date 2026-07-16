@@ -13,7 +13,7 @@ use ReflectionClass;
 
 class ServeCommand extends Command
 {
-    protected $signature = 'pluma:serve';
+    protected $signature = 'pluma:serve {--host=localhost : The host both servers bind to}';
 
     protected $description = 'Generate the site and start the development server';
 
@@ -29,23 +29,21 @@ class ServeCommand extends Command
         $this->info('Site generated.');
 
         $path = $disk->path('/');
-        $editorUrl = config('pluma.editor_url');
-        $editorHost = parse_url($editorUrl, PHP_URL_HOST) ?? 'localhost';
-        $editorPort = parse_url($editorUrl, PHP_URL_PORT) ?? 8000;
-        $previewUrl = config('pluma.url');
-        $previewHost = parse_url($previewUrl, PHP_URL_HOST) ?? 'localhost';
-        $previewPort = parse_url($previewUrl, PHP_URL_PORT) ?? 8001;
+        $host = $this->option('host');
+        $editorPort = parse_url(config('pluma.editor_url'), PHP_URL_PORT) ?? 8000;
+        $previewPort = parse_url(config('pluma.url'), PHP_URL_PORT) ?? 8001;
         $siteDirectory = $disk->path('site');
+        $previewServerPath = base_path('resources/preview-server.php');
 
         $autoloadPath = dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2).'/autoload.php';
 
         Process::pool(function (Pool $pool) use (
             $path,
-            $editorHost,
+            $host,
             $editorPort,
-            $previewHost,
             $previewPort,
             $siteDirectory,
+            $previewServerPath,
             $autoloadPath,
         ) {
             $pool->path(base_path())
@@ -55,10 +53,10 @@ class ServeCommand extends Command
                     'AUTOLOAD_PATH' => $autoloadPath,
                 ])
                 ->tty(Process::supportsTty())
-                ->command("php artisan serve --host=$editorHost --port=$editorPort --no-reload");
+                ->command("php artisan serve --host=$host --port=$editorPort --no-reload");
             $pool->forever()
                 ->tty(Process::supportsTty())
-                ->command("php -S $previewHost:$previewPort -t $siteDirectory");
+                ->command("php -S $host:$previewPort -t $siteDirectory $previewServerPath");
         })->start(function (string $type, string $output, int $key) {
             echo $output;
         })->wait();
