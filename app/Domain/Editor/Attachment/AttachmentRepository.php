@@ -33,6 +33,15 @@ class AttachmentRepository
         return true;
     }
 
+    public function pruneEmptyDirectory(PagePath $pagePath): void
+    {
+        $directory = "assets/{$pagePath}";
+
+        if ($this->disk->exists($directory) && empty($this->disk->files($directory))) {
+            $this->disk->deleteDirectory($directory);
+        }
+    }
+
     public function exists(PagePath $pagePath, string $filename): bool
     {
         return $this->disk->exists($this->assetPath($pagePath, $filename));

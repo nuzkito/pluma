@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Storage;
 
 test('publish page sets published_at and syncs site generation', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
@@ -23,7 +22,6 @@ test('publish page sets published_at and syncs site generation', function () {
 
 test('publish page always syncs site generation', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);

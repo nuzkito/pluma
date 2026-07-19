@@ -8,13 +8,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
-afterEach(function () {
-    chdir(base_path());
-});
-
 test('generates index without prior generatePage call', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -36,7 +31,6 @@ test('generates index without prior generatePage call', function () {
 
 test('generates 404 without prior generatePage call', function () {
     initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -48,7 +42,6 @@ test('generates 404 without prior generatePage call', function () {
 test('regenerates rss feed excluding pages with rss disabled', function () {
     initializeSite();
     config(['pluma.rss.enabled' => true]);
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -74,7 +67,6 @@ test('regenerates rss feed excluding pages with rss disabled', function () {
 test('does not generate rss feed when rss is disabled', function () {
     initializeSite();
     config(['pluma.rss.enabled' => false]);
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -90,7 +82,6 @@ test('does not generate rss feed when rss is disabled', function () {
 
 test('generates a tag page listing only the posts with that tag', function () {
     initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -123,7 +114,6 @@ test('generates a tag page listing only the posts with that tag', function () {
 
 test('does not render a description when the tag page has empty content', function () {
     initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 
@@ -140,9 +130,23 @@ test('does not render a description when the tag page has empty content', functi
         ->and($disk->get('site/tags/laravel/index.html'))->not->toContain('<div>');
 });
 
+test('removes a single file from a generated page', function () {
+    initializeSite();
+
+    $generator = app(SiteGenerator::class);
+
+    $disk = Storage::disk('current');
+    $disk->put('site/my-page/index.html', '<html></html>');
+    $disk->put('site/my-page/photo.png', 'binary');
+
+    $generator->removePageFile('my-page', 'photo.png');
+
+    expect($disk->exists('site/my-page/photo.png'))->toBeFalse()
+        ->and($disk->exists('site/my-page/index.html'))->toBeTrue();
+});
+
 test('deletes feed.xml when last rss page has rss disabled', function () {
     initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $generator = app(SiteGenerator::class);
 

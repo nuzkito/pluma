@@ -52,7 +52,7 @@ enum SettingType: string
             self::Integer => (int) $value,
             self::DateTime => Carbon::parse($value)->toIso8601String(),
             self::List => Collection::make(preg_split('/\r\n|\r|\n/', (string) $value))
-                ->map(trim(...))
+                ->map(fn (string $line): string => trim($line))
                 ->filter()
                 ->values()
                 ->all(),

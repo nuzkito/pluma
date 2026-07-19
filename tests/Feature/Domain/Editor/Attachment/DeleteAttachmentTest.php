@@ -141,6 +141,7 @@ test('regenerates the published page when its cover image is deleted', function 
 
     $siteGenerator = mock(SiteGenerator::class, function ($mock) {
         $mock->shouldReceive('generatePage')->once()->with('test-page');
+        $mock->shouldReceive('removePageFile')->once()->with('test-page', 'header.png');
     });
 
     $deleteAttachment = new DeleteAttachment(
@@ -171,6 +172,7 @@ test('does not regenerate the page when a non-cover attachment is deleted', func
 
     $siteGenerator = mock(SiteGenerator::class, function ($mock) {
         $mock->shouldNotReceive('generatePage');
+        $mock->shouldReceive('removePageFile')->once()->with('test-page', 'other.txt');
     });
 
     $deleteAttachment = new DeleteAttachment(

@@ -17,7 +17,7 @@ test('error returns true for isError', function () {
 test('error unwrap throws RuntimeException with error message', function () {
     $error = new Error('conflict detected');
     $error->unwrap();
-})->throws(RuntimeException::class, 'Called `Result::unwrap()` on an `Error` value: %sconflict detected');
+})->throws(RuntimeException::class, 'Called `Result::unwrap()` on an `Error` value: conflict detected');
 
 test('error unwrapError returns the stored error string', function () {
     $error = new Error('not found');

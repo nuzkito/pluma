@@ -20,7 +20,6 @@ test('delete page removes it from repository', function () {
 
 test('delete page removes generated site files', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
@@ -37,7 +36,6 @@ test('delete page removes generated site files', function () {
 
 test('delete page regenerates index when deleting published page', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $page1 = ContentPage::draft('First Page', 'first-page');
     $repository->save($page1);
@@ -60,7 +58,6 @@ test('delete page regenerates index when deleting published page', function () {
 
 test('delete page does not touch site files when deleting draft', function () {
     $repository = initializeSite();
-    chdir(Storage::disk('current')->path('/'));
 
     $page = ContentPage::draft('Draft Page', 'draft-page');
     $repository->save($page);

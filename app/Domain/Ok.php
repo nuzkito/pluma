@@ -31,7 +31,7 @@ final readonly class Ok implements Result
     /** @throws RuntimeException */
     public function unwrapError(): string
     {
-        throw new RuntimeException("Called `Result::unwrapError()` on an `Ok` value: {$this->value}");
+        throw new RuntimeException('Called `Result::unwrapError()` on an `Ok` value: '.get_debug_type($this->value));
     }
 
     public function match(callable $ok, callable $error): mixed

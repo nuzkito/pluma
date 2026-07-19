@@ -24,7 +24,12 @@ test('ok unwrap returns the stored value', function () {
 test('ok unwrapError throws RuntimeException', function () {
     $ok = new Ok('success');
     $ok->unwrapError();
-})->throws(RuntimeException::class, 'Called `Result::unwrapError()` on an `Ok` value: success');
+})->throws(RuntimeException::class, 'Called `Result::unwrapError()` on an `Ok` value: string');
+
+test('ok unwrapError throws RuntimeException for array value', function () {
+    $ok = new Ok(['key' => 'value']);
+    $ok->unwrapError();
+})->throws(RuntimeException::class, 'Called `Result::unwrapError()` on an `Ok` value: array');
 
 test('ok match executes ok callback with stored value', function () {
     $ok = new Ok('hello');

@@ -62,6 +62,34 @@ test('returns false when deleting non-existent attachment', function () {
     expect($result)->toBeFalse();
 });
 
+test('prunes the assets directory when it is empty', function () {
+    initializeSite();
+    $attachments = new AttachmentRepository;
+    $page = ContentPage::draft('Test Page', 'test-page');
+    app(PageRepository::class)->save($page);
+
+    $disk = Storage::disk('current');
+    $disk->makeDirectory("assets/{$page->path}");
+
+    $attachments->pruneEmptyDirectory($page->path);
+
+    expect($disk->exists("assets/{$page->path}"))->toBeFalse();
+});
+
+test('does not prune the assets directory when it still has files', function () {
+    initializeSite();
+    $attachments = new AttachmentRepository;
+    $page = ContentPage::draft('Test Page', 'test-page');
+    app(PageRepository::class)->save($page);
+
+    $disk = Storage::disk('current');
+    $disk->put("assets/{$page->path}/file.txt", 'content');
+
+    $attachments->pruneEmptyDirectory($page->path);
+
+    expect($disk->exists("assets/{$page->path}/file.txt"))->toBeTrue();
+});
+
 test('checks if attachment exists', function () {
     initializeSite();
     $attachments = new AttachmentRepository;

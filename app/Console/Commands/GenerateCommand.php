@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
@@ -15,8 +14,7 @@ class GenerateCommand extends Command
 
     public function handle(): int
     {
-        $repository = new PageRepository;
-        $generator = new SiteGenerator($repository);
+        $generator = $this->laravel->make(SiteGenerator::class);
 
         $this->info('Generating static site...');
 

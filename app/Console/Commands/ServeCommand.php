@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
@@ -21,8 +20,7 @@ class ServeCommand extends Command
     {
         $disk = Storage::disk('current');
 
-        $repository = new PageRepository;
-        $generator = new SiteGenerator($repository);
+        $generator = $this->laravel->make(SiteGenerator::class);
 
         $this->info('Generating static site...');
         $generator->generateAll();

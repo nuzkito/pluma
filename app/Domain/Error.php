@@ -21,7 +21,7 @@ final readonly class Error implements Result
     /** @throws RuntimeException */
     public function unwrap(): mixed
     {
-        throw new RuntimeException("Called `Result::unwrap()` on an `Error` value: %s{$this->error}");
+        throw new RuntimeException("Called `Result::unwrap()` on an `Error` value: {$this->error}");
     }
 
     public function unwrapError(): string

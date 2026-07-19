@@ -5,7 +5,6 @@ namespace App\Domain\Editor\Attachment;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
-use Illuminate\Support\Facades\Storage;
 
 class DeleteAttachment
 {
@@ -37,15 +36,10 @@ class DeleteAttachment
             }
         }
 
-        $disk = Storage::disk('current');
-        $assetsDir = "assets/{$page->path}";
-
-        if ($disk->exists($assetsDir) && empty($disk->files($assetsDir))) {
-            $disk->deleteDirectory($assetsDir);
-        }
+        $this->attachmentRepository->pruneEmptyDirectory($page->path);
 
         if ($page->isPublished()) {
-            $disk->delete("site/{$page->path}/$filename");
+            $this->siteGenerator->removePageFile((string) $page->path, $filename);
         }
     }
 }

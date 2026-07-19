@@ -21,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->singletonIf(
+            SiteConfigLoader::class,
+            fn () => new SiteConfigLoader(Storage::disk('current')),
+        );
+
+        $this->app->singletonIf(
             SiteGenerator::class,
             fn () => new SiteGenerator(
                 app(PageRepository::class),
@@ -45,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $loader = new SiteConfigLoader(Storage::disk('current'));
-        $loader->load();
+        $this->app->make(SiteConfigLoader::class)->load();
     }
 }

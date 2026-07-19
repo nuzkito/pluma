@@ -5,6 +5,7 @@ namespace App\Domain\Generator;
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\Page\TagPage;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Factory;
@@ -12,14 +13,21 @@ use Illuminate\View\FileViewFinder;
 
 class SiteGenerator
 {
+    private const string SITE_DIRECTORY = 'site';
+
+    private const string ASSETS_DIRECTORY = 'assets';
+
+    private Filesystem $disk;
+
     public function __construct(
         private PageRepository $pageRepository,
-    ) {}
+    ) {
+        $this->disk = Storage::disk('current');
+    }
 
     public function generateAll(): void
     {
-        $this->ensureSiteDirectory();
-        $this->registerViewPaths();
+        $this->prepare();
 
         $pages = $this->pageRepository->published();
 
@@ -38,9 +46,9 @@ class SiteGenerator
             $this->generateRss($pages->filter(fn ($page) => $page->rss));
         }
 
-        foreach (Storage::disk('current')->allFiles('resources') as $file) {
-            $destination = 'site/'.substr($file, strlen('resources/'));
-            Storage::disk('current')->copy($file, $destination);
+        foreach ($this->disk->allFiles('resources') as $file) {
+            $destination = self::SITE_DIRECTORY.'/'.substr($file, strlen('resources/'));
+            $this->disk->copy($file, $destination);
         }
     }
 
@@ -68,26 +76,24 @@ class SiteGenerator
 
     private function writePage(Page $page): void
     {
-        $this->ensureSiteDirectory();
-        $this->registerViewPaths();
+        $this->prepare();
 
-        $disk = Storage::disk('current');
-        $pagePath = "site/{$page->path}";
+        $pagePath = self::SITE_DIRECTORY."/{$page->path}";
 
-        $disk->makeDirectory($pagePath);
+        $this->disk->makeDirectory($pagePath);
 
         $html = $this->renderView('page', [
             'page' => $page,
             'baseUrl' => $this->baseUrl(),
         ]);
 
-        $disk->put("$pagePath/index.html", $html);
+        $this->disk->put("$pagePath/index.html", $html);
 
-        $attachmentsPath = "assets/{$page->path}";
-        if ($disk->exists($attachmentsPath)) {
-            foreach ($disk->files($attachmentsPath) as $file) {
+        $attachmentsPath = self::ASSETS_DIRECTORY."/{$page->path}";
+        if ($this->disk->exists($attachmentsPath)) {
+            foreach ($this->disk->files($attachmentsPath) as $file) {
                 $filename = basename($file);
-                $disk->copy($file, "$pagePath/$filename");
+                $this->disk->copy($file, "$pagePath/$filename");
             }
         }
     }
@@ -97,17 +103,15 @@ class SiteGenerator
      */
     private function writeTagPage(TagPage $tag, Collection $publishedPages): void
     {
-        $this->ensureSiteDirectory();
-        $this->registerViewPaths();
+        $this->prepare();
 
         $posts = $publishedPages
             ->filter(fn (Page $page) => in_array($tag->title, $page->tags, true))
             ->values();
 
-        $disk = Storage::disk('current');
-        $tagPath = "site/{$tag->path}";
+        $tagPath = self::SITE_DIRECTORY."/{$tag->path}";
 
-        $disk->makeDirectory($tagPath);
+        $this->disk->makeDirectory($tagPath);
 
         $html = $this->renderView('tag', [
             'tag' => $tag,
@@ -115,7 +119,7 @@ class SiteGenerator
             'baseUrl' => $this->baseUrl(),
         ]);
 
-        $disk->put("$tagPath/index.html", $html);
+        $this->disk->put("$tagPath/index.html", $html);
     }
 
     /**
@@ -123,8 +127,7 @@ class SiteGenerator
      */
     public function generateIndex(Collection $pages): void
     {
-        $this->ensureSiteDirectory();
-        $this->registerViewPaths();
+        $this->prepare();
 
         $html = $this->renderView('index', [
             'pages' => $pages,
@@ -133,7 +136,7 @@ class SiteGenerator
             'description' => $this->siteDescription(),
         ]);
 
-        Storage::disk('current')->put('site/index.html', $html);
+        $this->disk->put(self::SITE_DIRECTORY.'/index.html', $html);
     }
 
     /**
@@ -141,8 +144,7 @@ class SiteGenerator
      */
     public function generate404(Collection $pages): void
     {
-        $this->ensureSiteDirectory();
-        $this->registerViewPaths();
+        $this->prepare();
 
         $html = $this->renderView('404', [
             'pages' => $pages,
@@ -151,7 +153,7 @@ class SiteGenerator
             'description' => $this->siteDescription(),
         ]);
 
-        Storage::disk('current')->put('site/404.html', $html);
+        $this->disk->put(self::SITE_DIRECTORY.'/404.html', $html);
     }
 
     /**
@@ -170,7 +172,7 @@ class SiteGenerator
             'description' => $this->siteDescription(),
         ]);
 
-        Storage::disk('current')->put('site/feed.xml', $xml);
+        $this->disk->put(self::SITE_DIRECTORY.'/feed.xml', $xml);
     }
 
     public function regenerateIndex(): void
@@ -183,27 +185,38 @@ class SiteGenerator
         if ($rssPages->isNotEmpty()) {
             $this->generateRss($rssPages);
         } else {
-            Storage::disk('current')->delete('site/feed.xml');
+            $this->disk->delete(self::SITE_DIRECTORY.'/feed.xml');
         }
     }
 
     public function removePage(string $path): void
     {
-        $pagePath = "site/{$path}";
+        $pagePath = self::SITE_DIRECTORY."/{$path}";
 
-        if (Storage::disk('current')->exists($pagePath)) {
-            Storage::disk('current')->deleteDirectory($pagePath);
+        if ($this->disk->exists($pagePath)) {
+            $this->disk->deleteDirectory($pagePath);
         }
+    }
+
+    public function removePageFile(string $path, string $filename): void
+    {
+        $this->disk->delete(self::SITE_DIRECTORY."/$path/$filename");
+    }
+
+    private function prepare(): void
+    {
+        $this->ensureSiteDirectory();
+        $this->registerViewPaths();
     }
 
     private function ensureSiteDirectory(): void
     {
-        Storage::disk('current')->makeDirectory('site');
+        $this->disk->makeDirectory(self::SITE_DIRECTORY);
     }
 
     private function registerViewPaths(): void
     {
-        $viewsPath = Storage::disk('current')->path('views');
+        $viewsPath = $this->disk->path('views');
 
         /** @var Factory $viewFactory */
         $viewFactory = app('view');
