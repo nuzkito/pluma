@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Domain\Editor\Attachment;
+namespace App\Domain\Editor\Asset;
 
 use App\Domain\Editor\Page\PagePath;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 
-class AttachmentRepository
+class AssetRepository
 {
     private Filesystem $disk;
 
@@ -15,14 +15,14 @@ class AttachmentRepository
         $this->disk = Storage::disk('current');
     }
 
-    public function save(NewAttachment $attachment): void
+    public function save(NewAsset $asset): void
     {
-        $this->disk->putFileAs("assets/{$attachment->pagePath}", $attachment->file, $attachment->name);
+        $this->disk->putFileAs("assets/{$asset->pagePath}", $asset->file, $asset->name);
     }
 
-    public function delete(Attachment $attachment): bool
+    public function delete(Asset $asset): bool
     {
-        $assetPath = "assets/{$attachment->pagePath}/{$attachment->name}";
+        $assetPath = "assets/{$asset->pagePath}/{$asset->name}";
 
         if (! $this->disk->exists($assetPath)) {
             return false;
@@ -57,22 +57,22 @@ class AttachmentRepository
      */
     public function all(PagePath $pagePath): array
     {
-        $attachmentsPath = "assets/{$pagePath}";
+        $assetsPath = "assets/{$pagePath}";
 
-        if (! $this->disk->exists($attachmentsPath)) {
+        if (! $this->disk->exists($assetsPath)) {
             return [];
         }
 
-        $attachments = [];
+        $assets = [];
 
-        foreach ($this->disk->files($attachmentsPath) as $file) {
-            $attachments[] = [
+        foreach ($this->disk->files($assetsPath) as $file) {
+            $assets[] = [
                 'filename' => basename($file),
-                'url' => route('attachments.show', [$pagePath->__toString(), basename($file)]),
+                'url' => route('assets.show', [$pagePath->__toString(), basename($file)]),
             ];
         }
 
-        return $attachments;
+        return $assets;
     }
 
     private function assetPath(PagePath $pagePath, string $filename): string

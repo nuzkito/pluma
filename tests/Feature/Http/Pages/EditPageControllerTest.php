@@ -34,7 +34,7 @@ test('shows the edit page for a nested page', function () {
         ->assertSee('Nested Page');
 });
 
-test('shows existing attachments on edit page', function () {
+test('shows existing assets on edit page', function () {
     $repository = initializeSite();
 
     $page = ContentPage::draft('Test Page', 'test-page');
@@ -50,7 +50,7 @@ test('shows existing attachments on edit page', function () {
         ->assertSee('document.pdf');
 });
 
-test('shows edit page without attachments when none exist', function () {
+test('shows edit page without assets when none exist', function () {
     $repository = initializeSite();
 
     $page = ContentPage::draft('Test Page', 'test-page');

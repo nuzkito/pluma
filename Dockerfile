@@ -21,7 +21,7 @@ RUN php /pluma/bin/pluma new
 # Final stage: only PHP and the scaffolded site. The application code,
 # vendor/, .env and public/build come from the bind mount at runtime.
 # Alpine's php84 packages with just the extensions Laravel needs (plus gd,
-# required to optimize attached images at generation time) are still much
+# required to optimize image assets at generation time) are still much
 # smaller than the official monolithic PHP build.
 FROM alpine:3.22
 

@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Domain\Editor\Attachment;
+namespace App\Domain\Editor\Asset;
 
 use App\Domain\Editor\Page\PagePath;
 use Illuminate\Http\UploadedFile;
 
-class UploadAttachment
+class UploadAsset
 {
     public function __construct(
-        private AttachmentRepository $attachmentRepo,
+        private AssetRepository $assetRepo,
     ) {}
 
     /**
@@ -20,7 +20,7 @@ class UploadAttachment
         return array_values(array_map(function (UploadedFile $file) use ($pagePath) {
             $filename = $file->getClientOriginalName();
 
-            $this->attachmentRepo->save(new NewAttachment(
+            $this->assetRepo->save(new NewAsset(
                 pagePath: new PagePath($pagePath),
                 name: $filename,
                 file: $file,
@@ -28,7 +28,7 @@ class UploadAttachment
 
             return [
                 'filename' => $filename,
-                'url' => route('attachments.show', [$pagePath, $filename]),
+                'url' => route('assets.show', [$pagePath, $filename]),
             ];
         }, $files));
     }

@@ -90,9 +90,9 @@ class SiteGenerator
 
         $this->disk->put("$pagePath/index.html", $html);
 
-        $attachmentsPath = self::ASSETS_DIRECTORY."/{$page->path}";
-        if ($this->disk->exists($attachmentsPath)) {
-            foreach ($this->disk->files($attachmentsPath) as $file) {
+        $assetsPath = self::ASSETS_DIRECTORY."/{$page->path}";
+        if ($this->disk->exists($assetsPath)) {
+            foreach ($this->disk->files($assetsPath) as $file) {
                 $filename = basename($file);
                 $this->assetProcessor->copy($file, "$pagePath/$filename");
             }

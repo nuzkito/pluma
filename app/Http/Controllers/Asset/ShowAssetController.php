@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Attachment;
+namespace App\Http\Controllers\Asset;
 
-use App\Domain\Editor\Attachment\AttachmentRepository;
+use App\Domain\Editor\Asset\AssetRepository;
 use App\Domain\Editor\Page\PageRepository;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class ShowAttachmentController
+class ShowAssetController
 {
     public function __invoke(
         PageRepository $repository,
-        AttachmentRepository $attachments,
+        AssetRepository $assets,
         string $path,
         string $filename,
     ): BinaryFileResponse {
@@ -20,10 +20,10 @@ class ShowAttachmentController
             abort(404);
         }
 
-        if (! $attachments->exists($page->path, $filename)) {
+        if (! $assets->exists($page->path, $filename)) {
             abort(404);
         }
 
-        return response()->file($attachments->path($page->path, $filename));
+        return response()->file($assets->path($page->path, $filename));
     }
 }

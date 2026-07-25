@@ -155,7 +155,7 @@ test('does not link page tags when create_tag_pages is disabled', function () {
         ->not->toContain('/tags/laravel/');
 });
 
-test('optimizes attached images and copies the rest of the attachments when generating', function () {
+test('optimizes image assets and copies the rest of the assets when generating', function () {
     $repository = initializeSite();
 
     $repository->save(new ContentPage(

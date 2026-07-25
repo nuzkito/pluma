@@ -1,8 +1,8 @@
 <?php
 
-use App\Domain\Editor\Attachment\AttachmentRepository;
-use App\Domain\Editor\Attachment\DeleteAttachment;
-use App\Domain\Editor\Attachment\UploadAttachment;
+use App\Domain\Editor\Asset\AssetRepository;
+use App\Domain\Editor\Asset\DeleteAsset;
+use App\Domain\Editor\Asset\UploadAsset;
 use App\Domain\Editor\Page\AddPageTag;
 use App\Domain\Editor\Page\ChangePageCoverImage;
 use App\Domain\Editor\Page\ContentPage;
@@ -43,16 +43,16 @@ new class extends Component
 
     public ?string $cover_image = null;
 
-    public array $attachments;
+    public array $assets;
 
     public string $oldPath;
 
     public array $availableTags = [];
 
-    #[Validate(['newAttachments.*' => 'file|max:20480'])]
-    public array $newAttachments = [];
+    #[Validate(['newAssets.*' => 'file|max:20480'])]
+    public array $newAssets = [];
 
-    public function mount(PageRepository $repository, AttachmentRepository $attachmentRepo, string $path)
+    public function mount(PageRepository $repository, AssetRepository $assetRepo, string $path)
     {
         $page = $repository->findByPath($path);
 
@@ -68,7 +68,7 @@ new class extends Component
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
         $this->tags = $page->tags;
         $this->cover_image = $page->cover_image;
-        $this->attachments = $attachmentRepo->all($page->path);
+        $this->assets = $assetRepo->all($page->path);
         $this->availableTags = $repository->all()
             ->flatMap(fn (ContentPage $p) => $p->tags)
             ->unique()
@@ -77,7 +77,7 @@ new class extends Component
             ->all();
     }
 
-    public function render(PageRepository $repository, AttachmentRepository $attachmentRepo)
+    public function render(PageRepository $repository, AssetRepository $assetRepo)
     {
         return $this->view([
             'page' => $repository->findByPath($this->path),
@@ -170,23 +170,23 @@ new class extends Component
         return redirect()->route('pages.index');
     }
 
-    public function updatedNewAttachments(UploadAttachment $uploadAttachment)
+    public function updatedNewAssets(UploadAsset $uploadAsset)
     {
-        $newAttachments = $uploadAttachment->__invoke($this->path, $this->newAttachments);
+        $newAssets = $uploadAsset->__invoke($this->path, $this->newAssets);
 
-        $this->attachments = Arr::sort(
-            array_values([...$this->attachments, ...$newAttachments]),
-            fn ($attachment) => $attachment['filename'],
+        $this->assets = Arr::sort(
+            array_values([...$this->assets, ...$newAssets]),
+            fn ($asset) => $asset['filename'],
         );
 
-        $this->newAttachments = [];
+        $this->newAssets = [];
     }
 
-    public function deleteAttachment(DeleteAttachment $deleteAttachment, string $filename)
+    public function deleteAsset(DeleteAsset $deleteAsset, string $filename)
     {
-        $deleteAttachment->__invoke($this->path, $filename);
+        $deleteAsset->__invoke($this->path, $filename);
 
-        $this->attachments = array_values(array_filter($this->attachments, fn ($a) => $a['filename'] !== $filename));
+        $this->assets = array_values(array_filter($this->assets, fn ($a) => $a['filename'] !== $filename));
 
         if ($this->cover_image === $filename) {
             $this->cover_image = null;

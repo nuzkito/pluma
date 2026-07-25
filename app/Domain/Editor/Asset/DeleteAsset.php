@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Domain\Editor\Attachment;
+namespace App\Domain\Editor\Asset;
 
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 
-class DeleteAttachment
+class DeleteAsset
 {
     public function __construct(
         private PageRepository $pageRepository,
-        private AttachmentRepository $attachmentRepository,
+        private AssetRepository $assetRepository,
         private SiteGenerator $siteGenerator,
     ) {}
 
@@ -22,7 +22,7 @@ class DeleteAttachment
             return;
         }
 
-        $this->attachmentRepository->delete(new Attachment(
+        $this->assetRepository->delete(new Asset(
             pagePath: new PagePath($pagePath),
             name: $filename,
         ));
@@ -36,7 +36,7 @@ class DeleteAttachment
             }
         }
 
-        $this->attachmentRepository->pruneEmptyDirectory($page->path);
+        $this->assetRepository->pruneEmptyDirectory($page->path);
 
         if ($page->isPublished()) {
             $this->siteGenerator->removePageFile((string) $page->path, $filename);

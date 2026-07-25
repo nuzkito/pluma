@@ -679,15 +679,15 @@ describe('content', function () {
     });
 });
 
-describe('attachments', function () {
-    test('edit page shows existing attachments in list', function () {
+describe('assets', function () {
+    test('edit page shows existing assets in list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
 
         $page = new ContentPage(
-            title: 'Page With Attachments',
-            path: new PagePath('with-attachments'),
+            title: 'Page With Assets',
+            path: new PagePath('with-assets'),
             content: new Markdown('# Content'),
             created_at: Carbon::now(),
         );
@@ -698,18 +698,18 @@ describe('attachments', function () {
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
             ->tap(function ($component) {
-                expect($component->attachments)->toHaveCount(2);
-                expect(collect($component->attachments)->pluck('filename')->all())->toEqualCanonicalizing(['file1.txt', 'image.png']);
+                expect($component->assets)->toHaveCount(2);
+                expect(collect($component->assets)->pluck('filename')->all())->toEqualCanonicalizing(['file1.txt', 'image.png']);
 
-                foreach ($component->attachments as $attachment) {
-                    expect($attachment)->toHaveKeys(['filename', 'url']);
+                foreach ($component->assets as $asset) {
+                    expect($asset)->toHaveKeys(['filename', 'url']);
                 }
             });
 
         Carbon::setTestNow(null);
     });
 
-    test('uploading a file adds it to attachments list', function () {
+    test('uploading a file adds it to assets list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
@@ -725,15 +725,15 @@ describe('attachments', function () {
         $file = UploadedFile::fake()->createWithContent('test.txt', 'hello world');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->set('newAttachments', [$file])
-            ->assertSet('newAttachments', []);
+            ->set('newAssets', [$file])
+            ->assertSet('newAssets', []);
 
         expect(Storage::disk('current')->exists("assets/{$page->path}/test.txt"))->toBeTrue();
 
         Carbon::setTestNow(null);
     });
 
-    test('uploading multiple files adds all to attachments list', function () {
+    test('uploading multiple files adds all to assets list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
@@ -750,8 +750,8 @@ describe('attachments', function () {
         $file2 = UploadedFile::fake()->createWithContent('doc2.txt', 'content2');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->set('newAttachments', [$file1, $file2])
-            ->assertSet('newAttachments', []);
+            ->set('newAssets', [$file1, $file2])
+            ->assertSet('newAssets', []);
 
         expect(Storage::disk('current')->exists("assets/{$page->path}/doc1.pdf"))->toBeTrue();
         expect(Storage::disk('current')->exists("assets/{$page->path}/doc2.txt"))->toBeTrue();
@@ -759,14 +759,14 @@ describe('attachments', function () {
         Carbon::setTestNow(null);
     });
 
-    test('deleting an attachment removes it from storage and list', function () {
+    test('deleting an asset removes it from storage and list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
 
         $page = new ContentPage(
-            title: 'Delete Attachment Test',
-            path: new PagePath('delete-attachment'),
+            title: 'Delete Asset Test',
+            path: new PagePath('delete-asset'),
             content: new Markdown('# Content'),
             created_at: Carbon::now(),
         );
@@ -776,9 +776,9 @@ describe('attachments', function () {
         Storage::disk('current')->put("assets/{$page->path}/keep.txt", 'world');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'to-delete.txt')
+            ->call('deleteAsset', 'to-delete.txt')
             ->tap(function ($component) {
-                expect(collect($component->attachments)->pluck('filename')->all())->toEqualCanonicalizing(['keep.txt']);
+                expect(collect($component->assets)->pluck('filename')->all())->toEqualCanonicalizing(['keep.txt']);
             });
 
         expect(Storage::disk('current')->exists("assets/{$page->path}/to-delete.txt"))->toBeFalse();
@@ -787,14 +787,14 @@ describe('attachments', function () {
         Carbon::setTestNow(null);
     });
 
-    test('deleting all attachments results in empty list', function () {
+    test('deleting all assets results in empty list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
 
         $page = new ContentPage(
-            title: 'Clear Attachments Test',
-            path: new PagePath('clear-attachments'),
+            title: 'Clear Assets Test',
+            path: new PagePath('clear-assets'),
             content: new Markdown('# Content'),
             created_at: Carbon::now(),
         );
@@ -804,15 +804,15 @@ describe('attachments', function () {
         Storage::disk('current')->put("assets/{$page->path}/file2.png", 'binary');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'file1.txt')
-            ->call('deleteAttachment', 'file2.png');
+            ->call('deleteAsset', 'file1.txt')
+            ->call('deleteAsset', 'file2.png');
 
         expect(Storage::disk('current')->files("assets/{$page->path}"))->toBe([]);
 
         Carbon::setTestNow(null);
     });
 
-    test('deleting all attachments removes empty asset directory', function () {
+    test('deleting all assets removes empty assets directory', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
@@ -831,15 +831,15 @@ describe('attachments', function () {
         expect(Storage::disk('current')->exists("assets/{$page->path}"))->toBeTrue();
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'file1.txt')
-            ->call('deleteAttachment', 'file2.png');
+            ->call('deleteAsset', 'file1.txt')
+            ->call('deleteAsset', 'file2.png');
 
         expect(Storage::disk('current')->exists("assets/{$page->path}"))->toBeFalse();
 
         Carbon::setTestNow(null);
     });
 
-    test('deleting attachment from published page removes it from site disk', function () {
+    test('deleting asset from published page removes it from site disk', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
@@ -859,7 +859,7 @@ describe('attachments', function () {
         expect(Storage::disk('current')->exists("site/{$page->path}/to-delete.txt"))->toBeTrue();
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'to-delete.txt');
+            ->call('deleteAsset', 'to-delete.txt');
 
         expect(Storage::disk('current')->exists("assets/{$page->path}/to-delete.txt"))->toBeFalse();
         expect(Storage::disk('current')->exists("site/{$page->path}/to-delete.txt"))->toBeFalse();
@@ -867,7 +867,7 @@ describe('attachments', function () {
         Carbon::setTestNow(null);
     });
 
-    test('deleting attachment from draft page does not touch site disk', function () {
+    test('deleting asset from draft page does not touch site disk', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
         $repository = initializeSite();
@@ -884,7 +884,7 @@ describe('attachments', function () {
         Storage::disk('current')->put("site/{$page->path}/to-delete.txt", 'should remain');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'to-delete.txt');
+            ->call('deleteAsset', 'to-delete.txt');
 
         expect(Storage::disk('current')->exists("assets/{$page->path}/to-delete.txt"))->toBeFalse();
         expect(Storage::disk('current')->exists("site/{$page->path}/to-delete.txt"))->toBeTrue();
@@ -947,7 +947,7 @@ describe('cover image', function () {
             ->assertSee('Add as cover image');
     });
 
-    test('does not show the add as cover image button for non-image attachments', function () {
+    test('does not show the add as cover image button for non-image assets', function () {
         $repository = initializeSite();
 
         $page = ContentPage::draft('No Image Cover Page', 'no-image-cover-page');
@@ -977,7 +977,7 @@ describe('cover image', function () {
             ->assertDontSee('Add as cover image');
     });
 
-    test('deleting the cover image attachment clears the cover image', function () {
+    test('deleting the cover image asset clears the cover image', function () {
         $repository = initializeSite();
 
         $page = new ContentPage(
@@ -992,13 +992,13 @@ describe('cover image', function () {
         Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'header.png')
+            ->call('deleteAsset', 'header.png')
             ->assertSet('cover_image', null);
 
         expect($repository->findByPath('delete-cover-page')->cover_image)->toBeNull();
     });
 
-    test('deleting a non-cover attachment keeps the cover image', function () {
+    test('deleting a non-cover asset keeps the cover image', function () {
         $repository = initializeSite();
 
         $page = new ContentPage(
@@ -1014,7 +1014,7 @@ describe('cover image', function () {
         Storage::disk('current')->put("assets/{$page->path}/other.txt", 'content');
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('deleteAttachment', 'other.txt')
+            ->call('deleteAsset', 'other.txt')
             ->assertSet('cover_image', 'header.png');
 
         expect($repository->findByPath('keep-cover-page')->cover_image)->toBe('header.png');

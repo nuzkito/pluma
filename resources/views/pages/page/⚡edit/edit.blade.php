@@ -9,7 +9,7 @@
                 <flux:badge color="amber">Draft</flux:badge>
             @endif
 
-            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedNewAttachments,setCoverImage,deleteAttachment">
+            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedNewAssets,setCoverImage,deleteAsset">
                 <span wire:loading.delay>Saving...</span>
                 <span wire:loading.delay.remove>Saved</span>
             </span>
@@ -58,27 +58,27 @@
     </flux:field>
 
     <flux:field>
-        <flux:label>Attachments</flux:label>
-        <flux:input type="file" id="attachment-input" multiple wire:model="newAttachments" />
-        <div class="mt-2 text-sm text-zinc-500 not-data-loading:hidden" wire:loading wire:target="newAttachments">Uploading {{ count($newAttachments) }} file(s)...</div>
-        <div id="attachments-list" class="mt-2 space-y-2">
-            @foreach($attachments as $attachment)
-                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50" wire:key="attachment-{{ $attachment['filename'] }}">
-                    @if($this->isImage($attachment['filename']))
-                        <img src="{{ $attachment['url'] }}" alt="{{ $attachment['filename'] }}" class="w-8 h-8 shrink-0 rounded object-cover" loading="lazy" />
+        <flux:label>Assets</flux:label>
+        <flux:input type="file" id="asset-input" multiple wire:model="newAssets" />
+        <div class="mt-2 text-sm text-zinc-500 not-data-loading:hidden" wire:loading wire:target="newAssets">Uploading {{ count($newAssets) }} file(s)...</div>
+        <div id="assets-list" class="mt-2 space-y-2">
+            @foreach($assets as $asset)
+                <div class="flex items-center gap-3 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50" wire:key="asset-{{ $asset['filename'] }}">
+                    @if($this->isImage($asset['filename']))
+                        <img src="{{ $asset['url'] }}" alt="{{ $asset['filename'] }}" class="w-8 h-8 shrink-0 rounded object-cover" loading="lazy" />
                     @else
                         <div class="flex w-8 h-8 shrink-0 items-center justify-center rounded bg-zinc-100 text-xs font-bold uppercase text-zinc-500">
-                            {{ pathinfo($attachment['filename'], PATHINFO_EXTENSION) }}
+                            {{ pathinfo($asset['filename'], PATHINFO_EXTENSION) }}
                         </div>
                     @endif
-                    <span class="min-w-0 flex-1 truncate text-sm">{{ $attachment['filename'] }}</span>
-                    @if($cover_image === $attachment['filename'])
-                        <flux:badge :wire-key="'cover-' . $attachment['filename']" size="sm" color="emerald" icon="photo">Cover image</flux:badge>
-                    @elseif($this->isImage($attachment['filename']))
-                        <flux:button :wire-key="'cover-' . $attachment['filename']" wire:click="setCoverImage('{{ $attachment['filename'] }}')" size="xs">Add as cover image</flux:button>
+                    <span class="min-w-0 flex-1 truncate text-sm">{{ $asset['filename'] }}</span>
+                    @if($cover_image === $asset['filename'])
+                        <flux:badge :wire-key="'cover-' . $asset['filename']" size="sm" color="emerald" icon="photo">Cover image</flux:badge>
+                    @elseif($this->isImage($asset['filename']))
+                        <flux:button :wire-key="'cover-' . $asset['filename']" wire:click="setCoverImage('{{ $asset['filename'] }}')" size="xs">Add as cover image</flux:button>
                     @endif
-                    <flux:button :wire-key="'insert-' . $attachment['filename']" size="xs" x-on:click="insertAttachment('{{ $attachment['filename'] }}')">Insertar</flux:button>
-                    <flux:button :wire-key="'delete-' . $attachment['filename']" wire:click="deleteAttachment('{{ $attachment['filename'] }}')" size="xs" variant="danger">Eliminar</flux:button>
+                    <flux:button :wire-key="'insert-' . $asset['filename']" size="xs" x-on:click="insertAsset('{{ $asset['filename'] }}')">Insertar</flux:button>
+                    <flux:button :wire-key="'delete-' . $asset['filename']" wire:click="deleteAsset('{{ $asset['filename'] }}')" size="xs" variant="danger">Eliminar</flux:button>
                 </div>
             @endforeach
         </div>

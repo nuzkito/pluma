@@ -12,7 +12,7 @@ const easymde = new EasyMDE({
     ],
     previewRender: (plainText) => {
         const pagePath = $wire.$el.querySelector('#path').value
-        const baseUrl = `/pages/${pagePath}/attachments/`
+        const baseUrl = `/pages/${pagePath}/assets/`
 
         const container = document.createElement('div')
         container.innerHTML = easymde.markdown(plainText)
@@ -43,7 +43,7 @@ $wire.on('url-changed', (path) => {
     history.pushState({}, '', `/pages/${path}/edit`)
 });
 
-window.insertAttachment = (filename) => {
+window.insertAsset = (filename) => {
     const extension = filename.split('.').pop().toLowerCase()
     const encoded = encodeURIComponent(filename)
 

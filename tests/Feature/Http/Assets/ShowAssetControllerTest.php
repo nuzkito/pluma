@@ -3,7 +3,7 @@
 use App\Domain\Editor\Page\ContentPage;
 use Illuminate\Support\Facades\Storage;
 
-test('serves an attachment', function () {
+test('serves an asset', function () {
     $repository = initializeSite();
 
     $page = ContentPage::draft('Test Page', 'test-page');
@@ -11,6 +11,6 @@ test('serves an attachment', function () {
 
     Storage::disk('current')->put("assets/{$page->path}/test.txt", 'hello');
 
-    $this->get("/pages/{$page->path}/attachments/test.txt")
+    $this->get("/pages/{$page->path}/assets/test.txt")
         ->assertSuccessful();
 });

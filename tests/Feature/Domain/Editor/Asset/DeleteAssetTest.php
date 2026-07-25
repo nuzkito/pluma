@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\Editor\Attachment\AttachmentRepository;
-use App\Domain\Editor\Attachment\DeleteAttachment;
+use App\Domain\Editor\Asset\AssetRepository;
+use App\Domain\Editor\Asset\DeleteAsset;
 use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
 use App\Domain\Editor\Page\PagePath;
@@ -9,43 +9,43 @@ use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 use Illuminate\Support\Facades\Storage;
 
-test('deletes an attachment', function () {
+test('deletes an asset', function () {
     initializeSite();
     $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'file.txt');
+    $deleteAsset((string) $page->path, 'file.txt');
 
     expect(Storage::disk('current')->exists("assets/{$page->path}/file.txt"))->toBeFalse();
 });
 
-test('deletes attachment and removes empty assets directory', function () {
+test('deletes asset and removes empty assets directory', function () {
     initializeSite();
     $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
 
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'file.txt');
+    $deleteAsset((string) $page->path, 'file.txt');
 
     expect(Storage::disk('current')->exists("assets/{$page->path}"))->toBeFalse();
 });
 
-test('deletes attachment from site directory when page is published', function () {
+test('deletes asset from site directory when page is published', function () {
     initializeSite();
     $page = ContentPage::draft('Test Page', 'test-page');
     app(PageRepository::class)->save($page);
@@ -56,13 +56,13 @@ test('deletes attachment from site directory when page is published', function (
     $page->publish(Carbon\Carbon::now());
     app(PageRepository::class)->save($page);
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'file.txt');
+    $deleteAsset((string) $page->path, 'file.txt');
 
     expect(Storage::disk('current')->exists("site/{$page->path}/file.txt"))->toBeFalse();
 });
@@ -75,18 +75,18 @@ test('does not delete site file when page is not published', function () {
     Storage::disk('current')->put("assets/{$page->path}/file.txt", 'content');
     Storage::disk('current')->put("site/{$page->path}/file.txt", 'stale content');
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'file.txt');
+    $deleteAsset((string) $page->path, 'file.txt');
 
     expect(Storage::disk('current')->exists("site/{$page->path}/file.txt"))->toBeTrue();
 });
 
-test('removes the cover image when the deleted attachment is the cover', function () {
+test('removes the cover image when the deleted asset is the cover', function () {
     initializeSite();
     $page = ContentPage::draft('Test Page', 'test-page');
     $page->changeCoverImage('header.png');
@@ -94,18 +94,18 @@ test('removes the cover image when the deleted attachment is the cover', functio
 
     Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'header.png');
+    $deleteAsset((string) $page->path, 'header.png');
 
     expect(app(PageRepository::class)->findByPath('test-page')->cover_image)->toBeNull();
 });
 
-test('keeps the cover image when a different attachment is deleted', function () {
+test('keeps the cover image when a different asset is deleted', function () {
     initializeSite();
     $page = ContentPage::draft('Test Page', 'test-page');
     $page->changeCoverImage('header.png');
@@ -114,13 +114,13 @@ test('keeps the cover image when a different attachment is deleted', function ()
     Storage::disk('current')->put("assets/{$page->path}/header.png", 'binary');
     Storage::disk('current')->put("assets/{$page->path}/other.txt", 'content');
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment((string) $page->path, 'other.txt');
+    $deleteAsset((string) $page->path, 'other.txt');
 
     expect(app(PageRepository::class)->findByPath('test-page')->cover_image)->toBe('header.png');
 });
@@ -144,18 +144,18 @@ test('regenerates the published page when its cover image is deleted', function 
         $mock->shouldReceive('removePageFile')->once()->with('test-page', 'header.png');
     });
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         $siteGenerator
     );
 
-    $deleteAttachment((string) $page->path, 'header.png');
+    $deleteAsset((string) $page->path, 'header.png');
 
     expect(app(PageRepository::class)->findByPath('test-page')->cover_image)->toBeNull();
 });
 
-test('does not regenerate the page when a non-cover attachment is deleted', function () {
+test('does not regenerate the page when a non-cover asset is deleted', function () {
     initializeSite();
     $page = new ContentPage(
         title: 'Test Page',
@@ -175,13 +175,13 @@ test('does not regenerate the page when a non-cover attachment is deleted', func
         $mock->shouldReceive('removePageFile')->once()->with('test-page', 'other.txt');
     });
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         $siteGenerator
     );
 
-    $deleteAttachment((string) $page->path, 'other.txt');
+    $deleteAsset((string) $page->path, 'other.txt');
 });
 
 test('does not regenerate a draft page when its cover image is deleted', function () {
@@ -201,13 +201,13 @@ test('does not regenerate a draft page when its cover image is deleted', functio
         $mock->shouldNotReceive('generatePage');
     });
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         $siteGenerator
     );
 
-    $deleteAttachment((string) $page->path, 'header.png');
+    $deleteAsset((string) $page->path, 'header.png');
 
     expect(app(PageRepository::class)->findByPath('test-page')->cover_image)->toBeNull();
 });
@@ -215,13 +215,13 @@ test('does not regenerate a draft page when its cover image is deleted', functio
 test('does nothing when page does not exist', function () {
     initializeSite();
 
-    $deleteAttachment = new DeleteAttachment(
+    $deleteAsset = new DeleteAsset(
         app(PageRepository::class),
-        app(AttachmentRepository::class),
+        app(AssetRepository::class),
         app(SiteGenerator::class)
     );
 
-    $deleteAttachment('non-existent-page', 'file.txt');
+    $deleteAsset('non-existent-page', 'file.txt');
 
     expect(true)->toBeTrue();
 });
