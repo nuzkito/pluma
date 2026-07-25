@@ -8,7 +8,9 @@ services:
       # Use the development environment's code (including vendor/, .env and
       # public/build) so changes are reflected while developing.
       - .:/pluma
+    environment:
+      VIEW_COMPILED_PATH: /tmp/pluma/views
     # Match the host user so files written to the mounted repo
-    # (storage/framework, storage/logs) are not owned by root.
+    # (storage/logs) are not owned by root.
     user: "1000:1000"
     tty: true
