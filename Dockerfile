@@ -1,7 +1,9 @@
 # Build stage: install dependencies and scaffold the test site with `pluma new`.
 FROM php:8.4-cli-alpine AS builder
 
-RUN apk add --no-cache git unzip
+RUN apk add --no-cache git unzip libpng-dev libjpeg-turbo-dev freetype-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-freetype \
+    && docker-php-ext-install gd
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -18,7 +20,8 @@ RUN php /pluma/bin/pluma new
 
 # Final stage: only PHP and the scaffolded site. The application code,
 # vendor/, .env and public/build come from the bind mount at runtime.
-# Alpine's php84 packages with just the extensions Laravel needs are much
+# Alpine's php84 packages with just the extensions Laravel needs (plus gd,
+# required to optimize attached images at generation time) are still much
 # smaller than the official monolithic PHP build.
 FROM alpine:3.22
 
@@ -28,6 +31,7 @@ RUN apk add --no-cache \
         php84-curl \
         php84-dom \
         php84-fileinfo \
+        php84-gd \
         php84-iconv \
         php84-mbstring \
         php84-openssl \

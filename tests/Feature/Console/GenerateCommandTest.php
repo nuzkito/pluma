@@ -5,6 +5,7 @@ use App\Domain\Editor\Page\Markdown;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\artisan;
@@ -152,6 +153,30 @@ test('does not link page tags when create_tag_pages is disabled', function () {
 
     expect($html)->toContain('Laravel')
         ->not->toContain('/tags/laravel/');
+});
+
+test('optimizes attached images and copies the rest of the attachments when generating', function () {
+    $repository = initializeSite();
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+    ));
+
+    $disk = Storage::disk('current');
+    $photo = UploadedFile::fake()->image('photo.jpg', 3000, 2000)->getContent();
+    $disk->put('assets/hello-world/photo.jpg', $photo);
+    $disk->put('assets/hello-world/notes.txt', 'text content');
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    expect($disk->exists('site/hello-world/photo.jpg'))->toBeTrue()
+        ->and($disk->size('site/hello-world/photo.jpg'))->toBeLessThan($disk->size('assets/hello-world/photo.jpg'))
+        ->and($disk->get('site/hello-world/notes.txt'))->toBe('text content');
 });
 
 test('renders markdown content as html', function () {

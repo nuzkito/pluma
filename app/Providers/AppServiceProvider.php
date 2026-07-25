@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Generator\AssetProcessor;
 use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\Page\YoutubeNocookieEmbedAdapter;
 use App\Domain\Generator\SiteGenerator;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
             SiteGenerator::class,
             fn () => new SiteGenerator(
                 app(PageRepository::class),
+                app(AssetProcessor::class),
             ),
         );
 

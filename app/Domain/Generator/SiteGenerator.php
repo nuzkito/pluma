@@ -21,6 +21,7 @@ class SiteGenerator
 
     public function __construct(
         private PageRepository $pageRepository,
+        private AssetProcessor $assetProcessor,
     ) {
         $this->disk = Storage::disk('current');
     }
@@ -93,7 +94,7 @@ class SiteGenerator
         if ($this->disk->exists($attachmentsPath)) {
             foreach ($this->disk->files($attachmentsPath) as $file) {
                 $filename = basename($file);
-                $this->disk->copy($file, "$pagePath/$filename");
+                $this->assetProcessor->copy($file, "$pagePath/$filename");
             }
         }
     }
