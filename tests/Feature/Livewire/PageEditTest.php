@@ -709,6 +709,30 @@ describe('assets', function () {
         Carbon::setTestNow(null);
     });
 
+    test('the assets section and the editor render as drag and drop zones', function () {
+        Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Drop Zone Page',
+            path: new PagePath('drop-zone'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+        );
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->assertSeeHtml('id="asset-drop-zone"')
+            ->assertSeeHtml('id="asset-drop-zone-overlay"')
+            ->assertSeeHtml('group-data-dragging:flex')
+            ->assertSeeHtml('Drop files here to upload')
+            ->assertSeeHtml('id="content-drop-zone"')
+            ->assertSeeHtml('group-data-over:outline-blue-500');
+
+        Carbon::setTestNow(null);
+    });
+
     test('uploading a file adds it to assets list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
