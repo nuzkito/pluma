@@ -179,6 +179,46 @@ test('optimizes image assets and copies the rest of the assets when generating',
         ->and($disk->get('site/hello-world/notes.txt'))->toBe('text content');
 });
 
+test('renders the cover image above the title when the page has one', function () {
+    $repository = initializeSite();
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('# Hello World'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+        cover_image: 'header image.png',
+    ));
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    $html = Storage::disk('current')->get('site/hello-world/index.html');
+
+    expect($html)->toContain('<img src="header%20image.png" alt="header image.png">')
+        ->and(strpos($html, '<img src="header%20image.png"'))->toBeLessThan(strpos($html, '<h1>Hello World</h1>'));
+});
+
+test('does not render a cover image when the page has none', function () {
+    $repository = initializeSite();
+
+    $repository->save(new ContentPage(
+        title: 'Hello World',
+        path: new PagePath('hello-world'),
+        content: new Markdown('Some content'),
+        created_at: Carbon::parse('2025-01-01'),
+        published_at: Carbon::parse('2025-01-15'),
+    ));
+
+    artisan('pluma:generate')
+        ->assertSuccessful();
+
+    $html = Storage::disk('current')->get('site/hello-world/index.html');
+
+    expect($html)->not->toContain('<img');
+});
+
 test('renders markdown content as html', function () {
     $repository = initializeSite();
 
