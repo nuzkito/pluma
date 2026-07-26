@@ -199,6 +199,17 @@ class SiteGenerator
         }
     }
 
+    public function copyPageFile(string $path, string $filename): void
+    {
+        $source = self::ASSETS_DIRECTORY."/$path/$filename";
+
+        if (! $this->disk->exists($source)) {
+            return;
+        }
+
+        $this->assetProcessor->copy($source, self::SITE_DIRECTORY."/$path/$filename");
+    }
+
     public function removePageFile(string $path, string $filename): void
     {
         $this->disk->delete(self::SITE_DIRECTORY."/$path/$filename");
