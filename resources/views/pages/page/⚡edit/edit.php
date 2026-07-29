@@ -49,7 +49,7 @@ new class extends Component
 
     public array $availableTags = [];
 
-    #[Validate(['newAssets.*' => 'file|max:20480'])]
+    #[Validate(['newAssets.*' => 'file|max:12288'])]
     public array $newAssets = [];
 
     public function mount(PageRepository $repository, AssetRepository $assetRepo, string $path)

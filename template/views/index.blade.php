@@ -6,6 +6,9 @@
 
 @section('content')
 <main>
+    @if($coverImage)
+        <img src="{{ rawurlencode($coverImage) }}" alt="{{ $title }}">
+    @endif
     <h1>{{ $title }}</h1>
     <p>{{ $description }}</p>
     <ul>

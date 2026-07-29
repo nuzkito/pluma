@@ -37,6 +37,27 @@
                                 </flux:field>
                                 @break
 
+                            @case(SettingType::Image)
+                                @php($uploadModel = 'newImages.'.$definition->key)
+                                @php($image = (string) data_get($images, $definition->key))
+                                @php($fieldId = 'setting-'.str_replace(['.', '_'], '-', $definition->key))
+
+                                <flux:field>
+                                    <flux:label>{{ $definition->label }}</flux:label>
+                                    <flux:description>{{ $definition->description }}</flux:description>
+                                    <flux:input type="file" id="{{ $fieldId }}-input" accept="image/*" wire:model="{{ $uploadModel }}" />
+                                    <div class="mt-2 text-sm text-zinc-500 not-data-loading:hidden" wire:loading wire:target="{{ $uploadModel }}">Uploading...</div>
+                                    @if($image !== '')
+                                        <div id="{{ $fieldId }}-preview" class="mt-2 flex items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-700 p-2">
+                                            <img src="{{ route('site-assets.show', $image) }}" alt="{{ $image }}" class="w-8 h-8 shrink-0 rounded object-cover" loading="lazy" />
+                                            <span class="min-w-0 flex-1 truncate text-sm">{{ $image }}</span>
+                                            <flux:button wire:click="removeImage('{{ $definition->key }}')" size="xs" variant="danger">Remove</flux:button>
+                                        </div>
+                                    @endif
+                                    <flux:error name="{{ $uploadModel }}" />
+                                </flux:field>
+                                @break
+
                             @case(SettingType::List)
                                 <flux:field>
                                     <flux:label>{{ $definition->label }}</flux:label>

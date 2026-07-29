@@ -41,7 +41,11 @@ RUN apk add --no-cache \
         php84-xml \
         php84-xmlreader \
         php84-xmlwriter \
-    && ln -s /usr/bin/php84 /usr/bin/php
+    && ln -s /usr/bin/php84 /usr/bin/php \
+    # PHP discards bigger uploads before the application sees them, so the limit
+    # must match the one Livewire enforces on temporary uploads (12 MB), plus
+    # some room in post_max_size for the rest of the multipart request.
+    && printf 'upload_max_filesize = 12M\npost_max_size = 13M\n' > /etc/php84/conf.d/99-uploads.ini
 
 COPY --from=builder --chown=1000:1000 /site /site
 

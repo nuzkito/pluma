@@ -2,6 +2,8 @@
 
 namespace App\Domain\Settings;
 
+use Illuminate\Support\Collection;
+
 class SettingsSchema
 {
     /**
@@ -43,6 +45,13 @@ class SettingsSchema
                 type: SettingType::String,
                 group: 'General',
                 rules: ['nullable', 'string'],
+            ),
+            new SettingDefinition(
+                key: 'cover_image',
+                label: 'Cover image',
+                description: 'The image shown in the site index.',
+                type: SettingType::Image,
+                group: 'General',
             ),
 
             new SettingDefinition(
@@ -86,6 +95,23 @@ class SettingsSchema
         ];
     }
 
+    public static function find(string $key): ?SettingDefinition
+    {
+        return collect(self::definitions())
+            ->first(fn (SettingDefinition $definition): bool => $definition->key === $key);
+    }
+
+    /**
+     * @return list<SettingDefinition>
+     */
+    public static function ofType(SettingType $type): array
+    {
+        return collect(self::definitions())
+            ->filter(fn (SettingDefinition $definition): bool => $definition->type === $type)
+            ->values()
+            ->all();
+    }
+
     /**
      * Definitions keyed by their group label, preserving declaration order.
      *
@@ -93,12 +119,9 @@ class SettingsSchema
      */
     public static function grouped(): array
     {
-        $grouped = [];
-
-        foreach (self::definitions() as $definition) {
-            $grouped[$definition->group][] = $definition;
-        }
-
-        return $grouped;
+        return collect(self::definitions())
+            ->groupBy(fn (SettingDefinition $definition): string => $definition->group)
+            ->map(fn (Collection $definitions): array => $definitions->values()->all())
+            ->all();
     }
 }

@@ -783,6 +783,21 @@ describe('assets', function () {
         Carbon::setTestNow(null);
     });
 
+    test('rejects files bigger than the upload limit', function () {
+        $repository = initializeSite();
+
+        $page = ContentPage::draft('Big Upload Test', 'big-upload');
+        $repository->save($page);
+
+        $file = UploadedFile::fake()->create('huge.pdf', 12289);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->set('newAssets', [$file])
+            ->assertHasErrors(['newAssets.0']);
+
+        expect(Storage::disk('current')->exists("assets/{$page->path}/huge.pdf"))->toBeFalse();
+    });
+
     test('deleting an asset removes it from storage and list', function () {
         Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 

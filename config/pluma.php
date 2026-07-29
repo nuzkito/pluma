@@ -5,6 +5,7 @@ return [
     'url' => 'http://localhost:8001',
     'title' => '',
     'description' => '',
+    'cover_image' => '',
     'tags' => [
         'create_pages' => false,
         'pages_path' => 'tags',

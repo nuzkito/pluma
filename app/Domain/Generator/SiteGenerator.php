@@ -5,6 +5,8 @@ namespace App\Domain\Generator;
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\Page\TagPage;
+use App\Domain\Settings\SettingsSchema;
+use App\Domain\Settings\SettingType;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +53,8 @@ class SiteGenerator
             $destination = self::SITE_DIRECTORY.'/'.substr($file, strlen('resources/'));
             $this->disk->copy($file, $destination);
         }
+
+        $this->copySiteImages();
     }
 
     public function generatePage(string $path): void
@@ -135,6 +139,7 @@ class SiteGenerator
             'baseUrl' => $this->baseUrl(),
             'title' => $this->siteTitle(),
             'description' => $this->siteDescription(),
+            'coverImage' => $this->siteCoverImage(),
         ]);
 
         $this->disk->put(self::SITE_DIRECTORY.'/index.html', $html);
@@ -215,6 +220,35 @@ class SiteGenerator
         $this->disk->delete(self::SITE_DIRECTORY."/$path/$filename");
     }
 
+    public function copySiteImages(): void
+    {
+        foreach (SettingsSchema::ofType(SettingType::Image) as $definition) {
+            $this->copySiteFile((string) config('pluma.'.$definition->key));
+        }
+    }
+
+    public function copySiteFile(string $filename): void
+    {
+        if ($filename === '') {
+            return;
+        }
+
+        $source = self::ASSETS_DIRECTORY."/$filename";
+
+        if (! $this->disk->exists($source)) {
+            return;
+        }
+
+        $this->ensureSiteDirectory();
+
+        $this->assetProcessor->copy($source, self::SITE_DIRECTORY."/$filename");
+    }
+
+    public function removeSiteFile(string $filename): void
+    {
+        $this->disk->delete(self::SITE_DIRECTORY."/$filename");
+    }
+
     private function prepare(): void
     {
         $this->ensureSiteDirectory();
@@ -261,5 +295,10 @@ class SiteGenerator
     private function siteDescription(): string
     {
         return config('pluma.description');
+    }
+
+    private function siteCoverImage(): string
+    {
+        return (string) config('pluma.cover_image');
     }
 }

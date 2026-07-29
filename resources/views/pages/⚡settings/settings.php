@@ -1,62 +1,147 @@
 <?php
 
+use App\Domain\Generator\SiteGenerator;
+use App\Domain\Settings\RemoveSettingImage;
 use App\Domain\Settings\SettingDefinition;
+use App\Domain\Settings\SettingsRepository;
 use App\Domain\Settings\SettingsSchema;
-use App\Domain\Settings\SiteConfigLoader;
+use App\Domain\Settings\SettingType;
+use App\Domain\Settings\UploadSettingImage;
 use Flux\Flux;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     /**
      * @var array<string, mixed>
      */
     public array $values = [];
 
+    /**
+     * The filename stored for each image setting, keyed by setting key.
+     *
+     * @var array<string, mixed>
+     */
+    #[Locked]
+    public array $images = [];
+
+    /**
+     * The pending upload of each image setting, keyed by setting key.
+     *
+     * @var array<string, mixed>
+     */
+    public array $newImages = [];
+
     public function mount(): void
     {
         foreach (SettingsSchema::definitions() as $definition) {
-            data_set($this->values, $definition->key, $definition->type->forForm(config('pluma.'.$definition->key)));
+            if ($definition->type === SettingType::Image) {
+                data_set($this->images, $definition->key, (string) config("pluma.{$definition->key}"));
+                data_set($this->newImages, $definition->key, null);
+
+                continue;
+            }
+
+            data_set($this->values, $definition->key, $definition->type->forForm(config("pluma.{$definition->key}")));
         }
     }
 
-    public function save(): void
+    public function updatedNewImages(mixed $value, string $key, UploadSettingImage $uploadSettingImage): void
     {
-        $this->validate($this->validationRules());
+        $upload = data_get($this->newImages, $key);
 
-        $settings = [];
-
-        foreach (SettingsSchema::definitions() as $definition) {
-            $value = $definition->type->fromForm(data_get($this->values, $definition->key));
-            data_set($settings, $definition->key, $value);
+        if (! $upload instanceof TemporaryUploadedFile) {
+            return;
         }
 
-        Storage::disk('current')->put(
-            'pluma-settings.json',
-            json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-        );
+        $this->validateOnly("newImages.$key");
 
-        (new SiteConfigLoader(Storage::disk('current')))->load();
+        $image = $uploadSettingImage->__invoke($key, $upload);
+
+        if ($image === null) {
+            return;
+        }
+
+        data_set($this->images, $key, $image);
+        data_set($this->newImages, $key, null);
+    }
+
+    public function removeImage(string $key, RemoveSettingImage $removeSettingImage): void
+    {
+        if (! $removeSettingImage->__invoke($key)) {
+            return;
+        }
+
+        data_set($this->images, $key, '');
+    }
+
+    public function save(SettingsRepository $settings, SiteGenerator $siteGenerator): void
+    {
+        $this->validate();
+
+        $values = [];
+
+        foreach (SettingsSchema::definitions() as $definition) {
+            data_set($values, $definition->key, $definition->type->fromForm($this->value($definition)));
+        }
+
+        $settings->save($values);
+
+        $siteGenerator->copySiteImages();
+        $siteGenerator->regenerateIndex();
 
         Flux::toast('Settings saved.', variant: 'success');
+    }
+
+    private function value(SettingDefinition $definition): mixed
+    {
+        return $definition->type === SettingType::Image
+            ? (string) data_get($this->images, $definition->key)
+            : data_get($this->values, $definition->key);
     }
 
     /**
      * @return array<string, array<int, string>>
      */
-    private function validationRules(): array
+    protected function rules(): array
     {
         $rules = [];
 
         foreach (SettingsSchema::definitions() as $definition) {
+            if ($definition->type === SettingType::Image) {
+                $rules["newImages.{$definition->key}"] = ['nullable', 'image', 'max:12288'];
+
+                continue;
+            }
+
             if ($definition->rules !== []) {
                 $rules["values.{$definition->key}"] = $definition->rules;
             }
         }
 
         return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        $attributes = [];
+
+        foreach (SettingsSchema::definitions() as $definition) {
+            $property = $definition->type === SettingType::Image ? 'newImages' : 'values';
+
+            $attributes["$property.{$definition->key}"] = strtolower($definition->label);
+        }
+
+        return $attributes;
     }
 
     /**

@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Asset\ShowAssetController;
+use App\Http\Controllers\Asset\ShowSiteAssetController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/pages');
 
 Route::livewire('/settings', 'pages::settings')->name('settings.index');
+
+Route::get('/assets/{filename}', ShowSiteAssetController::class)->name('site-assets.show');
 
 Route::livewire('/pages/{path}/edit', 'pages::page.edit')->where('path', '.*')->name('pages.edit');
 

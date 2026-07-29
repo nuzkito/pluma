@@ -7,6 +7,12 @@ test('cast coerces string values', function () {
     expect(SettingType::String->cast(123))->toBe('123');
 });
 
+test('image values are handled as strings', function () {
+    expect(SettingType::Image->cast('cover.png'))->toBe('cover.png')
+        ->and(SettingType::Image->forForm('cover.png'))->toBe('cover.png')
+        ->and(SettingType::Image->fromForm('cover.png'))->toBe('cover.png');
+});
+
 test('cast coerces boolean values', function () {
     expect(SettingType::Boolean->cast(1))->toBeTrue()
         ->and(SettingType::Boolean->cast(0))->toBeFalse();
