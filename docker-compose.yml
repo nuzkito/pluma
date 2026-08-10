@@ -14,3 +14,20 @@ services:
     # (storage/logs) are not owned by root.
     user: "1000:1000"
     tty: true
+
+  composer:
+    build:
+      context: .
+      target: composer-cli
+    volumes:
+      - .:/pluma
+      # Keep Composer's cache between runs.
+      - composer-cache:/tmp/composer
+    # Match the host user so vendor/ is not owned by root.
+    user: "1000:1000"
+    # Only started explicitly with `docker compose run`, never by `up`.
+    profiles:
+      - tools
+
+volumes:
+  composer-cache:

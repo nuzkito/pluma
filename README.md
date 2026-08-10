@@ -67,6 +67,14 @@ Any changes you make to pages with the editor are automatically rebuilt and refl
 
 ## Local development with Docker
 
+The container runs the code from the repository, so install the PHP dependencies first:
+
+```bash
+docker compose run --rm composer install
+```
+
+This writes `vendor/` into the repository using the same PHP version as the container, so you don't need PHP or Composer installed on the host. Run it again whenever `composer.json` changes.
+
 To try Pluma while developing it, run:
 
 ```bash

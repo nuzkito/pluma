@@ -1,5 +1,8 @@
-# Build stage: install dependencies and scaffold the test site with `pluma new`.
-FROM php:8.4-cli-alpine AS builder
+# Composer stage: PHP with Composer, the tools it needs to fetch packages and
+# the extensions composer.json requires (gd), so the platform check passes.
+# The build below uses it, and so does the `composer` service in
+# docker-compose.yml, which installs into the mounted repo.
+FROM php:8.4-cli-alpine AS composer-cli
 
 RUN apk add --no-cache git unzip libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
@@ -7,11 +10,23 @@ RUN apk add --no-cache git unzip libpng-dev libjpeg-turbo-dev freetype-dev \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Composer keeps its cache and config under $COMPOSER_HOME; the default ($HOME)
+# is not writable when the container runs as the host user. Create it upfront so
+# a volume mounted there inherits the ownership instead of belonging to root.
+ENV COMPOSER_HOME=/tmp/composer
+
+RUN mkdir -p /tmp/composer && chown 1000:1000 /tmp/composer
+
 WORKDIR /pluma
+
+ENTRYPOINT ["composer"]
+
+# Build stage: install dependencies and scaffold the test site with `pluma new`.
+FROM composer-cli AS builder
 
 COPY . .
 
-RUN --mount=type=cache,target=/root/.composer/cache \
+RUN --mount=type=cache,target=/tmp/composer/cache \
     composer install --no-dev --no-interaction --no-progress
 
 WORKDIR /site
