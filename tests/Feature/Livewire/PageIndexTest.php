@@ -3,6 +3,7 @@
 use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
 use App\Domain\Editor\Page\PagePath;
+use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -30,6 +31,24 @@ test('a directory only shows its own pages', function () {
     Livewire::test('pages::page.index', ['directory' => 'posts'])
         ->assertSee('Post Page')
         ->assertDontSee('Root Page');
+});
+
+test('the tags directory shows its tag pages', function () {
+    $repository = initializeSite();
+    $repository->save(TagPage::create('Laravel'));
+
+    Livewire::test('pages::page.index', ['directory' => 'tags'])
+        ->assertSee('Laravel');
+});
+
+test('tag pages are not shown at the root', function () {
+    $repository = initializeSite();
+    $repository->save(ContentPage::draft('Root Page', 'root-page'));
+    $repository->save(TagPage::create('Laravel'));
+
+    Livewire::test('pages::page.index')
+        ->assertSee('Root Page')
+        ->assertDontSee('Laravel');
 });
 
 test('shows the pages index', function () {

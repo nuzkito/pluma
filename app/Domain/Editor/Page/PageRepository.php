@@ -42,18 +42,21 @@ class PageRepository
         }
 
         return collect($this->disk->files($path))
-            ->filter(fn (string $file) => Str::of($file)->endsWith('.md') && ! Str::of($file)->endsWith('.tag.md'))
+            ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
             ->map($this->fromFile(...))
             ->sortByDesc('created_at')
             ->values();
     }
 
     /**
-     * @return Collection<int, Page>
+     * @return Collection<int, ContentPage>
      */
     public function published(): Collection
     {
-        return $this->all()->filter->isPublished()->values();
+        return $this->all()
+            ->whereInstanceOf(ContentPage::class)
+            ->filter->isPublished()
+            ->values();
     }
 
     public function findByPath(string $path): ?Page
@@ -121,6 +124,15 @@ class PageRepository
         $parsed = $parser->parse($raw);
         $metadata = $parsed->getFrontMatter();
         $content = $parsed->getContent();
+
+        if (Str::of($filePath)->endsWith('.tag.md')) {
+            return new TagPage(
+                path: new PagePath($metadata['path']),
+                title: $metadata['title'],
+                content: new Markdown($content),
+                created_at: Carbon::parse($metadata['created_at']),
+            );
+        }
 
         return new ContentPage(
             title: $metadata['title'],

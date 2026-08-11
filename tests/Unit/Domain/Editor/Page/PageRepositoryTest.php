@@ -310,17 +310,80 @@ test('saves a tag page using the .tag.md suffix', function () {
     expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeTrue();
 });
 
-test('excludes tag pages from all()', function () {
+test('includes tag pages, typed as TagPage, alongside content pages', function () {
     Storage::fake('current');
     Storage::disk('current')->makeDirectory('pages');
 
     $repository = new PageRepository;
 
     $repository->save(ContentPage::draft('Regular Page', 'regular-page'));
+    $repository->save(new TagPage(
+        path: new PagePath('root-tag'),
+        title: 'Root Tag',
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    $all = $repository->all();
+
+    expect($all)->toHaveCount(2)
+        ->and($all->whereInstanceOf(ContentPage::class)->pluck('title')->all())->toBe(['Regular Page'])
+        ->and($all->whereInstanceOf(TagPage::class)->pluck('title')->all())->toBe(['Root Tag']);
+});
+
+test('reads a tag page from its directory', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $repository->save(TagPage::create('Cosas varias'));
+    Carbon::setTestNow(null);
+
+    $tags = $repository->searchByDirectory('tags');
+
+    expect($tags)->toHaveCount(1)
+        ->and($tags->first())->toBeInstanceOf(TagPage::class)
+        ->and($tags->first()->title)->toBe('Cosas varias')
+        ->and((string) $tags->first()->path)->toBe('tags/cosas-varias')
+        ->and($tags->first()->created_at->toIso8601String())->toBe(Carbon::parse('2025-01-01 10:00:00')->toIso8601String());
+});
+
+test('a tag page only shows up in its own directory', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(ContentPage::draft('Root Page', 'root-page'));
     $repository->save(TagPage::create('Cosas varias'));
 
-    expect($repository->all())->toHaveCount(1)
-        ->and($repository->all()->first()->title)->toBe('Regular Page');
+    expect($repository->searchByDirectory('')->pluck('title')->all())->toBe(['Root Page'])
+        ->and($repository->searchByDirectory('tags')->pluck('title')->all())->toBe(['Cosas varias']);
+});
+
+test('excludes tag pages from published()', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(new ContentPage(
+        title: 'Published',
+        path: new PagePath('published'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+        published_at: Carbon::now(),
+    ));
+    $repository->save(new TagPage(
+        path: new PagePath('root-tag'),
+        title: 'Root Tag',
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+    ));
+
+    expect($repository->published()->pluck('title')->all())->toBe(['Published']);
 });
 
 test('searchByDirectory returns only pages directly in that directory', function () {

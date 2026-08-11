@@ -1,7 +1,9 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\DirectoryRepository;
 use App\Domain\Editor\Page\PageRepository;
+use App\Domain\Editor\Page\TagPage;
 use Livewire\Component;
 
 new class extends Component {
@@ -14,8 +16,11 @@ new class extends Component {
 
     public function render(PageRepository $pages, DirectoryRepository $directories)
     {
+        $entries = $pages->searchByDirectory($this->directory);
+
         return $this->view([
-            'pages' => $pages->searchByDirectory($this->directory),
+            'pages' => $entries->whereInstanceOf(ContentPage::class)->values(),
+            'tags' => $entries->whereInstanceOf(TagPage::class)->sortBy('title')->values(),
             'directories' => $directories->searchByDirectory($this->directory),
         ]);
     }
@@ -48,6 +53,29 @@ new class extends Component {
                                 {{ $folder->name() }}
                             </a>
                         </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    @endif
+
+    @if($tags->isNotEmpty())
+        <flux:table>
+            <flux:table.columns>
+                <flux:table.column>Tag</flux:table.column>
+                <flux:table.column>Created</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach($tags as $tagPage)
+                    <flux:table.row>
+                        <flux:table.cell align="start">
+                            <span class="flex items-center gap-2">
+                                <flux:icon name="tag" variant="micro" />
+                                {{ $tagPage->title }}
+                            </span>
+                        </flux:table.cell>
+                        <flux:table.cell>{{ $tagPage->created_at->format('Y-m-d H:i') }}</flux:table.cell>
                     </flux:table.row>
                 @endforeach
             </flux:table.rows>
