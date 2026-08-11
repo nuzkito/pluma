@@ -4,13 +4,11 @@
             "command": "docker",
             "args": [
                 "compose",
-                "run",
-                "--rm",
+                "exec",
                 "-T",
-                "--entrypoint",
+                "pluma",
                 "php",
-                "composer",
-                "artisan",
+                "/pluma/artisan",
                 "boost:mcp"
             ]
         }

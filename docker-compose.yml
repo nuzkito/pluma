@@ -13,6 +13,9 @@ services:
     # Match the host user so files written to the mounted repo
     # (storage/logs) are not owned by root.
     user: "1000:1000"
+    # Laravel Boost's MCP server attaches here with `docker compose exec`
+    # (see .mcp.json), so every editor session reuses this container instead of
+    # starting one of its own. It must be up for the MCP server to connect.
     tty: true
 
   composer:
