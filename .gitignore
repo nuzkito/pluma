@@ -3,7 +3,6 @@
 .env
 .env.backup
 .env.production
-.mcp.json
 .phpactor.json
 .phpunit.result.cache
 /.agents

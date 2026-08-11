@@ -9,6 +9,7 @@
     "mcp": true,
     "sail": false,
     "skills": [
+        "infer-conventions",
         "laravel-best-practices",
         "fluxui-development",
         "livewire-development",
