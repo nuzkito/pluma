@@ -25,6 +25,18 @@ RUN apk add --no-cache git unzip libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install gd
 
+# Pest's test impact analysis records which source lines each test covers, so it
+# needs a coverage driver. Without one it silently records nothing and every run
+# re-runs the whole suite. pcov is used instead of Xdebug because it only does
+# coverage, which is all this needs, and is much faster at it.
+RUN apk add --no-cache --virtual .pcov-build-deps $PHPIZE_DEPS \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
+    && apk del .pcov-build-deps
+
+# Short tags break any template starting with an XML declaration.
+RUN printf 'short_open_tag = Off\n' > /usr/local/etc/php/conf.d/99-short-open-tag.ini
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Composer keeps its cache and config under $COMPOSER_HOME; the default ($HOME)
@@ -33,6 +45,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_HOME=/tmp/composer
 
 RUN mkdir -p /tmp/composer && chown 1000:1000 /tmp/composer
+
+# Pest keeps the test impact analysis graph under $HOME, which defaults to the
+# unwritable `/` when the container runs as the host user. Point it somewhere
+# writable so a volume mounted there keeps the graph between runs; without it
+# every `--rm` run starts cold and re-runs the whole suite.
+ENV HOME=/tmp/pest
+
+RUN mkdir -p /tmp/pest && chown 1000:1000 /tmp/pest
 
 WORKDIR /pluma
 

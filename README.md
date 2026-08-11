@@ -74,6 +74,7 @@ A `Makefile` wraps the most common commands, so you can use the shortcuts below 
 | `make install` | Installs the PHP and frontend dependencies |
 | `make up` | Starts the development environment |
 | `make build` | Builds the assets |
+| `make test` | Runs the tests affected by your changes |
 
 The container runs the code from the repository, so install the PHP dependencies first:
 
@@ -118,3 +119,15 @@ docker compose run --rm node run build
 ```
 
 Or simply `make build`.
+
+### Running the tests
+
+The suite runs with Pest, inside the same container as everything else:
+
+```bash
+docker compose run --rm --entrypoint php composer vendor/bin/pest --tia --parallel
+```
+
+Or simply `make test`.
+
+`--tia` enables Pest's test impact analysis: it runs only the tests affected by the changes since the last run and replays the rest from cache. The cache lives in a Docker volume, so it is kept between runs and survives rebuilding the images. `docker compose down -v` removes it, and the next run is a full one that records the dependency graph again.

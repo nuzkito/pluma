@@ -23,6 +23,9 @@ services:
       - .:/pluma
       # Keep Composer's cache between runs.
       - composer-cache:/tmp/composer
+      # Keep Pest's test impact analysis graph between runs, so `make test` only
+      # re-runs the tests affected by the changes since the last run.
+      - pest-cache:/tmp/pest
     # Match the host user so vendor/ is not owned by root.
     user: "1000:1000"
     # Only started explicitly with `docker compose run`, never by `up`.
@@ -53,3 +56,4 @@ services:
 volumes:
   composer-cache:
   npm-cache:
+  pest-cache:

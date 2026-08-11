@@ -12,6 +12,7 @@ Everything runs in Docker, so don't assume PHP, Composer, Node or npm are availa
 - `docker compose run --rm node install` — install the frontend dependencies into `node_modules/`.
 - `docker compose up` — start the development environment: it scaffolds a test site with `pluma new`, runs `pluma serve` and the Vite dev server. Editor on http://localhost:8000, site preview on http://localhost:8001, Vite on http://localhost:5173.
 - `docker compose run --rm node run build` — compile the assets into `public/build/`.
+- `docker compose run --rm --entrypoint php composer vendor/bin/pest --tia --parallel` — run the tests.
 
 `public/build/` is committed and the Vite dev server keeps the compiled assets in memory, so always build before committing frontend changes.
 
