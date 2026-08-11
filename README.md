@@ -67,6 +67,14 @@ Any changes you make to pages with the editor are automatically rebuilt and refl
 
 ## Local development with Docker
 
+A `Makefile` wraps the most common commands, so you can use the shortcuts below instead of typing the full `docker compose` ones:
+
+| Shortcut | Runs |
+| --- | --- |
+| `make install` | Installs the PHP and frontend dependencies |
+| `make up` | Starts the development environment |
+| `make build` | Builds the assets |
+
 The container runs the code from the repository, so install the PHP dependencies first:
 
 ```bash
@@ -83,10 +91,12 @@ docker compose run --rm node install
 
 This writes `node_modules/` into the repository, so you don't need Node or npm installed on the host either.
 
+Both installs run together with `make install`.
+
 To try Pluma while developing it, run:
 
 ```bash
-docker compose up --build
+docker compose up
 ```
 
 This scaffolds a test site with `pluma new` inside the container, starts `pluma serve` and runs the Vite dev server:
@@ -106,3 +116,5 @@ The dev server keeps the compiled assets in memory, so `public/build/` is not up
 ```bash
 docker compose run --rm node run build
 ```
+
+Or simply `make build`.
