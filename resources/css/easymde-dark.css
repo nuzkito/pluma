@@ -1,0 +1,92 @@
+/**
+ * EasyMDE only ships a light theme, so every colour it hardcodes has to be
+ * restated for dark mode. The text colour is the one thing it leaves alone: the
+ * editor inherits the light one from the page, which is what makes the light
+ * backgrounds below unreadable. The values mirror the ones Flux uses for its own
+ * inputs, so that the editor keeps looking like the rest of the form.
+ */
+.dark .EasyMDEContainer .CodeMirror {
+    color: var(--color-zinc-300);
+    background: rgb(255 255 255 / 10%);
+    border-color: rgb(255 255 255 / 10%);
+}
+
+.dark .editor-toolbar {
+    border-color: rgb(255 255 255 / 10%);
+}
+
+/* Without this the active button paints an almost white background under the
+   light label, hiding it. */
+.dark .editor-toolbar button.active,
+.dark .editor-toolbar button:hover {
+    background: rgb(255 255 255 / 10%);
+    border-color: rgb(255 255 255 / 20%);
+}
+
+/* The separator is drawn as two borders, the right one white to fake a bevel. */
+.dark .editor-toolbar i.separator {
+    border-left-color: rgb(255 255 255 / 20%);
+    border-right-color: transparent;
+}
+
+.dark .CodeMirror-cursor {
+    border-left-color: var(--color-zinc-300);
+}
+
+.dark .CodeMirror-selected,
+.dark .EasyMDEContainer .CodeMirror-focused .CodeMirror-selected {
+    background: rgb(255 255 255 / 20%);
+}
+
+.dark .CodeMirror-line::selection,
+.dark .CodeMirror-line > span::selection,
+.dark .CodeMirror-line > span > span::selection {
+    background-color: rgb(255 255 255 / 20%);
+}
+
+.dark .cm-s-easymde .cm-string {
+    color: #9ecbff;
+}
+
+.dark .cm-s-easymde .cm-tag {
+    color: #85e89d;
+}
+
+.dark .cm-s-easymde .cm-attribute {
+    color: #b392f0;
+}
+
+/* Highlighted with a black overlay, which does nothing over a dark background. */
+.dark .cm-s-easymde .cm-comment {
+    background: rgb(255 255 255 / 10%);
+}
+
+.dark .editor-preview,
+.dark .editor-preview-side {
+    background: var(--color-zinc-800);
+    border-color: rgb(255 255 255 / 10%);
+}
+
+.dark .editor-preview pre,
+.dark .editor-preview-side pre {
+    background: rgb(255 255 255 / 10%);
+}
+
+.dark .editor-preview table td,
+.dark .editor-preview table th,
+.dark .editor-preview-side table td,
+.dark .editor-preview-side table th {
+    border-color: rgb(255 255 255 / 20%);
+}
+
+/* Fullscreen mode (F11) takes over the whole viewport with its own background,
+   and fades the edges of the toolbar out to white. */
+.dark .editor-toolbar.fullscreen,
+.dark .EasyMDEContainer .CodeMirror-fullscreen {
+    background: var(--color-zinc-800);
+}
+
+.dark .editor-toolbar.fullscreen:before,
+.dark .editor-toolbar.fullscreen:after {
+    background: none;
+}

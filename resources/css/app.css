@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 @import 'easymde/dist/easymde.min.css';
+@import './easymde-dark.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
