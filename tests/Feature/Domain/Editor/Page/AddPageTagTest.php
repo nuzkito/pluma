@@ -79,8 +79,7 @@ test('adds tag to published page and regenerates site', function () {
     $repository->save($page);
 
     $siteGenerator = mock(SiteGenerator::class, function ($mock) {
-        $mock->shouldReceive('generatePage')->once();
-        $mock->shouldReceive('generateTagPage')->once();
+        $mock->shouldReceive('generatePage')->twice();
         $mock->shouldReceive('regenerateIndex')->once();
     });
 

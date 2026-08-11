@@ -104,8 +104,7 @@ test('removes tag from published page and regenerates site', function () {
     $repository->save($page);
 
     $siteGenerator = mock(SiteGenerator::class, function ($mock) {
-        $mock->shouldReceive('generatePage')->once();
-        $mock->shouldReceive('generateTagPage')->once();
+        $mock->shouldReceive('generatePage')->twice();
         $mock->shouldReceive('regenerateIndex')->once();
     });
 
@@ -140,7 +139,7 @@ test('updates the static tag page when removing a tag from a published page', fu
     ));
 
     $generator = app(SiteGenerator::class);
-    $generator->generateTagPage('tags/laravel');
+    $generator->generatePage('tags/laravel');
 
     expect(Storage::disk('current')->get('site/tags/laravel/index.html'))->toContain('Published Post');
 

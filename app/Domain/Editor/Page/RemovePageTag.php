@@ -28,7 +28,7 @@ class RemovePageTag
             $this->siteGenerator->generatePage((string) $page->path);
 
             if ($removedTag !== null) {
-                $this->siteGenerator->generateTagPage((string) TagPage::create($removedTag)->path);
+                $this->siteGenerator->generatePage((string) TagPage::create($removedTag)->path);
             }
 
             $this->siteGenerator->regenerateIndex();

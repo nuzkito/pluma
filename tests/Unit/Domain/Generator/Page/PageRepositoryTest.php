@@ -2,6 +2,7 @@
 
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PageRepository;
+use App\Domain\Generator\Page\TagPage;
 use Illuminate\Support\Facades\Storage;
 
 test('all() returns pages from every subdirectory', function () {
@@ -29,6 +30,19 @@ test('all() excludes tag pages even when nested', function () {
 
     expect($repository->all())->toHaveCount(1)
         ->and((string) $repository->all()->first()->path)->toBe('posts/post-page');
+});
+
+test('findByPath falls back to the tag page and reads its cover image', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    Storage::disk('current')->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: tags/laravel\ncover_image: header.png\ncreated_at: '2025-01-01T00:00:00+00:00'\n---\n");
+
+    $repository = new PageRepository;
+
+    expect($repository->findByPath('tags/laravel'))->toBeInstanceOf(TagPage::class);
+
+    expect($repository->findByPath('tags/laravel')->cover_image)->toBe('header.png');
 });
 
 test('reads the cover image from the front matter', function () {

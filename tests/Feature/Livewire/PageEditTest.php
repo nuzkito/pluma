@@ -3,6 +3,7 @@
 use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
 use App\Domain\Editor\Page\PagePath;
+use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -1109,6 +1110,131 @@ describe('publish / unpublish', function () {
         expect($updated)->not->toBeNull()
             ->and($updated->isDraft())->toBeTrue()
             ->and($updated->published_at)->toBeNull();
+    });
+});
+
+describe('tag pages', function () {
+    test('a tag page opens in the editor with its title, path and content', function () {
+        $repository = initializeSite();
+
+        $tagPage = TagPage::create('Laravel');
+        $tagPage->setContent(new Markdown('All about Laravel'));
+        $repository->save($tagPage);
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->assertSet('isTagPage', true)
+            ->assertSet('title', 'Laravel')
+            ->assertSet('path', 'tags/laravel')
+            ->assertSet('content', 'All about Laravel');
+    });
+
+    test('the title and path fields are read only', function () {
+        $repository = initializeSite();
+        $repository->save(TagPage::create('Laravel'));
+        $repository->save(ContentPage::draft('A Regular Page', 'a-regular-page'));
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->assertSeeHtml('readonly');
+
+        Livewire::test('pages::page.edit', ['path' => 'a-regular-page'])
+            ->assertDontSeeHtml('readonly');
+    });
+
+    test('the fields that do not apply to a tag page are hidden', function () {
+        $repository = initializeSite();
+        config(['pluma.rss.enabled' => true]);
+
+        $repository->save(TagPage::create('Laravel'));
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->assertDontSee('Include in RSS feed')
+            ->assertDontSeeHtml('id="tags-list"')
+            ->assertDontSee('Published at')
+            ->assertDontSeeHtml('wire:click="publish"')
+            ->assertDontSeeHtml('wire:click="unpublish"')
+            ->assertDontSeeHtml('wire:click="delete"');
+    });
+
+    test('editing the content saves it and regenerates the tag page', function () {
+        $repository = initializeSite();
+        $repository->save(TagPage::create('Laravel'));
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->set('content', 'Everything about Laravel')
+            ->assertSet('content', 'Everything about Laravel');
+
+        $disk = Storage::disk('current');
+
+        expect((string) $repository->findByPath('tags/laravel')->content)->toBe('Everything about Laravel')
+            ->and($disk->get('site/tags/laravel/index.html'))->toContain('Everything about Laravel');
+    });
+
+    test('setting a cover image saves it and copies it to the generated site', function () {
+        $repository = initializeSite();
+        $repository->save(TagPage::create('Laravel'));
+
+        Storage::disk('current')->put('assets/tags/laravel/header.png', 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->call('setCoverImage', 'header.png')
+            ->assertSet('cover_image', 'header.png');
+
+        $disk = Storage::disk('current');
+
+        expect($repository->findByPath('tags/laravel')->cover_image)->toBe('header.png')
+            ->and($disk->exists('site/tags/laravel/header.png'))->toBeTrue();
+    });
+
+    test('deleting the cover image asset clears it from the tag page', function () {
+        $repository = initializeSite();
+
+        $tagPage = TagPage::create('Laravel');
+        $tagPage->changeCoverImage('header.png');
+        $repository->save($tagPage);
+
+        Storage::disk('current')->put('assets/tags/laravel/header.png', 'binary');
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->call('deleteAsset', 'header.png')
+            ->assertSet('cover_image', null);
+
+        expect($repository->findByPath('tags/laravel')->cover_image)->toBeNull()
+            ->and(Storage::disk('current')->exists('assets/tags/laravel/header.png'))->toBeFalse();
+    });
+
+    test('uploading an asset stores it under the tag page path', function () {
+        $repository = initializeSite();
+        $repository->save(TagPage::create('Laravel'));
+
+        $file = UploadedFile::fake()->createWithContent('notes.txt', 'hello');
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->set('newAssets', [$file])
+            ->assertSet('newAssets', []);
+
+        expect(Storage::disk('current')->exists('assets/tags/laravel/notes.txt'))->toBeTrue();
+    });
+
+    test('the actions that do not apply to a tag page leave it untouched', function () {
+        $repository = initializeSite();
+        $repository->save(TagPage::create('Laravel'));
+
+        Livewire::test('pages::page.edit', ['path' => 'tags/laravel'])
+            ->set('title', 'PHP')
+            ->set('path', 'tags/php')
+            ->call('addTag', 'php')
+            ->call('publish')
+            ->call('unpublish')
+            ->call('delete')
+            ->assertOk()
+            ->assertSet('path', 'tags/laravel');
+
+        $tagPage = $repository->findByPath('tags/laravel');
+
+        expect($tagPage)->not->toBeNull()
+            ->and($tagPage->title)->toBe('Laravel')
+            ->and($tagPage->tags)->toBe([])
+            ->and(Storage::disk('current')->exists('pages/tags/php.tag.md'))->toBeFalse();
     });
 });
 

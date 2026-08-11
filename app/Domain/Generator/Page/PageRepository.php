@@ -20,7 +20,7 @@ class PageRepository
     }
 
     /**
-     * @return Collection<int, Page>
+     * @return Collection<int, ContentPage>
      */
     public function all(): Collection
     {
@@ -55,7 +55,7 @@ class PageRepository
     }
 
     /**
-     * @return Collection<int, Page>
+     * @return Collection<int, ContentPage>
      */
     public function published(): Collection
     {
@@ -64,27 +64,22 @@ class PageRepository
 
     public function findByPath(string $path): ?Page
     {
-        $filePath = "pages/$path.md";
+        $pagePath = "pages/$path.md";
 
-        if (! $this->disk->exists($filePath)) {
-            return null;
+        if ($this->disk->exists($pagePath)) {
+            return $this->fromFile($pagePath);
         }
 
-        return $this->fromFile($filePath);
-    }
+        $tagPagePath = "pages/$path.tag.md";
 
-    public function findTagByPath(string $path): ?TagPage
-    {
-        $filePath = "pages/$path.tag.md";
-
-        if (! $this->disk->exists($filePath)) {
-            return null;
+        if ($this->disk->exists($tagPagePath)) {
+            return $this->tagPageFromFile($tagPagePath);
         }
 
-        return $this->tagPageFromFile($filePath);
+        return null;
     }
 
-    private function fromFile(string $filePath): Page
+    private function fromFile(string $filePath): ContentPage
     {
         $raw = $this->disk->get($filePath);
         $parser = new FrontMatterParser(new SymfonyYamlFrontMatterParser);
@@ -92,7 +87,7 @@ class PageRepository
         $metadata = $parsed->getFrontMatter();
         $content = $parsed->getContent();
 
-        return new Page(
+        return new ContentPage(
             title: $metadata['title'],
             path: new PagePath($metadata['path']),
             content: new Markdown($content),
@@ -117,6 +112,7 @@ class PageRepository
             path: new PagePath($metadata['path']),
             content: new Markdown($content),
             created_at: Carbon::parse($metadata['created_at']),
+            cover_image: $metadata['cover_image'] ?? null,
         );
     }
 }

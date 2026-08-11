@@ -70,10 +70,10 @@ new class extends Component {
                 @foreach($tags as $tagPage)
                     <flux:table.row>
                         <flux:table.cell align="start">
-                            <span class="flex items-center gap-2">
+                            <a href="{{ route('pages.edit', $tagPage->path) }}" wire:navigate.hover class="flex items-center gap-2 text-blue-600 hover:underline">
                                 <flux:icon name="tag" variant="micro" />
                                 {{ $tagPage->title }}
-                            </span>
+                            </a>
                         </flux:table.cell>
                         <flux:table.cell>{{ $tagPage->created_at->format('Y-m-d H:i') }}</flux:table.cell>
                     </flux:table.row>

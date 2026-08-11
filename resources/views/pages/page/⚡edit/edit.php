@@ -8,9 +8,11 @@ use App\Domain\Editor\Page\ChangePageCoverImage;
 use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\DeletePage;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\RemovePageTag;
+use App\Domain\Editor\Page\TagPage;
 use App\Domain\Editor\Page\UnpublishPage;
 use App\Domain\Editor\Page\UpdatePageContent;
 use App\Domain\Editor\Page\UpdatePagePath;
@@ -47,6 +49,8 @@ new class extends Component
 
     public string $oldPath;
 
+    public bool $isTagPage = false;
+
     public array $availableTags = [];
 
     #[Validate(['newAssets.*' => 'file|max:12288'])]
@@ -60,6 +64,7 @@ new class extends Component
             abort(404);
         }
 
+        $this->isTagPage = $page instanceof TagPage;
         $this->title = $page->title;
         $this->path = (string) $page->path;
         $this->oldPath = (string) $page->path;
@@ -70,7 +75,7 @@ new class extends Component
         $this->cover_image = $page->cover_image;
         $this->assets = $assetRepo->all($page->path);
         $this->availableTags = $repository->all()
-            ->flatMap(fn (ContentPage $p) => $p->tags)
+            ->flatMap(fn (Page $p) => $p->tags)
             ->unique()
             ->sort()
             ->values()
@@ -86,6 +91,10 @@ new class extends Component
 
     public function updatedTitle(UpdatePageTitle $action, string $value)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $this->validate();
 
         $result = $action->__invoke($this->oldPath, $value);
@@ -102,6 +111,12 @@ new class extends Component
 
     public function updatedPath(UpdatePagePath $action, string $newPath)
     {
+        if ($this->isTagPage) {
+            $this->path = $this->oldPath;
+
+            return;
+        }
+
         $this->validate();
 
         $result = $action->__invoke($this->oldPath, $newPath);
@@ -122,17 +137,25 @@ new class extends Component
 
     public function updatedRss(UpdatePageRss $action, bool $value)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $action->__invoke($this->path, $value);
     }
 
     public function updatedPublishedAt(UpdatePagePublishedAt $action, ?string $value)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $action->__invoke($this->path, $value);
     }
 
     public function addTag(AddPageTag $addTagAction, CreateTagPage $createTagPage, string $tag)
     {
-        if (trim($tag) === '') {
+        if ($this->isTagPage || trim($tag) === '') {
             return;
         }
 
@@ -144,6 +167,10 @@ new class extends Component
 
     public function removeTag(RemovePageTag $removeTagAction, int $index)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $page = $removeTagAction->__invoke($this->path, $index);
 
         $this->tags = $page->tags;
@@ -151,6 +178,10 @@ new class extends Component
 
     public function publish(PublishPage $publishPage)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $page = $publishPage->__invoke($this->path);
 
         $this->published_at = $page->published_at->format('Y-m-d\TH:i');
@@ -158,6 +189,10 @@ new class extends Component
 
     public function unpublish(UnpublishPage $unpublishPage)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $unpublishPage->__invoke($this->path);
 
         $this->published_at = null;
@@ -165,6 +200,10 @@ new class extends Component
 
     public function delete(DeletePage $deletePage)
     {
+        if ($this->isTagPage) {
+            return;
+        }
+
         $deletePage->__invoke($this->path);
 
         return redirect()->route('pages.index');

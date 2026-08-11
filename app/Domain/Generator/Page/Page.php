@@ -4,26 +4,24 @@ namespace App\Domain\Generator\Page;
 
 use Carbon\Carbon;
 
-class Page
+interface Page
 {
-    public function __construct(
-        public string $title,
-        public PagePath $path,
-        public Markdown $content,
-        public Carbon $created_at,
-        public ?Carbon $published_at = null,
-        public bool $rss = false,
-        public array $tags = [],
-        public ?string $cover_image = null,
-    ) {}
+    public string $title { get; }
 
-    public function isPublished(): bool
-    {
-        return $this->published_at !== null;
-    }
+    public PagePath $path { get; }
 
-    public function isDraft(): bool
-    {
-        return ! $this->isPublished();
-    }
+    public Markdown $content { get; }
+
+    public Carbon $created_at { get; }
+
+    public ?Carbon $published_at { get; }
+
+    public bool $rss { get; }
+
+    /** @var array<int, string> */
+    public array $tags { get; }
+
+    public ?string $cover_image { get; }
+
+    public function isPublished(): bool;
 }

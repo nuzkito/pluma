@@ -7,6 +7,9 @@
 @section('content')
 <main>
     <a href="{{ $baseUrl }}">Go back</a>
+    @if($tag->cover_image)
+        <img src="{{ rawurlencode($tag->cover_image) }}" alt="{{ $tag->cover_image }}">
+    @endif
     <h1>{{ $tag->title }}</h1>
     @if(trim((string) $tag->content) !== '')
         <div>{!! $tag->content->html() !!}</div>

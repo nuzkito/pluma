@@ -25,6 +25,6 @@ class CreateTagPage
 
         $this->repository->save($tagPage);
 
-        $this->siteGenerator->generateTagPage((string) $tagPage->path);
+        $this->siteGenerator->generatePage((string) $tagPage->path);
     }
 }

@@ -27,7 +27,7 @@ class AddPageTag
 
         if ($page->isPublished()) {
             $this->siteGenerator->generatePage((string) $page->path);
-            $this->siteGenerator->generateTagPage((string) TagPage::create($tag)->path);
+            $this->siteGenerator->generatePage((string) TagPage::create($tag)->path);
             $this->siteGenerator->regenerateIndex();
         }
 

@@ -41,6 +41,14 @@ test('the tags directory shows its tag pages', function () {
         ->assertSee('Laravel');
 });
 
+test('a tag page links to its edit screen', function () {
+    $repository = initializeSite();
+    $repository->save(TagPage::create('Laravel'));
+
+    Livewire::test('pages::page.index', ['directory' => 'tags'])
+        ->assertSeeHtml('href="'.route('pages.edit', 'tags/laravel').'"');
+});
+
 test('tag pages are not shown at the root', function () {
     $repository = initializeSite();
     $repository->save(ContentPage::draft('Root Page', 'root-page'));

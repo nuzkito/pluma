@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Generator\Page\ContentPage;
 use App\Domain\Generator\Page\Markdown;
-use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PagePath;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
@@ -13,7 +13,7 @@ test('generates index without prior generatePage call', function () {
 
     $generator = app(SiteGenerator::class);
 
-    $page = new Page(
+    $page = new ContentPage(
         title: 'My Page',
         path: new PagePath('my-page'),
         content: new Markdown('# Hello'),
@@ -128,6 +128,44 @@ test('does not render a description when the tag page has empty content', functi
 
     expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
         ->and($disk->get('site/tags/laravel/index.html'))->not->toContain('<div>');
+});
+
+test('copies the assets of a tag page next to its generated html', function () {
+    initializeSite();
+
+    $generator = app(SiteGenerator::class);
+
+    Storage::disk('current')->put(
+        'pages/tags/laravel.tag.md',
+        "---\ntitle: Laravel\npath: tags/laravel\ncover_image: header.png\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
+    );
+
+    Storage::disk('current')->put('assets/tags/laravel/header.png', 'binary');
+
+    $generator->generateAll();
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('site/tags/laravel/header.png'))->toBeTrue()
+        ->and($disk->get('site/tags/laravel/index.html'))->toContain('src="header.png"');
+});
+
+test('generatePage regenerates the tag page living at that path', function () {
+    initializeSite();
+
+    $generator = app(SiteGenerator::class);
+
+    Storage::disk('current')->put(
+        'pages/tags/laravel.tag.md',
+        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
+    );
+
+    $generator->generatePage('tags/laravel');
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
+        ->and($disk->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
 });
 
 test('removes a single file from a generated page', function () {

@@ -61,13 +61,19 @@ class PageRepository
 
     public function findByPath(string $path): ?Page
     {
-        $filePath = self::BASE_DIRECTORY."/$path.md";
+        $contentPagePath = self::BASE_DIRECTORY."/$path.md";
 
-        if (! $this->disk->exists($filePath)) {
-            return null;
+        if ($this->disk->exists($contentPagePath)) {
+            return $this->fromFile($contentPagePath);
         }
 
-        return $this->fromFile($filePath);
+        $tagPagePath = self::BASE_DIRECTORY."/$path.tag.md";
+
+        if ($this->disk->exists($tagPagePath)) {
+            return $this->fromFile($tagPagePath);
+        }
+
+        return null;
     }
 
     public function save(Page $page, ?string $oldPath = null): void
@@ -131,6 +137,7 @@ class PageRepository
                 title: $metadata['title'],
                 content: new Markdown($content),
                 created_at: Carbon::parse($metadata['created_at']),
+                cover_image: $metadata['cover_image'] ?? null,
             );
         }
 

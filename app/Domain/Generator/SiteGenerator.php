@@ -65,18 +65,13 @@ class SiteGenerator
             return;
         }
 
-        $this->writePage($page);
-    }
+        if ($page instanceof TagPage) {
+            $this->writeTagPage($page, $this->pageRepository->published());
 
-    public function generateTagPage(string $path): void
-    {
-        $tag = $this->pageRepository->findTagByPath($path);
-
-        if ($tag === null) {
             return;
         }
 
-        $this->writeTagPage($tag, $this->pageRepository->published());
+        $this->writePage($page);
     }
 
     private function writePage(Page $page): void
@@ -94,12 +89,20 @@ class SiteGenerator
 
         $this->disk->put("$pagePath/index.html", $html);
 
-        $assetsPath = self::ASSETS_DIRECTORY."/{$page->path}";
-        if ($this->disk->exists($assetsPath)) {
-            foreach ($this->disk->files($assetsPath) as $file) {
-                $filename = basename($file);
-                $this->assetProcessor->copy($file, "$pagePath/$filename");
-            }
+        $this->copyPageAssets((string) $page->path, $pagePath);
+    }
+
+    private function copyPageAssets(string $path, string $destination): void
+    {
+        $assetsPath = self::ASSETS_DIRECTORY."/$path";
+
+        if (! $this->disk->exists($assetsPath)) {
+            return;
+        }
+
+        foreach ($this->disk->files($assetsPath) as $file) {
+            $filename = basename($file);
+            $this->assetProcessor->copy($file, "$destination/$filename");
         }
     }
 
@@ -125,6 +128,8 @@ class SiteGenerator
         ]);
 
         $this->disk->put("$tagPath/index.html", $html);
+
+        $this->copyPageAssets((string) $tag->path, $tagPath);
     }
 
     /**

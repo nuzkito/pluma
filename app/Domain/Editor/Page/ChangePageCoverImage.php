@@ -11,7 +11,7 @@ class ChangePageCoverImage
         private SiteGenerator $siteGenerator,
     ) {}
 
-    public function __invoke(string $path, string $coverImage): ContentPage
+    public function __invoke(string $path, string $coverImage): Page
     {
         $page = $this->repository->findByPath($path);
 

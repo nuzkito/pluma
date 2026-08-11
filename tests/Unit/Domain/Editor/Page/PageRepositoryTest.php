@@ -434,6 +434,34 @@ test('all() is equivalent to searchByDirectory() at the root', function () {
         ->and($repository->all())->toHaveCount(1);
 });
 
+test('findByPath resolves a tag page from its path', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(TagPage::create('Cosas varias'));
+
+    $found = $repository->findByPath('tags/cosas-varias');
+
+    expect($found)->toBeInstanceOf(TagPage::class)
+        ->and($found->title)->toBe('Cosas varias');
+});
+
+test('keeps the cover image of a tag page between saves', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $tagPage = TagPage::create('Cosas varias');
+    $tagPage->changeCoverImage('header.png');
+
+    $repository->save($tagPage);
+
+    expect($repository->findByPath('tags/cosas-varias')->cover_image)->toBe('header.png');
+});
+
 test('tagExists reflects whether a tag page file is present', function () {
     Storage::fake('current');
     Storage::disk('current')->makeDirectory('pages');

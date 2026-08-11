@@ -4,31 +4,26 @@ namespace App\Domain\Generator\Page;
 
 use Carbon\Carbon;
 
-class TagPage implements Page
+class ContentPage implements Page
 {
-    public bool $rss {
-        get => false;
-    }
-
-    /** @var array<int, string> */
-    public array $tags {
-        get => [];
-    }
-
-    public ?Carbon $published_at {
-        get => $this->created_at;
-    }
-
     public function __construct(
         public string $title,
         public PagePath $path,
         public Markdown $content,
         public Carbon $created_at,
+        public ?Carbon $published_at = null,
+        public bool $rss = false,
+        public array $tags = [],
         public ?string $cover_image = null,
     ) {}
 
     public function isPublished(): bool
     {
         return $this->published_at !== null;
+    }
+
+    public function isDraft(): bool
+    {
+        return ! $this->isPublished();
     }
 }
