@@ -23,6 +23,8 @@ interface Page
 
     public ?string $cover_image { get; }
 
+    public function moveToPath(PagePath $newPath): void;
+
     public function isPublished(): bool;
 
     public function filename(): string;

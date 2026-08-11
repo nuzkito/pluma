@@ -38,6 +38,11 @@ class TagPage implements Page
         );
     }
 
+    public function moveToPath(PagePath $newPath): void
+    {
+        $this->path = $newPath;
+    }
+
     public function setContent(Markdown $newContent): void
     {
         $this->content = $newContent;

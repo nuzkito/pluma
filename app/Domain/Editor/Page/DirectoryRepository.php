@@ -44,4 +44,24 @@ class DirectoryRepository
     {
         return $this->disk->exists(self::BASE_DIRECTORY."/$directory");
     }
+
+    /**
+     * Delete a directory only when it holds no files or subdirectories.
+     *
+     * @return bool Whether the directory was deleted.
+     */
+    public function deleteIfEmpty(string $directory): bool
+    {
+        $path = self::BASE_DIRECTORY."/$directory";
+
+        if (! $this->disk->exists($path)) {
+            return false;
+        }
+
+        if ($this->disk->files($path) !== [] || $this->disk->directories($path) !== []) {
+            return false;
+        }
+
+        return $this->disk->deleteDirectory($path);
+    }
 }

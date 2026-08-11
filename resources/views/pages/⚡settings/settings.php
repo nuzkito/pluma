@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Editor\Page\MoveTagPages;
 use App\Domain\Generator\SiteGenerator;
 use App\Domain\Settings\RemoveSettingImage;
 use App\Domain\Settings\SettingDefinition;
@@ -81,7 +82,7 @@ new class extends Component
         data_set($this->images, $key, '');
     }
 
-    public function save(SettingsRepository $settings, SiteGenerator $siteGenerator): void
+    public function save(SettingsRepository $settings, SiteGenerator $siteGenerator, MoveTagPages $moveTagPages): void
     {
         $this->validate();
 
@@ -91,10 +92,25 @@ new class extends Component
             data_set($values, $definition->key, $definition->type->fromForm($this->value($definition)));
         }
 
+        $currentTagsPath = (string) config('pluma.tags.pages_path');
+        $newTagsPath = (string) data_get($values, 'tags.pages_path');
+
+        $result = $moveTagPages->__invoke($currentTagsPath, $newTagsPath);
+
+        if ($result->isError()) {
+            $this->addError('values.tags.pages_path', $result->unwrapError());
+
+            return;
+        }
+
         $settings->save($values);
 
-        $siteGenerator->copySiteImages();
-        $siteGenerator->regenerateIndex();
+        if (trim($currentTagsPath, '/') !== trim($newTagsPath, '/')) {
+            $siteGenerator->generateAll();
+        } else {
+            $siteGenerator->copySiteImages();
+            $siteGenerator->regenerateIndex();
+        }
 
         Flux::toast('Settings saved.', variant: 'success');
     }

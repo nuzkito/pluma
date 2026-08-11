@@ -1,5 +1,10 @@
 <?php
 
+use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\CreateTagPage;
+use App\Domain\Editor\Page\Markdown;
+use App\Domain\Editor\Page\PagePath;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -87,6 +92,90 @@ test('validates that urls are required and valid', function () {
         ->set('values.url', 'not-a-url')
         ->call('save')
         ->assertHasErrors(['values.url']);
+});
+
+describe('tag pages path', function () {
+    test('moves the existing tag pages to the new directory', function () {
+        initializeSite();
+        config()->set('pluma.tags.create_pages', true);
+
+        app(CreateTagPage::class)->__invoke('Laravel');
+
+        Livewire::test('pages::settings')
+            ->set('values.tags.pages_path', 'topics')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $disk = Storage::disk('current');
+
+        expect($disk->exists('pages/topics/laravel.tag.md'))->toBeTrue()
+            ->and($disk->exists('pages/tags/laravel.tag.md'))->toBeFalse()
+            ->and($disk->get('pages/topics/laravel.tag.md'))->toContain('path: topics/laravel');
+    });
+
+    test('regenerates the tag pages in the new directory of the site', function () {
+        initializeSite();
+        config()->set('pluma.tags.create_pages', true);
+
+        app(CreateTagPage::class)->__invoke('Laravel');
+
+        Livewire::test('pages::settings')
+            ->set('values.tags.pages_path', 'topics')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $disk = Storage::disk('current');
+
+        expect($disk->exists('site/topics/laravel/index.html'))->toBeTrue()
+            ->and($disk->exists('site/tags'))->toBeFalse();
+    });
+
+    test('regenerates the pages so their tag links point to the new directory', function () {
+        $repository = initializeSite();
+        config()->set('pluma.tags.create_pages', true);
+
+        $repository->save(new ContentPage(
+            title: 'Tagged Post',
+            path: new PagePath('tagged-post'),
+            content: new Markdown('# Tagged'),
+            created_at: Carbon::parse('2025-01-01'),
+            published_at: Carbon::parse('2025-01-15'),
+            tags: ['Laravel'],
+        ));
+
+        app(CreateTagPage::class)->__invoke('Laravel');
+
+        Livewire::test('pages::settings')
+            ->set('values.tags.pages_path', 'topics')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect(Storage::disk('current')->get('site/tagged-post/index.html'))
+            ->toContain('/topics/laravel/')
+            ->not->toContain('/tags/laravel/');
+    });
+
+    test('rejects a path that collides with an existing directory', function () {
+        initializeSite();
+        config()->set('pluma.tags.create_pages', true);
+
+        app(CreateTagPage::class)->__invoke('Laravel');
+
+        Storage::disk('current')->makeDirectory('pages/topics');
+
+        Livewire::test('pages::settings')
+            ->set('values.title', 'Not saved')
+            ->set('values.tags.pages_path', 'topics')
+            ->call('save')
+            ->assertHasErrors('values.tags.pages_path');
+
+        $disk = Storage::disk('current');
+        $saved = json_decode($disk->get('pluma-settings.json'), true);
+
+        expect($saved['tags']['pages_path'])->toBe('tags')
+            ->and($saved['title'])->not->toBe('Not saved')
+            ->and($disk->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+    });
 });
 
 describe('cover image', function () {

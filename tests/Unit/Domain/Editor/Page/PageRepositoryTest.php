@@ -310,6 +310,24 @@ test('saves a tag page using the .tag.md suffix', function () {
     expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeTrue();
 });
 
+test('moves the tag page file when it is saved with an old path', function () {
+    Storage::fake('current');
+    Storage::disk('current')->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $tagPage = TagPage::create('Cosas varias');
+    $repository->save($tagPage);
+
+    $tagPage->moveToPath(new PagePath('topics/cosas-varias'));
+    $repository->save($tagPage, 'tags/cosas-varias');
+
+    $disk = Storage::disk('current');
+
+    expect($disk->exists('pages/topics/cosas-varias.tag.md'))->toBeTrue()
+        ->and($disk->exists('pages/tags/cosas-varias.tag.md'))->toBeFalse();
+});
+
 test('includes tag pages, typed as TagPage, alongside content pages', function () {
     Storage::fake('current');
     Storage::disk('current')->makeDirectory('pages');

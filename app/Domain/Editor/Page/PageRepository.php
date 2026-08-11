@@ -84,7 +84,7 @@ class PageRepository
         $newFilePath = self::BASE_DIRECTORY."/{$page->filename()}";
 
         if ($oldPath !== null && $oldPath !== $page->path->__toString()) {
-            $oldFilePath = self::BASE_DIRECTORY."/$oldPath.md";
+            $oldFilePath = $this->filePathAt($page, $oldPath);
 
             if ($this->disk->exists($oldFilePath)) {
                 $this->disk->move($oldFilePath, $newFilePath);
@@ -114,6 +114,16 @@ class PageRepository
     public function tagExists(string $slug): bool
     {
         return $this->disk->exists(self::BASE_DIRECTORY."/$slug.tag.md");
+    }
+
+    /**
+     * The file a page occupies when it lives at the given path.
+     */
+    private function filePathAt(Page $page, string $path): string
+    {
+        $extension = $page instanceof TagPage ? '.tag.md' : '.md';
+
+        return self::BASE_DIRECTORY."/$path$extension";
     }
 
     private function toMarkdownFile(Page $page): string
