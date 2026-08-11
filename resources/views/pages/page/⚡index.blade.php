@@ -1,9 +1,11 @@
 <?php
 
 use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\DeleteDirectory;
 use App\Domain\Editor\Page\DirectoryRepository;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\TagPage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 new class extends Component {
@@ -14,14 +16,31 @@ new class extends Component {
         $this->directory = trim($directory, '/');
     }
 
+    public function delete(DeleteDirectory $deleteDirectory)
+    {
+        if (! $deleteDirectory($this->directory)) {
+            return;
+        }
+
+        return redirect()->route('pages.index', [
+            'directory' => Str::contains($this->directory, '/') ? Str::beforeLast($this->directory, '/') : '',
+        ]);
+    }
+
     public function render(PageRepository $pages, DirectoryRepository $directories)
     {
         $entries = $pages->searchByDirectory($this->directory);
+        $contentPages = $entries->whereInstanceOf(ContentPage::class)->values();
+        $tagPages = $entries->whereInstanceOf(TagPage::class)->sortBy('title')->values();
+        $subdirectories = $directories->searchByDirectory($this->directory);
+        $isEmpty = $contentPages->isEmpty() && $tagPages->isEmpty();
 
         return $this->view([
-            'pages' => $entries->whereInstanceOf(ContentPage::class)->values(),
-            'tags' => $entries->whereInstanceOf(TagPage::class)->sortBy('title')->values(),
-            'directories' => $directories->searchByDirectory($this->directory),
+            'pages' => $contentPages,
+            'tags' => $tagPages,
+            'directories' => $subdirectories,
+            'isEmpty' => $isEmpty,
+            'canBeDeleted' => $isEmpty && $subdirectories->isEmpty() && $this->directory !== '',
         ]);
     }
 };
@@ -34,7 +53,7 @@ new class extends Component {
         </div>
         <div class="flex gap-2">
             <flux:button :href="route('directories.create', ['directory' => $directory])" icon="folder-plus" wire:navigate>New directory</flux:button>
-            <livewire:create-draft :directory="$directory" variant="primary" />
+            <livewire:create-draft :directory="$directory" variant="primary" key="create-draft-header" />
         </div>
     </div>
 
@@ -116,5 +135,17 @@ new class extends Component {
                 @endforeach
             </flux:table.rows>
         </flux:table>
+    @endif
+
+    @if($isEmpty)
+        <div class="grid justify-items-center gap-4 py-12">
+            <flux:text>There are no pages in this directory.</flux:text>
+            <div class="flex gap-2">
+                <livewire:create-draft :directory="$directory" variant="primary" key="create-draft-empty" />
+                @if($canBeDeleted)
+                    <flux:button wire:click="delete" variant="danger" icon="trash">Delete directory</flux:button>
+                @endif
+            </div>
+        </div>
     @endif
 </div>
