@@ -75,17 +75,34 @@ docker compose run --rm composer install
 
 This writes `vendor/` into the repository using the same PHP version as the container, so you don't need PHP or Composer installed on the host. Run it again whenever `composer.json` changes.
 
+Do the same for the frontend dependencies:
+
+```bash
+docker compose run --rm node install
+```
+
+This writes `node_modules/` into the repository, so you don't need Node or npm installed on the host either.
+
 To try Pluma while developing it, run:
 
 ```bash
 docker compose up --build
 ```
 
-This scaffolds a test site with `pluma new` inside the container and starts `pluma serve`:
+This scaffolds a test site with `pluma new` inside the container, starts `pluma serve` and runs the Vite dev server:
 
 - Editor: http://localhost:8000
 - Site preview: http://localhost:8001
+- Vite dev server: http://localhost:5173
 
-The repository is bind-mounted into the container, so code changes are picked up on the next request. Frontend changes require `npm run build` (or a running `npm run dev`) on the host.
+The repository is bind-mounted into the containers, so code changes are picked up on the next request, and changes to the CSS and JS under `resources/` are rebuilt on the fly by `npm run dev`.
 
 The test site lives only inside the container: it survives `docker compose stop`/`start` and is reset to a fresh scaffold when the container is recreated (e.g. after `--build` or `--force-recreate`).
+
+### Building the assets
+
+The dev server keeps the compiled assets in memory, so `public/build/` is not updated while it runs. Since those files are committed to the repository, build them before committing frontend changes:
+
+```bash
+docker compose run --rm node run build
+```

@@ -1,3 +1,20 @@
+# Node stage: used only by the `node` service in docker-compose.yml, which
+# installs node_modules into the mounted repo and runs the Vite dev server.
+FROM alpine:3.23 AS node-cli
+
+RUN apk add --no-cache nodejs npm
+
+# npm's default cache lives in $HOME, which is not writable when the container
+# runs as the host user. Create it upfront so the volume mounted there inherits
+# the ownership instead of belonging to root.
+ENV npm_config_cache=/tmp/npm
+
+RUN mkdir -p /tmp/npm && chown 1000:1000 /tmp/npm
+
+WORKDIR /pluma
+
+ENTRYPOINT ["npm"]
+
 # Composer stage: PHP with Composer, the tools it needs to fetch packages and
 # the extensions composer.json requires (gd), so the platform check passes.
 # The build below uses it, and so does the `composer` service in

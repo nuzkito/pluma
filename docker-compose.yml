@@ -29,5 +29,27 @@ services:
     profiles:
       - tools
 
+  node:
+    build:
+      context: .
+      target: node-cli
+    ports:
+      - "5173:5173" # Vite dev server
+    volumes:
+      - .:/pluma
+      # Keep npm's cache between runs.
+      - npm-cache:/tmp/npm
+    environment:
+      # The host the browser uses to reach the dev server, written to public/hot.
+      VITE_DEV_SERVER_HOST: localhost
+    # Match the host user so node_modules/ is not owned by root.
+    user: "1000:1000"
+    # Started by `up` so assets are rebuilt while developing. The entrypoint is
+    # npm, so one-off commands still work: `docker compose run --rm node install`.
+    # `--host` makes Vite listen on every interface, so the published port
+    # reaches it from the host.
+    command: ["run", "dev", "--", "--host"]
+
 volumes:
   composer-cache:
+  npm-cache:
