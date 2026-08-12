@@ -6,7 +6,7 @@
 
 @section('content')
 <main>
-    <a href="{{ $baseUrl }}">Go back</a>
+    <a href="{{ $web->url }}">Go back</a>
     @if($tag->cover_image)
         <img src="{{ rawurlencode($tag->cover_image) }}" alt="{{ $tag->cover_image }}">
     @endif
@@ -17,7 +17,7 @@
     <ul>
         @foreach ($pages as $page)
         <li>
-            <a href="{{ $baseUrl }}/{{ $page->path }}/">{{ $page->title }}</a>
+            <a href="{{ $web->url->append($page->path) }}/">{{ $page->title }}</a>
             <time datetime="{{ $page->published_at->toDateString() }}">{{ $page->published_at->toDateString() }}</time>
         </li>
         @endforeach

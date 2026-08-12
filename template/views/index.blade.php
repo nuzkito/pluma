@@ -1,20 +1,20 @@
 @extends('layout')
 
-@section('title', $title)
+@section('title', $web->title)
 
 @section('rss', true)
 
 @section('content')
 <main>
-    @if($coverImage)
-        <img src="{{ rawurlencode($coverImage) }}" alt="{{ $title }}">
+    @if($web->cover_image->isDefined())
+        <img src="{{ $web->cover_image->url() }}" alt="{{ $web->title }}">
     @endif
-    <h1>{{ $title }}</h1>
-    <p>{{ $description }}</p>
+    <h1>{{ $web->title }}</h1>
+    <p>{{ $web->description }}</p>
     <ul>
         @foreach ($pages as $page)
         <li>
-            <a href="{{ $baseUrl }}/{{ $page->path }}/">{{ $page->title }}</a>
+            <a href="{{ $web->url->append($page->path) }}/">{{ $page->title }}</a>
             <time datetime="{{ $page->published_at->toDateString() }}">{{ $page->published_at->toDateString() }}</time>
         </li>
         @endforeach

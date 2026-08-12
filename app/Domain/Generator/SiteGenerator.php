@@ -83,8 +83,8 @@ class SiteGenerator
         $this->disk->makeDirectory($pagePath);
 
         $html = $this->renderView('page', [
+            'web' => $this->web(),
             'page' => $page,
-            'baseUrl' => $this->baseUrl(),
         ]);
 
         $this->disk->put("$pagePath/index.html", $html);
@@ -122,9 +122,9 @@ class SiteGenerator
         $this->disk->makeDirectory($tagPath);
 
         $html = $this->renderView('tag', [
+            'web' => $this->web(),
             'tag' => $tag,
             'pages' => $posts,
-            'baseUrl' => $this->baseUrl(),
         ]);
 
         $this->disk->put("$tagPath/index.html", $html);
@@ -140,11 +140,8 @@ class SiteGenerator
         $this->prepare();
 
         $html = $this->renderView('index', [
+            'web' => $this->web(),
             'pages' => $pages,
-            'baseUrl' => $this->baseUrl(),
-            'title' => $this->siteTitle(),
-            'description' => $this->siteDescription(),
-            'coverImage' => $this->siteCoverImage(),
         ]);
 
         $this->disk->put(self::SITE_DIRECTORY.'/index.html', $html);
@@ -158,10 +155,8 @@ class SiteGenerator
         $this->prepare();
 
         $html = $this->renderView('404', [
+            'web' => $this->web(),
             'pages' => $pages,
-            'baseUrl' => $this->baseUrl(),
-            'title' => $this->siteTitle(),
-            'description' => $this->siteDescription(),
         ]);
 
         $this->disk->put(self::SITE_DIRECTORY.'/404.html', $html);
@@ -177,10 +172,8 @@ class SiteGenerator
         }
 
         $xml = $this->renderView('feed', [
+            'web' => $this->web(),
             'pages' => $pages,
-            'baseUrl' => $this->baseUrl(),
-            'title' => $this->siteTitle(),
-            'description' => $this->siteDescription(),
         ]);
 
         $this->disk->put(self::SITE_DIRECTORY.'/feed.xml', $xml);
@@ -285,25 +278,8 @@ class SiteGenerator
         return view($view, $data)->render();
     }
 
-    private function baseUrl(): string
+    private function web(): Web
     {
-        $url = config('pluma.url');
-
-        return rtrim($url, '/');
-    }
-
-    private function siteTitle(): string
-    {
-        return config('pluma.title');
-    }
-
-    private function siteDescription(): string
-    {
-        return config('pluma.description');
-    }
-
-    private function siteCoverImage(): string
-    {
-        return (string) config('pluma.cover_image');
+        return Web::fromConfig();
     }
 }

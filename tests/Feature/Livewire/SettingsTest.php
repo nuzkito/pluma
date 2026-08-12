@@ -277,7 +277,7 @@ describe('cover image', function () {
 
         expect($saved['cover_image'])->toBe('cover.png')
             ->and(config('pluma.cover_image'))->toBe('cover.png')
-            ->and(disk()->get('site/index.html'))->toContain('<img src="cover.png" alt="My Site">');
+            ->and(disk()->get('site/index.html'))->toContain('<img src="http://localhost:8001/cover.png" alt="My Site">');
     });
 });
 

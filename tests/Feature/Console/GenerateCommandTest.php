@@ -183,7 +183,7 @@ test('does not render a cover image when the page has none', function () {
 });
 
 test('optimizes the site cover image and renders it above the title in the index', function () {
-    config(['pluma.title' => 'My Site', 'pluma.cover_image' => 'site cover.jpg']);
+    config(['pluma.url' => 'https://example.com', 'pluma.title' => 'My Site', 'pluma.cover_image' => 'site cover.jpg']);
 
     disk()->put('assets/site cover.jpg', UploadedFile::fake()->image('site cover.jpg', 3000, 2000)->getContent());
 
@@ -194,8 +194,8 @@ test('optimizes the site cover image and renders it above the title in the index
 
     expect('site/site cover.jpg')->toExistOnDisk()
         ->and(disk()->size('site/site cover.jpg'))->toBeLessThan(disk()->size('assets/site cover.jpg'))
-        ->and($html)->toContain('<img src="site%20cover.jpg" alt="My Site">')
-        ->and(strpos($html, '<img src="site%20cover.jpg"'))->toBeLessThan(strpos($html, '<h1>My Site</h1>'));
+        ->and($html)->toContain('<img src="https://example.com/site%20cover.jpg" alt="My Site">')
+        ->and(strpos($html, '<img src="https://example.com/site%20cover.jpg"'))->toBeLessThan(strpos($html, '<h1>My Site</h1>'));
 });
 
 test('does not render a site cover image when none is configured', function () {

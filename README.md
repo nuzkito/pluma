@@ -61,9 +61,69 @@ By default, urls are:
 - Editor UI: http://localhost:8000
 - Site preview: http://localhost:8001
 
-You can config urls and ports in `config.php` file.
+You can config urls and ports in the `pluma-settings.json` file, or from the settings screen of the editor.
 
 Any changes you make to pages with the editor are automatically rebuilt and reflected in the preview.
+
+## Templates
+
+The templates of your site live in the `views/` directory and are plain [Blade](https://laravel.com/docs/blade) files, so you can edit them freely. Pluma renders one view per kind of output:
+
+| View | Output | Variables |
+| --- | --- | --- |
+| `index` | `site/index.html` | `$web`, `$pages` |
+| `page` | `site/{path}/index.html` | `$web`, `$page` |
+| `tag` | `site/{tag path}/index.html` | `$web`, `$tag`, `$pages` |
+| `404` | `site/404.html` | `$web`, `$pages` |
+| `feed` | `site/feed.xml` | `$web`, `$pages` |
+
+`layout` is not rendered on its own: the other views extend it, and it receives their variables.
+
+### The `$web` object
+
+`$web` holds the data of your site, taken from its settings, and is available in every view:
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `$web->url` | `Url` | The public URL of the site |
+| `$web->title` | `string` | The title of the site |
+| `$web->description` | `string` | A short summary of the site |
+| `$web->cover_image` | `CoverImage` | The cover image of the site, always present |
+
+For example, to show the title of your site:
+
+```blade
+<h1>{{ $web->title }}</h1>
+```
+
+### The `Url` object
+
+`$web->url` is a `Url`. Printing it gives you the URL of the site, always without a trailing slash:
+
+```blade
+<a href="{{ $web->url }}">Go to home</a>
+```
+
+Use `append()` to build a URL under it. It returns a new `Url`, so you can chain the calls and the original one is left untouched:
+
+```blade
+<link rel="stylesheet" href="{{ $web->url->append('styles.css') }}">
+<a href="{{ $web->url->append('tags')->append('laravel') }}/">Laravel</a>
+```
+
+The slashes between the segments are added for you, and any extra one is removed.
+
+### The `CoverImage` object
+
+`$web->cover_image` is always a `CoverImage`, even when the site has no cover image configured. Ask it with `isDefined()`:
+
+```blade
+@if($web->cover_image->isDefined())
+    <img src="{{ $web->cover_image->url() }}" alt="{{ $web->cover_image }}">
+@endif
+```
+
+Printing it gives you the filename of the image, and `url()` gives you its full URL on the site, already encoded. When there is no cover image, both are empty.
 
 ## Local development with Docker
 

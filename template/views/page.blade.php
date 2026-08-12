@@ -4,7 +4,7 @@
 
 @section('content')
     <article>
-        <a href="{{ $baseUrl }}">Go back</a>
+        <a href="{{ $web->url }}">Go back</a>
         @if($page->cover_image)
             <img src="{{ rawurlencode($page->cover_image) }}" alt="{{ $page->cover_image }}">
         @endif
@@ -14,7 +14,7 @@
                 @foreach($page->tags as $tag)
                     <li>
                         @if(config('pluma.tags.create_pages'))
-                            <a href="{{ $baseUrl }}/{{ config('pluma.tags.pages_path') }}/{{ \Illuminate\Support\Str::slug($tag) }}/">{{ $tag }}</a>
+                            <a href="{{ $web->url->append(config('pluma.tags.pages_path'))->append(\Illuminate\Support\Str::slug($tag)) }}/">{{ $tag }}</a>
                         @else
                             {{ $tag }}
                         @endif

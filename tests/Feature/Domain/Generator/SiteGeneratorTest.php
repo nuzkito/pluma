@@ -141,6 +141,39 @@ test('generatePage regenerates the tag page living at that path', function () {
         ->and(disk()->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
 });
 
+test('sends the web object to every template', function () {
+    config([
+        'pluma.rss.enabled' => true,
+        'pluma.url' => 'https://example.com',
+        'pluma.title' => 'My Site',
+        'pluma.description' => 'A site about things',
+    ]);
+
+    disk()->put(
+        'pages/tagged-post.md',
+        "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\ntags:\n    - Laravel\n---\n\n# Tagged"
+    );
+
+    disk()->put(
+        'pages/tags/laravel.tag.md',
+        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
+    );
+
+    app(SiteGenerator::class)->generateAll();
+
+    expect(disk()->get('site/index.html'))
+        ->toContain('<h1>My Site</h1>')
+        ->toContain('<p>A site about things</p>')
+        ->toContain('https://example.com/styles.css')
+        ->and(disk()->get('site/404.html'))->toContain('https://example.com/styles.css')
+        ->and(disk()->get('site/tagged-post/index.html'))->toContain('https://example.com/styles.css')
+        ->and(disk()->get('site/tags/laravel/index.html'))->toContain('https://example.com/styles.css')
+        ->and(disk()->get('site/feed.xml'))
+        ->toContain('<title>My Site</title>')
+        ->toContain('<link>https://example.com</link>')
+        ->toContain('<description>A site about things</description>');
+});
+
 test('removes a single file from a generated page', function () {
     $generator = app(SiteGenerator::class);
 

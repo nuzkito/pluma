@@ -81,7 +81,7 @@ test('the cover image survives a form submit that resends the values of the brow
 
     expect($saved['cover_image'])->toBe('cover.png')
         ->and($saved['title'])->toBe('My Site')
-        ->and(disk()->get('site/index.html'))->toContain('<img src="cover.png"');
+        ->and(disk()->get('site/index.html'))->toContain('<img src="http://localhost:8001/cover.png"');
 });
 
 test('the cover image is saved without submitting the form', function () {
