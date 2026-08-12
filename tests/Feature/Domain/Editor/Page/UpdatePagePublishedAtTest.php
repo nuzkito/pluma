@@ -1,58 +1,54 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePagePublishedAt;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 
 test('publishes page when published_at is provided', function () {
-    $repository = initializeSite();
+    $page = aPage('Publish Test', 'publish-test');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
-
-    $page = ContentPage::draft('Publish Test', 'publish-test');
     expect($page->isDraft())->toBeTrue();
-    $repository->save($page);
 
-    $action = new UpdatePagePublishedAt(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    $action = app(UpdatePagePublishedAt::class);
 
-    $action->__invoke('publish-test', '2025-06-15T14:30');
+    $action('publish-test', '2025-06-15T14:30');
 
-    Carbon::setTestNow(null);
-
-    expect($repository->findByPath('publish-test')->isPublished())->toBeTrue()
-        ->and($repository->findByPath('publish-test')->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30');
+    expect(repository()->findByPath('publish-test')->isPublished())->toBeTrue()
+        ->and(repository()->findByPath('publish-test')->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30');
 });
 
 test('unpublishes page when published_at is null', function () {
-    $repository = initializeSite();
-
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
-
-    $page = new ContentPage(
-        title: 'Unpublish Test',
-        path: new PagePath('unpublish-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
+    aPublishedPage(
+        'Unpublish Test',
+        'unpublish-test',
+        content: '# Content',
         published_at: Carbon::parse('2025-06-15 14:30:00'),
     );
-    $repository->save($page);
 
-    $action = new UpdatePagePublishedAt(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    $action = app(UpdatePagePublishedAt::class);
 
-    $action->__invoke('unpublish-test', null);
+    $action('unpublish-test', null);
 
-    Carbon::setTestNow(null);
+    expect(repository()->findByPath('unpublish-test')->isDraft())->toBeTrue()
+        ->and(repository()->findByPath('unpublish-test')->published_at)->toBeNull();
+});
 
-    expect($repository->findByPath('unpublish-test')->isDraft())->toBeTrue()
-        ->and($repository->findByPath('unpublish-test')->published_at)->toBeNull();
+test('generates the page in the site when it is published', function () {
+    aPage('Site Publish Test', 'site-publish-test');
+
+    app(UpdatePagePublishedAt::class)('site-publish-test', '2025-06-15T14:30');
+
+    expect('site/site-publish-test/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/index.html'))->toContain('Site Publish Test');
+});
+
+test('removes the page from the site when it is unpublished', function () {
+    aPublishedPage('Site Unpublish Test', 'site-unpublish-test', content: '# Content');
+
+    app(SiteGenerator::class)->generatePage('site-unpublish-test');
+
+    app(UpdatePagePublishedAt::class)('site-unpublish-test', null);
+
+    expect('site/site-unpublish-test')->toBeMissingFromDisk()
+        ->and(disk()->get('site/index.html'))->not->toContain('Site Unpublish Test');
 });

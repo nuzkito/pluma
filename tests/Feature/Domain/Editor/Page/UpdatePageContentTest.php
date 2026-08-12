@@ -1,59 +1,48 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePageContent;
 use App\Domain\Generator\SiteGenerator;
-use Carbon\Carbon;
+
+use function Pest\Laravel\mock;
 
 test('updates page content successfully', function () {
-    $repository = initializeSite();
+    aPage('Content Update Test', 'content-test', content: '# Old Content');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageContent::class);
 
-    $page = new ContentPage(
-        title: 'Content Update Test',
-        path: new PagePath('content-test'),
-        content: new Markdown('# Old Content'),
-        created_at: Carbon::now(),
-    );
-    $repository->save($page);
+    $action('content-test', '# New Content');
 
-    $action = new UpdatePageContent(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $action->__invoke('content-test', '# New Content');
-
-    expect((string) $repository->findByPath('content-test')->content)->toBe('# New Content');
-
-    Carbon::setTestNow(null);
+    expect((string) repository()->findByPath('content-test')->content)->toBe('# New Content');
 });
 
 test('clears content when empty string is provided', function () {
-    $repository = initializeSite();
+    aPage('Clear Content Test', 'clear-content-test', content: '# Has Content');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageContent::class);
 
-    $page = new ContentPage(
-        title: 'Clear Content Test',
-        path: new PagePath('clear-content-test'),
-        content: new Markdown('# Has Content'),
-        created_at: Carbon::now(),
-    );
-    $repository->save($page);
+    $action('clear-content-test', '');
 
-    $action = new UpdatePageContent(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    expect((string) repository()->findByPath('clear-content-test')->content)->toBe('');
+});
 
-    $action->__invoke('clear-content-test', '');
+test('regenerates the page and the index when the page is published', function () {
+    aPublishedPage('Published Content Test', 'published-content-test', content: '# Old Content');
 
-    expect((string) $repository->findByPath('clear-content-test')->content)->toBe('');
+    app(UpdatePageContent::class)('published-content-test', '# New Content');
 
-    Carbon::setTestNow(null);
+    expect(disk()->get('site/published-content-test/index.html'))->toContain('New Content')
+        ->and(disk()->get('site/index.html'))->toContain('Published Content Test');
+});
+
+test('leaves the generated site alone when the page is a draft', function () {
+    aPage('Draft Content Test', 'draft-content-test');
+
+    mock(SiteGenerator::class, function ($mock) {
+        $mock->shouldNotReceive('generatePage');
+        $mock->shouldNotReceive('regenerateIndex');
+    });
+
+    app(UpdatePageContent::class)('draft-content-test', '# New Content');
+
+    expect((string) repository()->findByPath('draft-content-test')->content)->toBe('# New Content');
 });

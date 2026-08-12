@@ -11,16 +11,14 @@ test('copies template files to the target directory', function () {
         ->expectsOutputToContain('Site initialized')
         ->assertSuccessful();
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('views/layout.blade.php'))->toBeTrue()
-        ->and($disk->exists('views/index.blade.php'))->toBeTrue()
-        ->and($disk->exists('views/page.blade.php'))->toBeTrue()
-        ->and($disk->exists('views/404.blade.php'))->toBeTrue()
-        ->and($disk->exists('resources/styles.css'))->toBeTrue()
-        ->and($disk->exists('resources/scripts.js'))->toBeTrue()
-        ->and($disk->exists('.gitignore'))->toBeTrue()
-        ->and($disk->exists('pluma-settings.json'))->toBeTrue();
+    expect('views/layout.blade.php')->toExistOnDisk()
+        ->and('views/index.blade.php')->toExistOnDisk()
+        ->and('views/page.blade.php')->toExistOnDisk()
+        ->and('views/404.blade.php')->toExistOnDisk()
+        ->and('resources/styles.css')->toExistOnDisk()
+        ->and('resources/scripts.js')->toExistOnDisk()
+        ->and('.gitignore')->toExistOnDisk()
+        ->and('pluma-settings.json')->toExistOnDisk();
 });
 
 test('creates pluma-settings.json with correct content', function () {
@@ -29,7 +27,7 @@ test('creates pluma-settings.json with correct content', function () {
     artisan('pluma:new')
         ->assertSuccessful();
 
-    $configContent = Storage::disk('current')->get('pluma-settings.json');
+    $configContent = disk()->get('pluma-settings.json');
 
     expect($configContent)->toContain('editor_url')
         ->and($configContent)->toContain('url');
@@ -41,7 +39,7 @@ test('creates .gitignore that ignores site directory', function () {
     artisan('pluma:new')
         ->assertSuccessful();
 
-    $gitignoreContent = Storage::disk('current')->get('.gitignore');
+    $gitignoreContent = disk()->get('.gitignore');
 
     expect($gitignoreContent)->toContain('site/');
 });

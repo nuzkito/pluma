@@ -1,47 +1,36 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\CreateTagPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 test('creates a tag page file with the slug-based name', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
     $action = app(CreateTagPage::class);
 
-    $action->__invoke('Cosas varias');
+    $action('Cosas varias');
 
-    expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeTrue();
+    expect('pages/tags/cosas-varias.tag.md')->toExistOnDisk();
 });
 
 test('does not create a tag page when the option is disabled', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', false);
 
     $action = app(CreateTagPage::class);
 
-    $action->__invoke('Cosas varias');
+    $action('Cosas varias');
 
-    expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeFalse();
+    expect('pages/tags/cosas-varias.tag.md')->toBeMissingFromDisk();
 });
 
 test('stores title, path and created_at in the frontmatter with empty content', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
-
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
 
     $action = app(CreateTagPage::class);
 
-    $action->__invoke('Laravel');
+    $action('Laravel');
 
-    Carbon::setTestNow(null);
-
-    $contents = Storage::disk('current')->get('pages/tags/laravel.tag.md');
+    $contents = disk()->get('pages/tags/laravel.tag.md');
 
     expect($contents)
         ->toContain('title: Laravel')
@@ -53,48 +42,43 @@ test('stores title, path and created_at in the frontmatter with empty content', 
 });
 
 test('does not overwrite an existing tag page', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    Storage::disk('current')->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nMy description");
+    disk()->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nMy description");
 
     $action = app(CreateTagPage::class);
 
-    $action->__invoke('Laravel');
+    $action('Laravel');
 
-    expect(Storage::disk('current')->get('pages/tags/laravel.tag.md'))->toContain('My description');
+    expect(disk()->get('pages/tags/laravel.tag.md'))->toContain('My description');
 });
 
 test('generates the tag page in the static site with its posts', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    $repository->save(new ContentPage(
-        title: 'Tagged Post',
-        path: new PagePath('tagged-post'),
-        content: new Markdown('# Tagged'),
+    aPublishedPage(
+        'Tagged Post',
+        'tagged-post',
+        content: '# Tagged',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
         tags: ['Laravel'],
-    ));
+    );
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
-        ->and($disk->get('site/tags/laravel/index.html'))
+    expect('site/tags/laravel/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/tags/laravel/index.html'))
         ->toContain('Laravel')
         ->toContain('Tagged Post');
 });
 
 test('does not show tag pages in the regular page listing', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
     $action = app(CreateTagPage::class);
 
-    $action->__invoke('Cosas varias');
+    $action('Cosas varias');
 
-    expect($repository->all())->toBeEmpty();
+    expect(repository()->all())->toBeEmpty();
 });

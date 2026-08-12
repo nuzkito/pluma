@@ -6,11 +6,8 @@ use App\Domain\Generator\Page\PagePath;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 
 test('generates index without prior generatePage call', function () {
-    $repository = initializeSite();
-
     $generator = app(SiteGenerator::class);
 
     $page = new ContentPage(
@@ -23,89 +20,77 @@ test('generates index without prior generatePage call', function () {
 
     $generator->generateIndex(new Collection([$page]));
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/index.html'))->toBeTrue()
-        ->and($disk->get('site/index.html'))->toContain('My Page');
+    expect('site/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/index.html'))->toContain('My Page');
 });
 
 test('generates 404 without prior generatePage call', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
     $generator->generate404(new Collection);
 
-    expect(Storage::disk('current')->exists('site/404.html'))->toBeTrue();
+    expect('site/404.html')->toExistOnDisk();
 });
 
 test('regenerates rss feed excluding pages with rss disabled', function () {
-    initializeSite();
     config(['pluma.rss.enabled' => true]);
 
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/rss-page.md',
         "---\ntitle: RSS Page\npath: rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\n---\n\n# RSS Page"
     );
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/no-rss-page.md',
         "---\ntitle: No RSS Page\npath: no-rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: false\n---\n\n# No RSS"
     );
 
     $generator->regenerateIndex();
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/feed.xml'))->toBeTrue()
-        ->and($disk->get('site/feed.xml'))->toContain('RSS Page')
-        ->and($disk->get('site/feed.xml'))->not->toContain('No RSS Page');
+    expect('site/feed.xml')->toExistOnDisk()
+        ->and(disk()->get('site/feed.xml'))->toContain('RSS Page')
+        ->and(disk()->get('site/feed.xml'))->not->toContain('No RSS Page');
 });
 
 test('does not generate rss feed when rss is disabled', function () {
-    initializeSite();
     config(['pluma.rss.enabled' => false]);
 
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/rss-page.md',
         "---\ntitle: RSS Page\npath: rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\n---\n\n# RSS Page"
     );
 
     $generator->regenerateIndex();
 
-    expect(Storage::disk('current')->exists('site/feed.xml'))->toBeFalse();
+    expect('site/feed.xml')->toBeMissingFromDisk();
 });
 
 test('generates a tag page listing only the posts with that tag', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tagged-post.md',
         "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - Laravel\n---\n\n# Tagged"
     );
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/other-post.md',
         "---\ntitle: Other Post\npath: other-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - PHP\n---\n\n# Other"
     );
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tags/laravel.tag.md',
         "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
     );
 
     $generator->generateAll();
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
-        ->and($disk->get('site/tags/laravel/index.html'))
+    expect('site/tags/laravel/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/tags/laravel/index.html'))
         ->toContain('Laravel')
         ->toContain('All about Laravel')
         ->toContain('Tagged Post')
@@ -113,91 +98,73 @@ test('generates a tag page listing only the posts with that tag', function () {
 });
 
 test('does not render a description when the tag page has empty content', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tags/laravel.tag.md',
         "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\n"
     );
 
     $generator->generateAll();
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
-        ->and($disk->get('site/tags/laravel/index.html'))->not->toContain('<div>');
+    expect('site/tags/laravel/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/tags/laravel/index.html'))->not->toContain('<div>');
 });
 
 test('copies the assets of a tag page next to its generated html', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tags/laravel.tag.md',
         "---\ntitle: Laravel\npath: tags/laravel\ncover_image: header.png\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
     );
 
-    Storage::disk('current')->put('assets/tags/laravel/header.png', 'binary');
+    disk()->put('assets/tags/laravel/header.png', 'binary');
 
     $generator->generateAll();
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/tags/laravel/header.png'))->toBeTrue()
-        ->and($disk->get('site/tags/laravel/index.html'))->toContain('src="header.png"');
+    expect('site/tags/laravel/header.png')->toExistOnDisk()
+        ->and(disk()->get('site/tags/laravel/index.html'))->toContain('src="header.png"');
 });
 
 test('generatePage regenerates the tag page living at that path', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tags/laravel.tag.md',
         "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
     );
 
     $generator->generatePage('tags/laravel');
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue()
-        ->and($disk->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
+    expect('site/tags/laravel/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
 });
 
 test('removes a single file from a generated page', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    $disk = Storage::disk('current');
-    $disk->put('site/my-page/index.html', '<html></html>');
-    $disk->put('site/my-page/photo.png', 'binary');
+    disk()->put('site/my-page/index.html', '<html></html>');
+    disk()->put('site/my-page/photo.png', 'binary');
 
     $generator->removePageFile('my-page', 'photo.png');
 
-    expect($disk->exists('site/my-page/photo.png'))->toBeFalse()
-        ->and($disk->exists('site/my-page/index.html'))->toBeTrue();
+    expect('site/my-page/photo.png')->toBeMissingFromDisk()
+        ->and('site/my-page/index.html')->toExistOnDisk();
 });
 
 test('deletes feed.xml when last rss page has rss disabled', function () {
-    initializeSite();
-
     $generator = app(SiteGenerator::class);
 
-    $disk = Storage::disk('current');
-    $disk->makeDirectory('site');
-    $disk->put('site/feed.xml', '<rss>old feed</rss>');
+    disk()->makeDirectory('site');
+    disk()->put('site/feed.xml', '<rss>old feed</rss>');
 
-    $disk->put(
+    disk()->put(
         'pages/former-rss-page.md',
         "---\ntitle: Former RSS Page\npath: former-rss-page\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: false\n---\n\n# Former RSS"
     );
 
     $generator->regenerateIndex();
 
-    expect($disk->exists('site/feed.xml'))->toBeFalse();
+    expect('site/feed.xml')->toBeMissingFromDisk();
 });

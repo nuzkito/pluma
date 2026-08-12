@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 });
 
 test('returns Draft when no pages exist', function () {
     $repository = new PageRepository;
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft');
+    expect($generator(''))->toBe('Draft');
 });
 
 test('returns Draft when no drafts named Draft exist', function () {
@@ -29,7 +29,7 @@ test('returns Draft when no drafts named Draft exist', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft');
+    expect($generator(''))->toBe('Draft');
 });
 
 test('returns Draft 2 when Draft exists', function () {
@@ -40,7 +40,7 @@ test('returns Draft 2 when Draft exists', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 2');
+    expect($generator(''))->toBe('Draft 2');
 });
 
 test('returns next sequential number', function () {
@@ -51,7 +51,7 @@ test('returns next sequential number', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 3');
+    expect($generator(''))->toBe('Draft 3');
 });
 
 test('uses highest number even with gaps', function () {
@@ -62,7 +62,7 @@ test('uses highest number even with gaps', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 6');
+    expect($generator(''))->toBe('Draft 6');
 });
 
 test('treats non-numeric Draft suffix as zero', function () {
@@ -72,7 +72,7 @@ test('treats non-numeric Draft suffix as zero', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 1');
+    expect($generator(''))->toBe('Draft 1');
 });
 
 test('ignores tag pages in the same directory', function () {
@@ -88,7 +88,7 @@ test('ignores tag pages in the same directory', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 2');
+    expect($generator(''))->toBe('Draft 2');
 });
 
 test('handles mix of numbered and unnumbered drafts', function () {
@@ -100,5 +100,5 @@ test('handles mix of numbered and unnumbered drafts', function () {
 
     $generator = new DraftNameGenerator($repository);
 
-    expect($generator->__invoke(''))->toBe('Draft 4');
+    expect($generator(''))->toBe('Draft 4');
 });

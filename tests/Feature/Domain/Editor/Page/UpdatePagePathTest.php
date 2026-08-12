@@ -1,61 +1,54 @@
 <?php
 
 use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePagePath;
-use App\Domain\Error;
 use App\Domain\Generator\SiteGenerator;
-use App\Domain\Ok;
-use Carbon\Carbon;
+
+use function Pest\Laravel\mock;
 
 test('returns Ok with page when path is updated successfully', function () {
-    $repository = initializeSite();
+    aPage('Path Update Test', 'path-update-test');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePagePath::class);
 
-    $page = ContentPage::draft('Path Update Test', 'path-update-test');
-    $repository->save($page);
+    $result = $action('path-update-test', 'new-path');
 
-    $action = new UpdatePagePath(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $result = $action->__invoke('path-update-test', 'new-path');
-
-    expect($result)->toBeInstanceOf(Ok::class)
+    expect($result)->toBeOk()
         ->and($result->unwrap())->toBeInstanceOf(ContentPage::class);
-
-    Carbon::setTestNow(null);
 });
 
 test('returns Error when new path already exists for another page', function () {
-    $repository = initializeSite();
+    aPage('Existing Page', 'existing-page');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    aPage('Another Page', 'existing-page', content: '# Content');
 
-    $pageA = ContentPage::draft('Existing Page', 'existing-page');
-    $repository->save($pageA);
+    $action = app(UpdatePagePath::class);
 
-    $pageB = new ContentPage(
-        title: 'Another Page',
-        path: new PagePath('existing-page'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-    );
-    $repository->save($pageB);
+    $result = $action('another-page', 'existing-page');
 
-    $action = new UpdatePagePath(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    expect($result)->toBeError('A page with this path already exists.');
+});
 
-    $result = $action->__invoke('another-page', 'existing-page');
+test('moves a published page in the generated site', function () {
+    aPublishedPage('Move In Site Test', 'move-in-site-test', content: '# Content');
 
-    expect($result)->toBeInstanceOf(Error::class)
-        ->and($result->unwrapError())->toBe('A page with this path already exists.');
+    app(SiteGenerator::class)->generatePage('move-in-site-test');
 
-    Carbon::setTestNow(null);
+    app(UpdatePagePath::class)('move-in-site-test', 'moved-page');
+
+    expect('site/moved-page/index.html')->toExistOnDisk()
+        ->and('site/move-in-site-test')->toBeMissingFromDisk()
+        ->and(disk()->get('site/index.html'))->toContain('moved-page');
+});
+
+test('leaves the generated site alone when the page is a draft', function () {
+    aPage('Draft Move Test', 'draft-move-test');
+
+    mock(SiteGenerator::class, function ($mock) {
+        $mock->shouldNotReceive('generatePage');
+        $mock->shouldNotReceive('removePage');
+        $mock->shouldNotReceive('regenerateIndex');
+    });
+
+    expect(app(UpdatePagePath::class)('draft-move-test', 'moved-draft'))->toBeOk();
 });

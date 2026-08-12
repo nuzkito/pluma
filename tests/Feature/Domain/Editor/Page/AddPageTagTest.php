@@ -2,123 +2,73 @@
 
 use App\Domain\Editor\Page\AddPageTag;
 use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
+
+use function Pest\Laravel\mock;
 
 test('adds tag to page', function () {
-    $repository = initializeSite();
+    aPage('Tag Test', 'tag-test', content: '# Content', tags: ['php']);
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(AddPageTag::class);
 
-    $page = new ContentPage(
-        title: 'Tag Test',
-        path: new PagePath('tag-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-        tags: ['php'],
-    );
-    $repository->save($page);
-
-    $action = new AddPageTag(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $result = $action->__invoke('tag-test', 'laravel');
-
-    Carbon::setTestNow(null);
+    $result = $action('tag-test', 'laravel');
 
     expect($result)->toBeInstanceOf(ContentPage::class)
-        ->and($repository->findByPath('tag-test')->tags)->toEqual(['php', 'laravel']);
+        ->and(repository()->findByPath('tag-test')->tags)->toEqual(['php', 'laravel']);
 });
 
 test('does not add duplicate tag', function () {
-    $repository = initializeSite();
+    aPage('Duplicate Tag Test', 'duplicate-tag-test', content: '# Content', tags: ['php']);
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(AddPageTag::class);
 
-    $page = new ContentPage(
-        title: 'Duplicate Tag Test',
-        path: new PagePath('duplicate-tag-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-        tags: ['php'],
-    );
-    $repository->save($page);
-
-    $action = new AddPageTag(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $result = $action->__invoke('duplicate-tag-test', 'php');
-
-    Carbon::setTestNow(null);
+    $result = $action('duplicate-tag-test', 'php');
 
     expect($result)->toBeInstanceOf(ContentPage::class)
-        ->and($repository->findByPath('duplicate-tag-test')->tags)->toEqual(['php']);
+        ->and(repository()->findByPath('duplicate-tag-test')->tags)->toEqual(['php']);
 });
 
 test('adds tag to published page and regenerates site', function () {
-    $repository = initializeSite();
-
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
-
-    $page = new ContentPage(
-        title: 'Published Tag Test',
-        path: new PagePath('published-tag-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
+    aPublishedPage(
+        'Published Tag Test',
+        'published-tag-test',
+        content: '# Content',
         published_at: Carbon::parse('2025-01-01 10:00:00'),
-        tags: [],
     );
-    $repository->save($page);
 
-    $siteGenerator = mock(SiteGenerator::class, function ($mock) {
+    mock(SiteGenerator::class, function ($mock) {
         $mock->shouldReceive('generatePage')->twice();
         $mock->shouldReceive('regenerateIndex')->once();
     });
 
-    $action = new AddPageTag(
-        repository: app(PageRepository::class),
-        siteGenerator: $siteGenerator,
-    );
+    $action = app(AddPageTag::class);
 
-    $result = $action->__invoke('published-tag-test', 'new-tag');
-
-    Carbon::setTestNow(null);
+    $result = $action('published-tag-test', 'new-tag');
 
     expect($result->tags)->toEqual(['new-tag']);
 });
 
 test('updates the static tag page when adding a tag to a published page', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    Storage::disk('current')->put(
+    disk()->put(
         'pages/tags/laravel.tag.md',
         "---\ntitle: laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\n"
     );
 
-    $repository->save(new ContentPage(
-        title: 'Published Post',
-        path: new PagePath('published-post'),
-        content: new Markdown('# Content'),
+    aPublishedPage(
+        'Published Post',
+        'published-post',
+        content: '# Content',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-    ));
-
-    $action = new AddPageTag(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
     );
 
-    $action->__invoke('published-post', 'laravel');
+    $action = app(AddPageTag::class);
 
-    expect(Storage::disk('current')->get('site/tags/laravel/index.html'))
+    $action('published-post', 'laravel');
+
+    expect(disk()->get('site/tags/laravel/index.html'))
         ->toContain('Published Post');
 });

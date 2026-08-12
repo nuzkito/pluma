@@ -14,8 +14,6 @@ test('creates a tag page with slug path, empty content and current date', functi
         ->and((string) $tagPage->content)->toBe('')
         ->and($tagPage->cover_image)->toBeNull()
         ->and($tagPage->created_at->toIso8601String())->toBe(Carbon::now()->toIso8601String());
-
-    Carbon::setTestNow(null);
 });
 
 test('builds the filename with the tag suffix', function () {
@@ -36,8 +34,6 @@ test('serializes title, path, cover image and created_at to the frontmatter', fu
         'cover_image' => 'header.png',
         'created_at' => Carbon::now()->toIso8601String(),
     ]);
-
-    Carbon::setTestNow(null);
 });
 
 test('is never included in the rss feed', function () {
@@ -62,8 +58,6 @@ test('is published at its creation date', function () {
 
     expect($tagPage->published_at)->toEqual($tagPage->created_at)
         ->and($tagPage->isPublished())->toBeTrue();
-
-    Carbon::setTestNow(null);
 });
 
 test('updates its content', function () {

@@ -1,18 +1,11 @@
 <?php
 
 use App\Domain\Editor\Asset\UploadAsset;
-use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 test('uploads a single file', function () {
-    initializeSite();
-    $page = ContentPage::draft('Test Page', 'test-page');
-    app(PageRepository::class)->save($page);
+    $page = aPage('Test Page', 'test-page');
 
     $file = UploadedFile::fake()->createWithContent('my-file.txt', 'content');
 
@@ -26,9 +19,7 @@ test('uploads a single file', function () {
 });
 
 test('uploads multiple files', function () {
-    initializeSite();
-    $page = ContentPage::draft('Test Page', 'test-page');
-    app(PageRepository::class)->save($page);
+    $page = aPage('Test Page', 'test-page');
 
     $files = [
         UploadedFile::fake()->createWithContent('file1.txt', 'a'),
@@ -45,9 +36,7 @@ test('uploads multiple files', function () {
 });
 
 test('saves files to correct assets directory', function () {
-    initializeSite();
-    $page = ContentPage::draft('Test Page', 'test-page');
-    app(PageRepository::class)->save($page);
+    $page = aPage('Test Page', 'test-page');
 
     $files = [
         UploadedFile::fake()->createWithContent('file1.txt', 'a'),
@@ -58,14 +47,12 @@ test('saves files to correct assets directory', function () {
 
     $uploadAsset((string) $page->path, $files);
 
-    expect(Storage::disk('current')->exists("assets/{$page->path}/file1.txt"))->toBeTrue();
-    expect(Storage::disk('current')->exists("assets/{$page->path}/file2.jpg"))->toBeTrue();
+    expect("assets/{$page->path}/file1.txt")->toExistOnDisk();
+    expect("assets/{$page->path}/file2.jpg")->toExistOnDisk();
 });
 
 test('returns url with correct route', function () {
-    initializeSite();
-    $page = ContentPage::draft('Test Page', 'test-page');
-    app(PageRepository::class)->save($page);
+    $page = aPage('Test Page', 'test-page');
 
     $files = [UploadedFile::fake()->createWithContent('my-file.txt', 'content')];
 
@@ -78,15 +65,13 @@ test('returns url with correct route', function () {
 });
 
 test('copies the uploaded files to the generated site when the page is published', function () {
-    initializeSite();
-    $page = new ContentPage(
-        title: 'Test Page',
-        path: new PagePath('test-page'),
-        content: new Markdown('# Content'),
+    $page = aPublishedPage(
+        'Test Page',
+        'test-page',
+        content: '# Content',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
     );
-    app(PageRepository::class)->save($page);
 
     $files = [
         UploadedFile::fake()->image('photo.jpg', 3000, 2000),
@@ -95,19 +80,15 @@ test('copies the uploaded files to the generated site when the page is published
 
     app(UploadAsset::class)((string) $page->path, $files);
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists("site/{$page->path}/photo.jpg"))->toBeTrue()
-        ->and($disk->size("site/{$page->path}/photo.jpg"))->toBeLessThan($disk->size("assets/{$page->path}/photo.jpg"))
-        ->and($disk->get("site/{$page->path}/notes.txt"))->toBe('text content');
+    expect("site/{$page->path}/photo.jpg")->toExistOnDisk()
+        ->and(disk()->size("site/{$page->path}/photo.jpg"))->toBeLessThan(disk()->size("assets/{$page->path}/photo.jpg"))
+        ->and(disk()->get("site/{$page->path}/notes.txt"))->toBe('text content');
 });
 
 test('does not copy the uploaded files to the generated site when the page is a draft', function () {
-    initializeSite();
-    $page = ContentPage::draft('Test Page', 'test-page');
-    app(PageRepository::class)->save($page);
+    $page = aPage('Test Page', 'test-page');
 
     app(UploadAsset::class)((string) $page->path, [UploadedFile::fake()->createWithContent('notes.txt', 'text content')]);
 
-    expect(Storage::disk('current')->exists("site/{$page->path}/notes.txt"))->toBeFalse();
+    expect("site/{$page->path}/notes.txt")->toBeMissingFromDisk();
 });

@@ -1,61 +1,39 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePageRss;
 use App\Domain\Generator\SiteGenerator;
-use Carbon\Carbon;
+
+use function Pest\Laravel\mock;
 
 test('enables RSS when enabled is true', function () {
-    $repository = initializeSite();
+    aPage('RSS Enable Test', 'rss-enable-test', content: '# Content');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageRss::class);
 
-    $page = new ContentPage(
-        title: 'RSS Enable Test',
-        path: new PagePath('rss-enable-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-        rss: false,
-    );
-    $repository->save($page);
+    $action('rss-enable-test', true);
 
-    $action = new UpdatePageRss(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $action->__invoke('rss-enable-test', true);
-
-    expect($repository->findByPath('rss-enable-test')->rss)->toBeTrue();
-
-    Carbon::setTestNow(null);
+    expect(repository()->findByPath('rss-enable-test')->rss)->toBeTrue();
 });
 
 test('disables RSS when enabled is false', function () {
-    $repository = initializeSite();
+    aPage('RSS Disable Test', 'rss-disable-test', content: '# Content', rss: true);
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageRss::class);
 
-    $page = new ContentPage(
-        title: 'RSS Disable Test',
-        path: new PagePath('rss-disable-test'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-        rss: true,
-    );
-    $repository->save($page);
+    $action('rss-disable-test', false);
 
-    $action = new UpdatePageRss(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    expect(repository()->findByPath('rss-disable-test')->rss)->toBeFalse();
+});
 
-    $action->__invoke('rss-disable-test', false);
+test('refreshes the index without regenerating the page', function () {
+    aPublishedPage('RSS Index Test', 'rss-index-test', content: '# Content');
 
-    expect($repository->findByPath('rss-disable-test')->rss)->toBeFalse();
+    mock(SiteGenerator::class, function ($mock) {
+        $mock->shouldNotReceive('generatePage');
+        $mock->shouldReceive('regenerateIndex')->once();
+    });
 
-    Carbon::setTestNow(null);
+    app(UpdatePageRss::class)('rss-index-test', true);
+
+    expect(repository()->findByPath('rss-index-test')->rss)->toBeTrue();
 });

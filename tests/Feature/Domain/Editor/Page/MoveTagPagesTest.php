@@ -1,166 +1,132 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\Markdown;
 use App\Domain\Editor\Page\MoveTagPages;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Error;
-use App\Domain\Ok;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 test('moves every tag page to the new directory', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
-    app(CreateTagPage::class)->__invoke('Livewire');
+    app(CreateTagPage::class)('Laravel');
+    app(CreateTagPage::class)('Livewire');
 
-    $result = app(MoveTagPages::class)->__invoke('tags', 'topics');
+    $result = app(MoveTagPages::class)('tags', 'topics');
 
-    $disk = Storage::disk('current');
-
-    expect($result)->toBeInstanceOf(Ok::class)
-        ->and($disk->exists('pages/topics/laravel.tag.md'))->toBeTrue()
-        ->and($disk->exists('pages/topics/livewire.tag.md'))->toBeTrue()
-        ->and($disk->exists('pages/tags/laravel.tag.md'))->toBeFalse()
-        ->and($disk->exists('pages/tags'))->toBeFalse();
+    expect($result)->toBeOk()
+        ->and('pages/topics/laravel.tag.md')->toExistOnDisk()
+        ->and('pages/topics/livewire.tag.md')->toExistOnDisk()
+        ->and('pages/tags/laravel.tag.md')->toBeMissingFromDisk()
+        ->and('pages/tags')->toBeMissingFromDisk();
 });
 
 test('updates the path stored in the frontmatter', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    app(MoveTagPages::class)->__invoke('tags', 'topics');
+    app(MoveTagPages::class)('tags', 'topics');
 
-    expect(Storage::disk('current')->get('pages/topics/laravel.tag.md'))
+    expect(disk()->get('pages/topics/laravel.tag.md'))
         ->toContain('path: topics/laravel')
         ->toContain('title: Laravel');
 });
 
 test('keeps the tag page content and cover image', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $tagPage = $repository->findByPath('tags/laravel');
+    $tagPage = repository()->findByPath('tags/laravel');
     $tagPage->setContent(new Markdown('My description'));
     $tagPage->changeCoverImage('cover.png');
-    $repository->save($tagPage);
+    repository()->save($tagPage);
 
-    app(MoveTagPages::class)->__invoke('tags', 'topics');
+    app(MoveTagPages::class)('tags', 'topics');
 
-    expect(Storage::disk('current')->get('pages/topics/laravel.tag.md'))
+    expect(disk()->get('pages/topics/laravel.tag.md'))
         ->toContain('My description')
         ->toContain('cover_image: cover.png');
 });
 
 test('moves the assets of the tag pages', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $disk = Storage::disk('current');
-    $disk->put('assets/tags/laravel/cover.png', 'image');
+    disk()->put('assets/tags/laravel/cover.png', 'image');
 
-    app(MoveTagPages::class)->__invoke('tags', 'topics');
+    app(MoveTagPages::class)('tags', 'topics');
 
-    expect($disk->exists('assets/topics/laravel/cover.png'))->toBeTrue()
-        ->and($disk->exists('assets/tags/laravel/cover.png'))->toBeFalse();
+    expect('assets/topics/laravel/cover.png')->toExistOnDisk()
+        ->and('assets/tags/laravel/cover.png')->toBeMissingFromDisk();
 });
 
 test('removes the generated tag pages from the old directory', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $disk = Storage::disk('current');
+    expect('site/tags/laravel/index.html')->toExistOnDisk();
 
-    expect($disk->exists('site/tags/laravel/index.html'))->toBeTrue();
+    app(MoveTagPages::class)('tags', 'topics');
 
-    app(MoveTagPages::class)->__invoke('tags', 'topics');
-
-    expect($disk->exists('site/tags'))->toBeFalse();
+    expect('site/tags')->toBeMissingFromDisk();
 });
 
 test('returns an error when the new directory already exists', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    Storage::disk('current')->makeDirectory('pages/topics');
+    disk()->makeDirectory('pages/topics');
 
-    $result = app(MoveTagPages::class)->__invoke('tags', 'topics');
+    $result = app(MoveTagPages::class)('tags', 'topics');
 
-    expect($result)->toBeInstanceOf(Error::class)
-        ->and($result->unwrapError())->toBe('A page or directory with this path already exists.')
-        ->and(Storage::disk('current')->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+    expect($result)->toBeError('A page or directory with this path already exists.')
+        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('returns an error when a page already uses the new path', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $repository->save(new ContentPage(
-        title: 'Topics',
-        path: new PagePath('topics'),
-        content: new Markdown('# Topics'),
-        created_at: Carbon::parse('2025-01-01'),
-    ));
+    aPage('Topics', 'topics', content: '# Topics', created_at: Carbon::parse('2025-01-01'));
 
-    $result = app(MoveTagPages::class)->__invoke('tags', 'topics');
+    $result = app(MoveTagPages::class)('tags', 'topics');
 
-    expect($result)->toBeInstanceOf(Error::class)
-        ->and(Storage::disk('current')->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+    expect($result)->toBeError()
+        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('does nothing when the path does not change', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $result = app(MoveTagPages::class)->__invoke('tags', 'tags');
+    $result = app(MoveTagPages::class)('tags', 'tags');
 
-    expect($result)->toBeInstanceOf(Ok::class)
-        ->and(Storage::disk('current')->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+    expect($result)->toBeOk()
+        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('keeps the old directory when it still holds other pages', function () {
-    $repository = initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    $repository->save(new ContentPage(
-        title: 'Kept',
-        path: new PagePath('tags/kept'),
-        content: new Markdown('# Kept'),
-        created_at: Carbon::parse('2025-01-01'),
-    ));
+    aPage('Kept', 'tags/kept', content: '# Kept', created_at: Carbon::parse('2025-01-01'));
 
-    app(MoveTagPages::class)->__invoke('tags', 'topics');
+    app(MoveTagPages::class)('tags', 'topics');
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('pages/tags/kept.md'))->toBeTrue()
-        ->and($disk->exists('pages/topics/laravel.tag.md'))->toBeTrue();
+    expect('pages/tags/kept.md')->toExistOnDisk()
+        ->and('pages/topics/laravel.tag.md')->toExistOnDisk();
 });
 
 test('does not create the new directory when there are no tag pages', function () {
-    initializeSite();
+    $result = app(MoveTagPages::class)('tags', 'topics');
 
-    $result = app(MoveTagPages::class)->__invoke('tags', 'topics');
-
-    expect($result)->toBeInstanceOf(Ok::class)
-        ->and(Storage::disk('current')->exists('pages/topics'))->toBeFalse();
+    expect($result)->toBeOk()
+        ->and('pages/topics')->toBeMissingFromDisk();
 });

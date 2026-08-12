@@ -1,87 +1,64 @@
 <?php
 
 use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
-use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Page\UpdatePageTitle;
-use App\Domain\Error;
 use App\Domain\Generator\SiteGenerator;
-use App\Domain\Ok;
-use Carbon\Carbon;
+
+use function Pest\Laravel\mock;
 
 test('returns Ok with page when title is updated successfully', function () {
-    $repository = initializeSite();
+    aPage('Original Title', 'original-title');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageTitle::class);
 
-    $page = ContentPage::draft('Original Title', 'original-title');
-    $repository->save($page);
+    $result = $action('original-title', 'New Title');
 
-    $action = new UpdatePageTitle(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $result = $action->__invoke('original-title', 'New Title');
-
-    expect($result)->toBeInstanceOf(Ok::class)
+    expect($result)->toBeOk()
         ->and($result->unwrap())->toBeInstanceOf(ContentPage::class);
-
-    Carbon::setTestNow(null);
 });
 
 test('returns Ok with page when title is updated without path change', function () {
-    $repository = initializeSite();
+    aPage('Original Title', 'custom-path', content: '# Content');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    $action = app(UpdatePageTitle::class);
 
-    $page = new ContentPage(
-        title: 'Original Title',
-        path: new PagePath('custom-path'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-    );
-    $repository->save($page);
+    $result = $action('custom-path', 'New Title');
 
-    $action = new UpdatePageTitle(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
-
-    $result = $action->__invoke('custom-path', 'New Title');
-
-    expect($result)->toBeInstanceOf(Ok::class)
-        ->and($repository->findByPath('custom-path')->title)->toBe('New Title');
-
-    Carbon::setTestNow(null);
+    expect($result)->toBeOk()
+        ->and(repository()->findByPath('custom-path')->title)->toBe('New Title');
 });
 
 test('returns Error when new title generates conflicting slug with another page', function () {
-    $repository = initializeSite();
+    aPage('Existing Title', 'existing-title');
 
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+    aPage('Different Title', 'different-title', content: '# Content');
 
-    $pageA = ContentPage::draft('Existing Title', 'existing-title');
-    $repository->save($pageA);
+    $action = app(UpdatePageTitle::class);
 
-    $pageB = new ContentPage(
-        title: 'Different Title',
-        path: new PagePath('different-title'),
-        content: new Markdown('# Content'),
-        created_at: Carbon::now(),
-    );
-    $repository->save($pageB);
+    $result = $action('different-title', 'Existing Title');
 
-    $action = new UpdatePageTitle(
-        repository: app(PageRepository::class),
-        siteGenerator: app(SiteGenerator::class),
-    );
+    expect($result)->toBeError('This title generates the same slug as another page that already exists.');
+});
 
-    $result = $action->__invoke('different-title', 'Existing Title');
+test('moves a published page in the generated site when the slug changes', function () {
+    aPublishedPage('Original Site Title', 'original-site-title', content: '# Content');
 
-    expect($result)->toBeInstanceOf(Error::class)
-        ->and($result->unwrapError())->toBe('This title generates the same slug as another page that already exists.');
+    app(SiteGenerator::class)->generatePage('original-site-title');
 
-    Carbon::setTestNow(null);
+    app(UpdatePageTitle::class)('original-site-title', 'Renamed Site Title');
+
+    expect('site/renamed-site-title/index.html')->toExistOnDisk()
+        ->and(disk()->get('site/index.html'))->toContain('Renamed Site Title');
+});
+
+test('does not generate the page in the site when it is a draft', function () {
+    aPage('Draft Site Title', 'draft-site-title');
+
+    mock(SiteGenerator::class, function ($mock) {
+        $mock->shouldNotReceive('generatePage');
+        $mock->shouldReceive('removePage')->once();
+        $mock->shouldReceive('regenerateIndex')->zeroOrMoreTimes();
+    });
+
+    expect(app(UpdatePageTitle::class)('draft-site-title', 'Renamed Draft Title'))->toBeOk();
 });

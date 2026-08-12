@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 test('returns empty collection when no pages exist', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -19,7 +19,7 @@ test('returns empty collection when no pages exist', function () {
 
 test('saves and retrieves a page', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -43,7 +43,7 @@ test('saves and retrieves a page', function () {
 
 test('saves and retrieves a page cover image', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -62,7 +62,7 @@ test('saves and retrieves a page cover image', function () {
 
 test('lists all pages sorted by created_at descending', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -91,7 +91,7 @@ test('lists all pages sorted by created_at descending', function () {
 
 test('filters published pages', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -121,7 +121,7 @@ test('filters published pages', function () {
 
 test('detects duplicate paths', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -141,7 +141,7 @@ test('detects duplicate paths', function () {
 
 test('detects duplicate paths inside a directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -160,34 +160,30 @@ test('detects duplicate paths inside a directory', function () {
 
 test('moves page file and assets when path changes', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
-    Storage::disk('current')->makeDirectory('assets');
+    disk()->makeDirectory('pages');
+    disk()->makeDirectory('assets');
 
     $repository = new PageRepository;
-    $disk = Storage::disk('current');
-
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
-    $disk->put("assets/{$page->path}/image.jpg", 'fake image');
+    disk()->put("assets/{$page->path}/image.jpg", 'fake image');
 
     $oldPath = (string) $page->path;
     $page->path = new PagePath('new-path');
     $repository->save($page, $oldPath);
 
-    expect($disk->exists('pages/new-path.md'))->toBeTrue()
-        ->and($disk->exists("pages/$oldPath.md"))->toBeFalse()
-        ->and($disk->exists('assets/new-path/image.jpg'))->toBeTrue()
-        ->and($disk->exists("assets/$oldPath/image.jpg"))->toBeFalse();
+    expect('pages/new-path.md')->toExistOnDisk()
+        ->and("pages/$oldPath.md")->toBeMissingFromDisk()
+        ->and('assets/new-path/image.jpg')->toExistOnDisk()
+        ->and("assets/$oldPath/image.jpg")->toBeMissingFromDisk();
 });
 
 test('moves page file when path changes with no assets directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
-    $disk = Storage::disk('current');
-
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
     $oldPath = (string) $page->path;
@@ -195,47 +191,43 @@ test('moves page file when path changes with no assets directory', function () {
     $page->path = new PagePath('renamed-path');
     $repository->save($page, $oldPath);
 
-    expect($disk->exists('pages/renamed-path.md'))->toBeTrue()
-        ->and($disk->exists("pages/$oldPath.md"))->toBeFalse();
+    expect('pages/renamed-path.md')->toExistOnDisk()
+        ->and("pages/$oldPath.md")->toBeMissingFromDisk();
 });
 
 test('deletes page file and assets directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
-    Storage::disk('current')->makeDirectory('assets');
+    disk()->makeDirectory('pages');
+    disk()->makeDirectory('assets');
 
     $repository = new PageRepository;
-    $disk = Storage::disk('current');
-
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
-    $disk->put("assets/{$page->path}/image.jpg", 'fake image');
+    disk()->put("assets/{$page->path}/image.jpg", 'fake image');
 
     $repository->delete((string) $page->path);
 
-    expect($disk->exists("pages/{$page->path}.md"))->toBeFalse()
-        ->and($disk->exists("assets/{$page->path}"))->toBeFalse();
+    expect("pages/{$page->path}.md")->toBeMissingFromDisk()
+        ->and("assets/{$page->path}")->toBeMissingFromDisk();
 });
 
 test('deletes page file when no assets directory exists', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
-    $disk = Storage::disk('current');
-
     $page = ContentPage::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $repository->delete((string) $page->path);
 
-    expect($disk->exists("pages/{$page->path}.md"))->toBeFalse();
+    expect("pages/{$page->path}.md")->toBeMissingFromDisk();
 });
 
 test('returns null when page not found by path', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -244,12 +236,10 @@ test('returns null when page not found by path', function () {
 
 test('ignores non-markdown files in all()', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
-    $disk = Storage::disk('current');
-
-    $disk->put('pages/readme.txt', 'some text');
+    disk()->put('pages/readme.txt', 'some text');
 
     $page = ContentPage::draft('Real Page', 'real-page');
     $repository->save($page);
@@ -259,7 +249,7 @@ test('ignores non-markdown files in all()', function () {
 
 test('persists and retrieves rss field', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -278,7 +268,7 @@ test('persists and retrieves rss field', function () {
 
 test('persists and retrieves published_at field', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -301,18 +291,18 @@ test('persists and retrieves published_at field', function () {
 
 test('saves a tag page using the .tag.md suffix', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
     $repository->save(TagPage::create('Cosas varias'));
 
-    expect(Storage::disk('current')->exists('pages/tags/cosas-varias.tag.md'))->toBeTrue();
+    expect('pages/tags/cosas-varias.tag.md')->toExistOnDisk();
 });
 
 test('moves the tag page file when it is saved with an old path', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -322,15 +312,13 @@ test('moves the tag page file when it is saved with an old path', function () {
     $tagPage->moveToPath(new PagePath('topics/cosas-varias'));
     $repository->save($tagPage, 'tags/cosas-varias');
 
-    $disk = Storage::disk('current');
-
-    expect($disk->exists('pages/topics/cosas-varias.tag.md'))->toBeTrue()
-        ->and($disk->exists('pages/tags/cosas-varias.tag.md'))->toBeFalse();
+    expect('pages/topics/cosas-varias.tag.md')->toExistOnDisk()
+        ->and('pages/tags/cosas-varias.tag.md')->toBeMissingFromDisk();
 });
 
 test('includes tag pages, typed as TagPage, alongside content pages', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -351,13 +339,12 @@ test('includes tag pages, typed as TagPage, alongside content pages', function (
 
 test('reads a tag page from its directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
     Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
     $repository->save(TagPage::create('Cosas varias'));
-    Carbon::setTestNow(null);
 
     $tags = $repository->searchByDirectory('tags');
 
@@ -370,7 +357,7 @@ test('reads a tag page from its directory', function () {
 
 test('a tag page only shows up in its own directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -383,7 +370,7 @@ test('a tag page only shows up in its own directory', function () {
 
 test('excludes tag pages from published()', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -406,7 +393,7 @@ test('excludes tag pages from published()', function () {
 
 test('searchByDirectory returns only pages directly in that directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -434,7 +421,7 @@ test('searchByDirectory returns only pages directly in that directory', function
 
 test('all() is equivalent to searchByDirectory() at the root', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -454,7 +441,7 @@ test('all() is equivalent to searchByDirectory() at the root', function () {
 
 test('findByPath resolves a tag page from its path', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -468,7 +455,7 @@ test('findByPath resolves a tag page from its path', function () {
 
 test('keeps the cover image of a tag page between saves', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
@@ -482,7 +469,7 @@ test('keeps the cover image of a tag page between saves', function () {
 
 test('tagExists reflects whether a tag page file is present', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages');
+    disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 

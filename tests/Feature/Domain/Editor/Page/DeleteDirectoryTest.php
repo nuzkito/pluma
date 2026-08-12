@@ -1,86 +1,59 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\DeleteDirectory;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PublishPage;
-use App\Domain\Generator\SiteGenerator;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 test('deletes an empty directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts');
 
-    expect(app(DeleteDirectory::class)->__invoke('posts'))->toBeTrue()
-        ->and(Storage::disk('current')->exists('pages/posts'))->toBeFalse();
+    expect(app(DeleteDirectory::class)('posts'))->toBeTrue()
+        ->and('pages/posts')->toBeMissingFromDisk();
 });
 
 test('deletes the directory in the generated site', function () {
-    $repository = initializeSite();
+    $page = aPage('Post Page', 'posts/post-page');
+    app(PublishPage::class)((string) $page->path);
 
-    $page = new ContentPage(
-        title: 'Post Page',
-        path: new PagePath('posts/post-page'),
-        content: new Markdown(''),
-        created_at: Carbon::now(),
-    );
-    $repository->save($page);
-    new PublishPage($repository, app(SiteGenerator::class))->__invoke((string) $page->path);
+    expect('site/posts')->toExistOnDisk();
 
-    expect(Storage::disk('current')->exists('site/posts'))->toBeTrue();
+    repository()->delete((string) $page->path);
 
-    $repository->delete((string) $page->path);
-
-    expect(app(DeleteDirectory::class)->__invoke('posts'))->toBeTrue()
-        ->and(Storage::disk('current')->exists('site/posts'))->toBeFalse();
+    expect(app(DeleteDirectory::class)('posts'))->toBeTrue()
+        ->and('site/posts')->toBeMissingFromDisk();
 });
 
 test('does not delete a directory holding pages', function () {
-    $repository = initializeSite();
+    aPage('Post Page', 'posts/post-page');
 
-    $repository->save(new ContentPage(
-        title: 'Post Page',
-        path: new PagePath('posts/post-page'),
-        content: new Markdown(''),
-        created_at: Carbon::now(),
-    ));
-
-    expect(app(DeleteDirectory::class)->__invoke('posts'))->toBeFalse()
-        ->and(Storage::disk('current')->exists('pages/posts'))->toBeTrue();
+    expect(app(DeleteDirectory::class)('posts'))->toBeFalse()
+        ->and('pages/posts')->toExistOnDisk();
 });
 
 test('does not delete a directory holding tag pages', function () {
-    initializeSite();
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)->__invoke('Laravel');
+    app(CreateTagPage::class)('Laravel');
 
-    expect(app(DeleteDirectory::class)->__invoke('tags'))->toBeFalse()
-        ->and(Storage::disk('current')->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+    expect(app(DeleteDirectory::class)('tags'))->toBeFalse()
+        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('does not delete a directory holding subdirectories', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts/2025');
+    disk()->makeDirectory('pages/posts/2025');
 
-    expect(app(DeleteDirectory::class)->__invoke('posts'))->toBeFalse()
-        ->and(Storage::disk('current')->exists('pages/posts'))->toBeTrue();
+    expect(app(DeleteDirectory::class)('posts'))->toBeFalse()
+        ->and('pages/posts')->toExistOnDisk();
 });
 
 test('does not delete the root directory', function (string $directory) {
-    initializeSite();
-
-    expect(app(DeleteDirectory::class)->__invoke($directory))->toBeFalse()
-        ->and(Storage::disk('current')->exists('pages'))->toBeTrue();
+    expect(app(DeleteDirectory::class)($directory))->toBeFalse()
+        ->and('pages')->toExistOnDisk();
 })->with(['', '/', '//', '.', './', '..', 'posts/..']);
 
 test('ignores the surrounding slashes of a directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts');
 
-    expect(app(DeleteDirectory::class)->__invoke('/posts/'))->toBeTrue()
-        ->and(Storage::disk('current')->exists('pages/posts'))->toBeFalse();
+    expect(app(DeleteDirectory::class)('/posts/'))->toBeTrue()
+        ->and('pages/posts')->toBeMissingFromDisk();
 });

@@ -62,7 +62,6 @@ function uploadCoverImage(string $snapshot): array
 }
 
 test('the cover image survives a form submit that resends the values of the browser', function () {
-    initializeSite();
     Storage::fake('tmp-for-tests');
 
     $snapshot = componentSnapshot(test()->get('/settings')->assertOk()->getContent());
@@ -78,22 +77,21 @@ test('the cover image survives a form submit that resends the values of the brow
         'params' => [],
     ]]);
 
-    $saved = json_decode(Storage::disk('current')->get('pluma-settings.json'), true);
+    $saved = json_decode(disk()->get('pluma-settings.json'), true);
 
     expect($saved['cover_image'])->toBe('cover.png')
         ->and($saved['title'])->toBe('My Site')
-        ->and(Storage::disk('current')->get('site/index.html'))->toContain('<img src="cover.png"');
+        ->and(disk()->get('site/index.html'))->toContain('<img src="cover.png"');
 });
 
 test('the cover image is saved without submitting the form', function () {
-    initializeSite();
     Storage::fake('tmp-for-tests');
 
     $snapshot = componentSnapshot(test()->get('/settings')->assertOk()->getContent());
 
     uploadCoverImage($snapshot);
 
-    $saved = json_decode(Storage::disk('current')->get('pluma-settings.json'), true);
+    $saved = json_decode(disk()->get('pluma-settings.json'), true);
 
     expect($saved['cover_image'])->toBe('cover.png');
 });

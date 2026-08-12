@@ -1,24 +1,20 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
-use App\Domain\Editor\Page\Markdown;
-use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\artisan;
 
-test('generates the site and starts the development servers', function () {
-    $repository = initializeSite();
+beforeEach(fn () => initializeSite());
 
-    $repository->save(new ContentPage(
-        title: 'Hello World',
-        path: new PagePath('hello-world'),
-        content: new Markdown('# Hello World'),
+test('generates the site and starts the development servers', function () {
+    aPublishedPage(
+        'Hello World',
+        'hello-world',
+        content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-    ));
+    );
 
     Process::fake();
 
@@ -27,20 +23,18 @@ test('generates the site and starts the development servers', function () {
         ->expectsOutputToContain('Site generated')
         ->assertSuccessful();
 
-    expect(Storage::disk('current')->exists('site/index.html'))->toBeTrue()
-        ->and(Storage::disk('current')->exists('site/hello-world/index.html'))->toBeTrue();
+    expect('site/index.html')->toExistOnDisk()
+        ->and('site/hello-world/index.html')->toExistOnDisk();
 });
 
 test('binds both servers to localhost by default, with the ports from the configured urls', function () {
-    $repository = initializeSite();
-
-    $repository->save(new ContentPage(
-        title: 'Hello World',
-        path: new PagePath('hello-world'),
-        content: new Markdown('# Hello World'),
+    aPublishedPage(
+        'Hello World',
+        'hello-world',
+        content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-    ));
+    );
 
     Process::fake();
 
@@ -61,15 +55,13 @@ test('binds both servers to localhost by default, with the ports from the config
 });
 
 test('binds both servers to the host given by the --host option', function () {
-    $repository = initializeSite();
-
-    $repository->save(new ContentPage(
-        title: 'Hello World',
-        path: new PagePath('hello-world'),
-        content: new Markdown('# Hello World'),
+    aPublishedPage(
+        'Hello World',
+        'hello-world',
+        content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-    ));
+    );
 
     Process::fake();
 
@@ -86,22 +78,20 @@ test('binds both servers to the host given by the --host option', function () {
 });
 
 test('passes CURRENT_PATH as process environment variable', function () {
-    $repository = initializeSite();
-
-    $repository->save(new ContentPage(
-        title: 'Hello World',
-        path: new PagePath('hello-world'),
-        content: new Markdown('# Hello World'),
+    aPublishedPage(
+        'Hello World',
+        'hello-world',
+        content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-    ));
+    );
 
     Process::fake();
 
     artisan('pluma:serve')
         ->assertSuccessful();
 
-    $expectedPath = Storage::disk('current')->path('/');
+    $expectedPath = disk()->path('/');
 
     Process::assertRan(function ($process) use ($expectedPath) {
         return ($process->environment['CURRENT_PATH'] ?? null) === $expectedPath;

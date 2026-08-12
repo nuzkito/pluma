@@ -12,10 +12,9 @@ test('returns empty collection when the pages directory does not exist', functio
 
 test('lists immediate subdirectories of the root sorted by path', function () {
     Storage::fake('current');
-    $disk = Storage::disk('current');
-    $disk->makeDirectory('pages/projects');
-    $disk->makeDirectory('pages/posts');
-    $disk->makeDirectory('pages/posts/2025');
+    disk()->makeDirectory('pages/projects');
+    disk()->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts/2025');
 
     $directories = (new DirectoryRepository)->searchByDirectory('');
 
@@ -25,9 +24,8 @@ test('lists immediate subdirectories of the root sorted by path', function () {
 
 test('lists immediate subdirectories of a nested directory', function () {
     Storage::fake('current');
-    $disk = Storage::disk('current');
-    $disk->makeDirectory('pages/posts/2025');
-    $disk->makeDirectory('pages/posts/2024');
+    disk()->makeDirectory('pages/posts/2025');
+    disk()->makeDirectory('pages/posts/2024');
 
     $directories = (new DirectoryRepository)->searchByDirectory('posts');
 
@@ -38,7 +36,7 @@ test('lists immediate subdirectories of a nested directory', function () {
 
 test('includes the tag pages directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages/tags');
+    disk()->makeDirectory('pages/tags');
 
     $directories = (new DirectoryRepository)->searchByDirectory('');
 
@@ -48,7 +46,7 @@ test('includes the tag pages directory', function () {
 
 test('deletes an empty directory', function () {
     Storage::fake('current');
-    Storage::disk('current')->makeDirectory('pages/tags');
+    disk()->makeDirectory('pages/tags');
 
     $repository = new DirectoryRepository;
 
@@ -58,16 +56,15 @@ test('deletes an empty directory', function () {
 
 test('keeps a directory that holds files or subdirectories', function () {
     Storage::fake('current');
-    $disk = Storage::disk('current');
-    $disk->put('pages/tags/laravel.tag.md', 'content');
-    $disk->makeDirectory('pages/posts/2025');
+    disk()->put('pages/tags/laravel.tag.md', 'content');
+    disk()->makeDirectory('pages/posts/2025');
 
     $repository = new DirectoryRepository;
 
     expect($repository->deleteIfEmpty('tags'))->toBeFalse()
         ->and($repository->deleteIfEmpty('posts'))->toBeFalse()
         ->and($repository->deleteIfEmpty('missing'))->toBeFalse()
-        ->and($disk->exists('pages/tags/laravel.tag.md'))->toBeTrue();
+        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('creates a directory and reflects its existence', function () {
@@ -80,5 +77,5 @@ test('creates a directory and reflects its existence', function () {
     $repository->create('posts');
 
     expect($repository->exists('posts'))->toBeTrue()
-        ->and(Storage::disk('current')->exists('pages/posts'))->toBeTrue();
+        ->and('pages/posts')->toExistOnDisk();
 });

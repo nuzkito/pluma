@@ -90,8 +90,6 @@ test('publishes a page', function () {
     $page = ContentPage::draft('My Post', 'my-post');
     $page->publish(Carbon::now());
 
-    Carbon::setTestNow(null);
-
     expect($page->published_at)->not->toBeNull()
         ->and($page->published_at->toDateString())->toBe('2025-06-01');
 });

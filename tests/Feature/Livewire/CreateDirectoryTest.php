@@ -1,23 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 test('creates a directory at the root and redirects to the index', function () {
-    initializeSite();
-
     Livewire::test('pages::page.create-directory')
         ->set('name', 'projects')
         ->call('create')
         ->assertHasNoErrors()
         ->assertRedirectToRoute('pages.index', ['directory' => '']);
 
-    expect(Storage::disk('current')->exists('pages/projects'))->toBeTrue();
+    expect('pages/projects')->toExistOnDisk();
 });
 
 test('creates a directory inside the current directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts');
 
     Livewire::withQueryParams(['directory' => 'posts'])
         ->test('pages::page.create-directory')
@@ -26,23 +22,20 @@ test('creates a directory inside the current directory', function () {
         ->assertHasNoErrors()
         ->assertRedirectToRoute('pages.index', ['directory' => 'posts']);
 
-    expect(Storage::disk('current')->exists('pages/posts/2025'))->toBeTrue();
+    expect('pages/posts/2025')->toExistOnDisk();
 });
 
 test('rejects an invalid directory name', function () {
-    initializeSite();
-
     Livewire::test('pages::page.create-directory')
         ->set('name', 'Invalid Name!')
         ->call('create')
         ->assertHasErrors('name');
 
-    expect(Storage::disk('current')->exists('pages/Invalid Name!'))->toBeFalse();
+    expect('pages/Invalid Name!')->toBeMissingFromDisk();
 });
 
 test('rejects a duplicate directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts');
 
     Livewire::test('pages::page.create-directory')
         ->set('name', 'posts')
@@ -51,16 +44,13 @@ test('rejects a duplicate directory', function () {
 });
 
 test('the create directory page resolves', function () {
-    initializeSite();
-
     $this->get('/directories/create')
         ->assertSuccessful()
         ->assertSee('New directory');
 });
 
 test('the create directory page keeps the directory it was opened from', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts/2025');
+    disk()->makeDirectory('pages/posts/2025');
 
     $this->get(route('directories.create', ['directory' => 'posts/2025']))
         ->assertSuccessful()
@@ -69,16 +59,14 @@ test('the create directory page keeps the directory it was opened from', functio
 });
 
 test('the index links to the create directory page for the current directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/posts');
+    disk()->makeDirectory('pages/posts');
 
     Livewire::test('pages::page.index', ['directory' => 'posts'])
         ->assertSee(route('directories.create', ['directory' => 'posts']), escape: false);
 });
 
 test('creates a directory inside a numeric directory', function () {
-    initializeSite();
-    Storage::disk('current')->makeDirectory('pages/2025');
+    disk()->makeDirectory('pages/2025');
 
     Livewire::withQueryParams(['directory' => '2025'])
         ->test('pages::page.create-directory')
@@ -87,5 +75,5 @@ test('creates a directory inside a numeric directory', function () {
         ->assertHasNoErrors()
         ->assertRedirectToRoute('pages.index', ['directory' => '2025']);
 
-    expect(Storage::disk('current')->exists('pages/2025/january'))->toBeTrue();
+    expect('pages/2025/january')->toExistOnDisk();
 });
