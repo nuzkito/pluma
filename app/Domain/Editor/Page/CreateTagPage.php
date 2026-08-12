@@ -2,13 +2,11 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
-
 class CreateTagPage
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $tagName): void
@@ -25,6 +23,6 @@ class CreateTagPage
 
         $this->repository->save($tagPage);
 
-        $this->siteGenerator->generatePage((string) $tagPage->path);
+        $this->site->refresh($tagPage);
     }
 }

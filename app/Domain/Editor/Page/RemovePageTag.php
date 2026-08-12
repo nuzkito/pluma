@@ -2,14 +2,13 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
 use Illuminate\Support\Arr;
 
 class RemovePageTag
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $path, int $index): ContentPage
@@ -24,15 +23,7 @@ class RemovePageTag
 
         $this->repository->save($page);
 
-        if ($page->isPublished()) {
-            $this->siteGenerator->generatePage((string) $page->path);
-
-            if ($removedTag !== null) {
-                $this->siteGenerator->generatePage((string) TagPage::create($removedTag)->path);
-            }
-
-            $this->siteGenerator->regenerateIndex();
-        }
+        $this->site->refresh($page, ...array_filter([$removedTag]));
 
         return $page;
     }

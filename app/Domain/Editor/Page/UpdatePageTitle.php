@@ -3,7 +3,6 @@
 namespace App\Domain\Editor\Page;
 
 use App\Domain\Error;
-use App\Domain\Generator\SiteGenerator;
 use App\Domain\Ok;
 use App\Domain\Result;
 
@@ -11,7 +10,7 @@ class UpdatePageTitle
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $oldPath, string $newTitle): Result
@@ -28,12 +27,7 @@ class UpdatePageTitle
 
         $this->repository->save($page, $oldPath);
 
-        if ($page->isPublished()) {
-            $this->siteGenerator->generatePage((string) $page->path);
-            $this->siteGenerator->regenerateIndex();
-        } else {
-            $this->siteGenerator->removePage((string) $page->path);
-        }
+        $this->site->refreshOrWithdraw($page);
 
         return new Ok($page);
     }

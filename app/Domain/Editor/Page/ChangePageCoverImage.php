@@ -2,13 +2,11 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
-
 class ChangePageCoverImage
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $path, string $coverImage): Page
@@ -19,10 +17,7 @@ class ChangePageCoverImage
 
         $this->repository->save($page);
 
-        if ($page->isPublished()) {
-            $this->siteGenerator->generatePage((string) $page->path);
-            $this->siteGenerator->regenerateIndex();
-        }
+        $this->site->refresh($page);
 
         return $page;
     }

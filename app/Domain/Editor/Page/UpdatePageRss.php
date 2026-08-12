@@ -2,13 +2,11 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
-
 class UpdatePageRss
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $path, bool $enabled): void
@@ -19,6 +17,6 @@ class UpdatePageRss
 
         $this->repository->save($page, $path);
 
-        $this->siteGenerator->regenerateIndex();
+        $this->site->refreshIndex();
     }
 }

@@ -2,15 +2,13 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
-
 use function in_array;
 
 class AddPageTag
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $path, string $tag): ContentPage
@@ -25,11 +23,7 @@ class AddPageTag
 
         $this->repository->save($page);
 
-        if ($page->isPublished()) {
-            $this->siteGenerator->generatePage((string) $page->path);
-            $this->siteGenerator->generatePage((string) TagPage::create($tag)->path);
-            $this->siteGenerator->regenerateIndex();
-        }
+        $this->site->refresh($page, $tag);
 
         return $page;
     }

@@ -2,14 +2,13 @@
 
 namespace App\Domain\Editor\Page;
 
-use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 
 class UpdatePagePublishedAt
 {
     public function __construct(
         private PageRepository $repository,
-        private SiteGenerator $siteGenerator,
+        private SiteSynchronizer $site,
     ) {}
 
     public function __invoke(string $path, ?string $publishedAt): void
@@ -22,12 +21,6 @@ class UpdatePagePublishedAt
 
         $this->repository->save($page, $path);
 
-        if ($page->isPublished()) {
-            $this->siteGenerator->generatePage((string) $page->path);
-        } else {
-            $this->siteGenerator->removePage((string) $page->path);
-        }
-
-        $this->siteGenerator->regenerateIndex();
+        $this->site->refreshOrWithdraw($page);
     }
 }
