@@ -20,6 +20,7 @@ use App\Domain\Editor\Page\UpdatePagePublishedAt;
 use App\Domain\Editor\Page\UpdatePageRss;
 use App\Domain\Editor\Page\UpdatePageTitle;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -206,7 +207,9 @@ new class extends Component
 
         $deletePage->__invoke($this->path);
 
-        return redirect()->route('pages.index');
+        return redirect()->route('pages.index', [
+            'directory' => Str::contains($this->path, '/') ? Str::beforeLast($this->path, '/') : '',
+        ]);
     }
 
     public function updatedNewAssets(UploadAsset $uploadAsset)

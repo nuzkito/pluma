@@ -1253,7 +1253,8 @@ describe('delete', function () {
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('delete');
+            ->call('delete')
+            ->assertRedirectToRoute('pages.index', ['directory' => '']);
 
         Carbon::setTestNow(null);
 
@@ -1275,10 +1276,33 @@ describe('delete', function () {
         $repository->save($page);
 
         Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-            ->call('delete');
+            ->call('delete')
+            ->assertRedirectToRoute('pages.index', ['directory' => '']);
 
         Carbon::setTestNow(null);
 
         expect($repository->findByPath('published-delete'))->toBeNull();
+    });
+
+    test('deleting a page redirects to its directory', function () {
+        Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
+
+        $repository = initializeSite();
+
+        $page = new ContentPage(
+            title: 'Nested Page To Delete',
+            path: new PagePath('posts/2025/pagina1'),
+            content: new Markdown('# Content'),
+            created_at: Carbon::now(),
+        );
+        $repository->save($page);
+
+        Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+            ->call('delete')
+            ->assertRedirectToRoute('pages.index', ['directory' => 'posts/2025']);
+
+        Carbon::setTestNow(null);
+
+        expect($repository->findByPath('posts/2025/pagina1'))->toBeNull();
     });
 });
