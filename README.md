@@ -72,12 +72,30 @@ The templates of your site live in the `views/` directory and are plain [Blade](
 | View | Output | Variables |
 | --- | --- | --- |
 | `index` | `site/index.html` | `$web`, `$pages` |
-| `page` | `site/{path}/index.html` | `$web`, `$page` |
+| `page` | `site/{path}/index.html` | `$web`, `$page`, `$pages` |
 | `tag` | `site/{tag path}/index.html` | `$web`, `$tag`, `$pages` |
 | `404` | `site/404.html` | `$web`, `$pages` |
 | `feed` | `site/feed.xml` | `$web`, `$pages` |
 
 `layout` is not rendered on its own: the other views extend it, and it receives their variables.
+
+### The `$pages` collection
+
+`$pages` is a collection of pages, and every view receives one. What it holds depends on the view:
+
+| View | Pages it holds |
+| --- | --- |
+| `index`, `404`, `page` | Every published page |
+| `tag` | The published pages with that tag |
+| `feed` | The published pages with the RSS feed enabled |
+
+In `page` the collection also includes the page being rendered, so filter it out when you list related or recent posts:
+
+```blade
+@foreach ($pages->where('path', '!=', $page->path)->take(5) as $recent)
+    <a href="{{ $web->url->append($recent->path) }}/">{{ $recent->title }}</a>
+@endforeach
+```
 
 ### The `$web` object
 

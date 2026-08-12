@@ -38,7 +38,7 @@ class SiteGenerator
         $this->generate404($pages);
 
         foreach ($pages as $page) {
-            $this->writePage($page);
+            $this->writePage($page, $pages);
         }
 
         foreach ($this->pageRepository->tags() as $tag) {
@@ -65,16 +65,21 @@ class SiteGenerator
             return;
         }
 
+        $publishedPages = $this->pageRepository->published();
+
         if ($page instanceof TagPage) {
-            $this->writeTagPage($page, $this->pageRepository->published());
+            $this->writeTagPage($page, $publishedPages);
 
             return;
         }
 
-        $this->writePage($page);
+        $this->writePage($page, $publishedPages);
     }
 
-    private function writePage(Page $page): void
+    /**
+     * @param  Collection<int, Page>  $publishedPages
+     */
+    private function writePage(Page $page, Collection $publishedPages): void
     {
         $this->prepare();
 
@@ -85,6 +90,7 @@ class SiteGenerator
         $html = $this->renderView('page', [
             'web' => $this->web(),
             'page' => $page,
+            'pages' => $publishedPages,
         ]);
 
         $this->disk->put("$pagePath/index.html", $html);

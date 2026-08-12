@@ -6,6 +6,7 @@ use App\Domain\Generator\Page\PagePath;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\View\View;
 
 test('generates index without prior generatePage call', function () {
     $generator = app(SiteGenerator::class);
@@ -172,6 +173,41 @@ test('sends the web object to every template', function () {
         ->toContain('<title>My Site</title>')
         ->toContain('<link>https://example.com</link>')
         ->toContain('<description>A site about things</description>');
+});
+
+test('sends the published pages to the page template', function () {
+    $pagesSentToTheTemplate = null;
+
+    view()->composer('page', function (View $view) use (&$pagesSentToTheTemplate) {
+        $pagesSentToTheTemplate = $view->getData()['pages'] ?? null;
+    });
+
+    aPublishedPage(title: 'First Post', path: 'first-post');
+    aPublishedPage(title: 'Second Post', path: 'second-post');
+    aPage(title: 'A Draft', path: 'a-draft');
+
+    app(SiteGenerator::class)->generateAll();
+
+    expect($pagesSentToTheTemplate)->toBeInstanceOf(Collection::class)
+        ->and($pagesSentToTheTemplate->pluck('title')->all())
+        ->toEqualCanonicalizing(['First Post', 'Second Post']);
+});
+
+test('generatePage sends the published pages to the page template', function () {
+    $pagesSentToTheTemplate = null;
+
+    view()->composer('page', function (View $view) use (&$pagesSentToTheTemplate) {
+        $pagesSentToTheTemplate = $view->getData()['pages'] ?? null;
+    });
+
+    aPublishedPage(title: 'First Post', path: 'first-post');
+    aPublishedPage(title: 'Second Post', path: 'second-post');
+
+    app(SiteGenerator::class)->generatePage('first-post');
+
+    expect($pagesSentToTheTemplate)->toBeInstanceOf(Collection::class)
+        ->and($pagesSentToTheTemplate->pluck('title')->all())
+        ->toEqualCanonicalizing(['First Post', 'Second Post']);
 });
 
 test('removes a single file from a generated page', function () {
