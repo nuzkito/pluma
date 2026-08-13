@@ -16,4 +16,4 @@ Everything runs in Docker, so don't assume PHP, Composer, Node or npm are availa
 
 `public/build/` is committed and the Vite dev server keeps the compiled assets in memory, so always build before committing frontend changes.
 
-The test site lives only inside the container: it survives `docker compose stop`/`start`, but is reset to a fresh scaffold when the container is recreated.
+The test site lives only inside the container: it survives `docker compose stop`/`start`, but is reset when the container is recreated, back to the scaffold plus the example content in `demo/` (a page with Markdown samples, a tag and the settings the demo shows off enabled).

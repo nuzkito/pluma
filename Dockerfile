@@ -58,7 +58,8 @@ WORKDIR /pluma
 
 ENTRYPOINT ["composer"]
 
-# Build stage: install dependencies and scaffold the test site with `pluma new`.
+# Build stage: install dependencies and scaffold the test site with `pluma new`,
+# filled with the example content from demo/.
 FROM composer-cli AS builder
 
 COPY . .
@@ -69,6 +70,11 @@ RUN --mount=type=cache,target=/tmp/composer/cache \
 WORKDIR /site
 
 RUN php /pluma/bin/pluma new
+
+# The scaffold has no pages and /site is built from scratch every time the
+# container is recreated, so the image ships an example site: a page with
+# Markdown samples, a tag and the settings the demo shows off already on.
+RUN cp -a /pluma/demo/. /site/
 
 # Final stage: only PHP and the scaffolded site. The application code,
 # vendor/, .env and public/build come from the bind mount at runtime.

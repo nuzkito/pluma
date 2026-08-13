@@ -1,0 +1,18 @@
+{
+    "editor_url": "http://localhost:8000",
+    "url": "http://localhost:8001",
+    "title": "Pluma",
+    "description": "This is the default description",
+    "cover_image": "cover-image.svg",
+    "tags": {
+        "create_pages": true,
+        "pages_path": "tags"
+    },
+    "rss": {
+        "enabled": true
+    },
+    "embedding": {
+        "enabled": true,
+        "allowed_domains": ["youtube.com", "x.com", "github.com"]
+    }
+}

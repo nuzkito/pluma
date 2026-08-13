@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="Diseño abstracto de ondas superpuestas con degradados">
+  <title>Ondas abstractas</title>
+
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1026"/>
+      <stop offset="100%" stop-color="#1b2050"/>
+    </linearGradient>
+
+    <linearGradient id="wave0" x1="0" y1="0" x2="1" y2="0.2">
+      <stop offset="0%" stop-color="#1d2350"/>
+      <stop offset="100%" stop-color="#2e2f72"/>
+    </linearGradient>
+
+    <linearGradient id="wave1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3b2f83"/>
+      <stop offset="100%" stop-color="#5b3fa8"/>
+    </linearGradient>
+
+    <linearGradient id="wave2" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#6d3fb0"/>
+      <stop offset="100%" stop-color="#9245c4"/>
+    </linearGradient>
+
+    <linearGradient id="wave3" x1="0.1" y1="0" x2="0.9" y2="0.4">
+      <stop offset="0%" stop-color="#b03fae"/>
+      <stop offset="100%" stop-color="#d94f8f"/>
+    </linearGradient>
+
+    <linearGradient id="wave4" x1="0" y1="0" x2="1" y2="0.2">
+      <stop offset="0%" stop-color="#ec5f74"/>
+      <stop offset="100%" stop-color="#f5825c"/>
+    </linearGradient>
+
+    <linearGradient id="wave5" x1="0.2" y1="0" x2="1" y2="0.5">
+      <stop offset="0%" stop-color="#f89a4c"/>
+      <stop offset="100%" stop-color="#ffc15e"/>
+    </linearGradient>
+
+    <linearGradient id="wave6" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="100%" stop-color="#ffe9a8"/>
+    </linearGradient>
+
+    <linearGradient id="wave7" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#ffe6a0"/>
+      <stop offset="100%" stop-color="#fff6dd"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="400" fill="url(#sky)"/>
+
+  <path d="M0,59 C 200,31 340,86 560,66 C 780,46 940,10 1200,36 L1200,400 L0,400 Z" fill="url(#wave0)"/>
+  <path d="M0,102 C 220,70 380,134 600,111 C 820,88 980,60 1200,87 L1200,400 L0,400 Z" fill="url(#wave1)"/>
+  <path d="M0,153 C 160,189 360,125 560,156 C 780,191 960,124 1200,147 L1200,400 L0,400 Z" fill="url(#wave2)"/>
+  <path d="M0,204 C 200,169 400,231 620,201 C 840,171 1000,210 1200,187 L1200,400 L0,400 Z" fill="url(#wave3)"/>
+  <path d="M0,259 C 240,293 420,224 640,255 C 860,286 1020,254 1200,268 L1200,400 L0,400 Z" fill="url(#wave4)"/>
+  <path d="M0,308 C 200,285 420,330 660,307 C 900,284 1040,316 1200,303 L1200,400 L0,400 Z" fill="url(#wave5)"/>
+  <path d="M0,353 C 180,374 400,326 620,351 C 840,376 1020,344 1200,357 L1200,400 L0,400 Z" fill="url(#wave6)"/>
+  <path d="M0,385 C 220,369 440,398 680,383 C 900,369 1060,390 1200,378 L1200,400 L0,400 Z" fill="url(#wave7)"/>
+</svg>
