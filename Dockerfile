@@ -2,7 +2,9 @@
 # installs node_modules into the mounted repo and runs the Vite dev server.
 FROM alpine:3.23 AS node-cli
 
-RUN apk add --no-cache nodejs npm
+RUN apk add --no-cache nodejs npm \
+    && npm install -g npm@12 \
+    && npm cache clean --force
 
 # npm's default cache lives in $HOME, which is not writable when the container
 # runs as the host user. Create it upfront so the volume mounted there inherits
