@@ -228,7 +228,8 @@ new class extends Component
     {
         $deleteAsset->__invoke($this->path, $filename);
 
-        $this->assets = array_values(array_filter($this->assets, fn ($a) => $a['filename'] !== $filename));
+        $this->assets = array_filter($this->assets, fn ($a) => $a['filename'] !== $filename)
+            |> array_values(...);
 
         if ($this->cover_image === $filename) {
             $this->cover_image = null;
@@ -244,8 +245,9 @@ new class extends Component
 
     private function isImage(string $filename): bool
     {
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $ext = pathinfo($filename, PATHINFO_EXTENSION)
+            |> strtolower(...);
 
-        return in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'], true);
+        return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'], true);
     }
 };

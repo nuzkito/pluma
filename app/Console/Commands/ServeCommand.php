@@ -9,6 +9,7 @@ use Illuminate\Process\Pool;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use ReflectionClass;
+use Uri\Rfc3986\Uri;
 
 class ServeCommand extends Command
 {
@@ -28,8 +29,8 @@ class ServeCommand extends Command
 
         $path = $disk->path('/');
         $host = $this->option('host');
-        $editorPort = parse_url(config('pluma.editor_url'), PHP_URL_PORT) ?? 8000;
-        $previewPort = parse_url(config('pluma.url'), PHP_URL_PORT) ?? 8001;
+        $editorPort = Uri::parse((string) config('pluma.editor_url'))?->getPort() ?? 8000;
+        $previewPort = Uri::parse((string) config('pluma.url'))?->getPort() ?? 8001;
         $siteDirectory = $disk->path('site');
         $previewServerPath = base_path('resources/preview-server.php');
 

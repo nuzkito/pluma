@@ -19,7 +19,7 @@ ENTRYPOINT ["npm"]
 # the extensions composer.json requires (gd), so the platform check passes.
 # The build below uses it, and so does the `composer` service in
 # docker-compose.yml, which installs into the mounted repo.
-FROM php:8.4-cli-alpine AS composer-cli
+FROM php:8.5-cli-alpine AS composer-cli
 
 RUN apk add --no-cache git unzip libpng-dev libjpeg-turbo-dev freetype-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
@@ -78,32 +78,32 @@ RUN cp -a /pluma/demo/. /site/
 
 # Final stage: only PHP and the scaffolded site. The application code,
 # vendor/, .env and public/build come from the bind mount at runtime.
-# Alpine's php84 packages with just the extensions Laravel needs (plus gd,
+# Alpine's php85 packages with just the extensions Laravel needs (plus gd,
 # required to optimize image assets at generation time) are still much
 # smaller than the official monolithic PHP build.
-FROM alpine:3.22
+FROM alpine:3.23
 
 RUN apk add --no-cache \
-        php84 \
-        php84-ctype \
-        php84-curl \
-        php84-dom \
-        php84-fileinfo \
-        php84-gd \
-        php84-iconv \
-        php84-mbstring \
-        php84-openssl \
-        php84-session \
-        php84-simplexml \
-        php84-tokenizer \
-        php84-xml \
-        php84-xmlreader \
-        php84-xmlwriter \
-    && ln -s /usr/bin/php84 /usr/bin/php \
+        php85 \
+        php85-ctype \
+        php85-curl \
+        php85-dom \
+        php85-fileinfo \
+        php85-gd \
+        php85-iconv \
+        php85-mbstring \
+        php85-openssl \
+        php85-session \
+        php85-simplexml \
+        php85-tokenizer \
+        php85-xml \
+        php85-xmlreader \
+        php85-xmlwriter \
+    && ln -s /usr/bin/php85 /usr/bin/php \
     # PHP discards bigger uploads before the application sees them, so the limit
     # must match the one Livewire enforces on temporary uploads (12 MB), plus
     # some room in post_max_size for the rest of the multipart request.
-    && printf 'upload_max_filesize = 12M\npost_max_size = 13M\n' > /etc/php84/conf.d/99-uploads.ini
+    && printf 'upload_max_filesize = 12M\npost_max_size = 13M\n' > /etc/php85/conf.d/99-uploads.ini
 
 COPY --from=builder --chown=1000:1000 /site /site
 

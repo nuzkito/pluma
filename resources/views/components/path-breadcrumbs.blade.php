@@ -1,7 +1,9 @@
 @props(['path' => ''])
 
 @php
-    $segments = array_values(array_filter(explode('/', (string) $path)));
+    $segments = explode('/', (string) $path)
+        |> array_filter(...)
+        |> array_values(...);
 
     $crumbs = [];
     $cumulative = '';
