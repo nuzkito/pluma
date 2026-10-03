@@ -1,5 +1,6 @@
 const easymde = new EasyMDE({
     element: $wire.$el.querySelector('#content'),
+    initialValue: $wire.content,
     spellChecker: false,
     status: false,
     sideBySideFullscreen: false,
