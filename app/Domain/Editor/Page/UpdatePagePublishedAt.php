@@ -11,16 +11,16 @@ class UpdatePagePublishedAt
         private SiteSynchronizer $site,
     ) {}
 
-    public function __invoke(string $path, ?string $publishedAt): void
+    public function __invoke(string $path, ?string $publishedAt): ContentPage
     {
         $page = $this->repository->findByPath($path);
 
-        isset($publishedAt)
-            ? $page->publish(Carbon::parse($publishedAt))
-            : $page->unpublish();
+        $page->changePublishedAt(filled($publishedAt) ? Carbon::parse($publishedAt) : null);
 
         $this->repository->save($page, $path);
 
-        $this->site->refreshOrWithdraw($page);
+        $this->site->refresh($page);
+
+        return $page;
     }
 }

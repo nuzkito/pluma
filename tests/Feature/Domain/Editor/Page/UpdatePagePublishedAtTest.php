@@ -4,51 +4,48 @@ use App\Domain\Editor\Page\UpdatePagePublishedAt;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 
-test('publishes page when published_at is provided', function () {
-    $page = aPage('Publish Test', 'publish-test');
+test('changes the published_at of a draft without publishing it', function () {
+    aPage('Draft Date Test', 'draft-date-test');
 
-    expect($page->isDraft())->toBeTrue();
+    app(UpdatePagePublishedAt::class)('draft-date-test', '2025-06-15T14:30');
 
-    $action = app(UpdatePagePublishedAt::class);
+    $updated = repository()->findByPath('draft-date-test');
 
-    $action('publish-test', '2025-06-15T14:30');
-
-    expect(repository()->findByPath('publish-test')->isPublished())->toBeTrue()
-        ->and(repository()->findByPath('publish-test')->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30');
+    expect($updated->isDraft())->toBeTrue()
+        ->and($updated->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30')
+        ->and('site/draft-date-test')->toBeMissingFromDisk();
 });
 
-test('unpublishes page when published_at is null', function () {
+test('clears the published_at of a draft', function () {
+    aPage('Draft Clear Test', 'draft-clear-test', published_at: Carbon::parse('2025-06-15 14:30:00'));
+
+    app(UpdatePagePublishedAt::class)('draft-clear-test', null);
+
+    expect(repository()->findByPath('draft-clear-test')->published_at)->toBeNull();
+});
+
+test('keeps the published_at of a published page when it is cleared', function () {
     aPublishedPage(
-        'Unpublish Test',
-        'unpublish-test',
-        content: '# Content',
+        'Published Clear Test',
+        'published-clear-test',
         published_at: Carbon::parse('2025-06-15 14:30:00'),
     );
 
-    $action = app(UpdatePagePublishedAt::class);
+    $page = app(UpdatePagePublishedAt::class)('published-clear-test', null);
 
-    $action('unpublish-test', null);
+    $updated = repository()->findByPath('published-clear-test');
 
-    expect(repository()->findByPath('unpublish-test')->isDraft())->toBeTrue()
-        ->and(repository()->findByPath('unpublish-test')->published_at)->toBeNull();
+    expect($page->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30')
+        ->and($updated->isPublished())->toBeTrue()
+        ->and($updated->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30');
 });
 
-test('generates the page in the site when it is published', function () {
-    aPage('Site Publish Test', 'site-publish-test');
+test('regenerates a published page with its new published_at', function () {
+    aPublishedPage('Site Date Test', 'site-date-test', content: '# Content');
 
-    app(UpdatePagePublishedAt::class)('site-publish-test', '2025-06-15T14:30');
+    app(SiteGenerator::class)->generatePage('site-date-test');
 
-    expect('site/site-publish-test/index.html')->toExistOnDisk()
-        ->and(disk()->get('site/index.html'))->toContain('Site Publish Test');
-});
+    app(UpdatePagePublishedAt::class)('site-date-test', '2025-06-15T14:30');
 
-test('removes the page from the site when it is unpublished', function () {
-    aPublishedPage('Site Unpublish Test', 'site-unpublish-test', content: '# Content');
-
-    app(SiteGenerator::class)->generatePage('site-unpublish-test');
-
-    app(UpdatePagePublishedAt::class)('site-unpublish-test', null);
-
-    expect('site/site-unpublish-test')->toBeMissingFromDisk()
-        ->and(disk()->get('site/index.html'))->not->toContain('Site Unpublish Test');
+    expect(disk()->get('site/site-date-test/index.html'))->toContain('2025-06-15');
 });

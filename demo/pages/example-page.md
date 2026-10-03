@@ -3,6 +3,7 @@ title: 'Example Page'
 path: example-page
 cover_image: null
 created_at: '2026-08-13T10:00:00+00:00'
+draft: false
 rss: true
 published_at: '2026-08-13T10:00:00+00:00'
 tags:

@@ -157,6 +157,7 @@ class PageRepository
             content: new Markdown($content),
             created_at: Carbon::parse($metadata['created_at']),
             published_at: isset($metadata['published_at']) ? Carbon::parse($metadata['published_at']) : null,
+            draft: $metadata['draft'] ?? false,
             rss: $metadata['rss'] ?? false,
             tags: $metadata['tags'] ?? [],
             cover_image: $metadata['cover_image'] ?? null,

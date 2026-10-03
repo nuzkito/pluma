@@ -13,6 +13,7 @@ class ContentPage implements Page
         public Markdown $content,
         public Carbon $created_at,
         public ?Carbon $published_at = null,
+        public bool $draft = true,
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,
@@ -77,22 +78,32 @@ class ContentPage implements Page
 
     public function publish(Carbon $publishedAt): void
     {
-        $this->published_at = $publishedAt;
+        $this->published_at ??= $publishedAt;
+        $this->draft = false;
     }
 
     public function unpublish(): void
     {
-        $this->published_at = null;
+        $this->draft = true;
+    }
+
+    public function changePublishedAt(?Carbon $publishedAt): void
+    {
+        if ($publishedAt === null && $this->isPublished()) {
+            return;
+        }
+
+        $this->published_at = $publishedAt;
     }
 
     public function isPublished(): bool
     {
-        return $this->published_at !== null;
+        return ! $this->draft;
     }
 
     public function isDraft(): bool
     {
-        return ! $this->isPublished();
+        return $this->draft;
     }
 
     public function filename(): string
@@ -110,6 +121,7 @@ class ContentPage implements Page
             'path' => (string) $this->path,
             'cover_image' => $this->cover_image,
             'created_at' => $this->created_at->toIso8601String(),
+            'draft' => $this->draft,
             'rss' => $this->rss,
         ];
 

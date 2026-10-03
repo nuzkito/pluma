@@ -90,42 +90,79 @@ test('publishes a page', function () {
     $page = ContentPage::draft('My Post', 'my-post');
     $page->publish(Carbon::now());
 
-    expect($page->published_at)->not->toBeNull()
+    expect($page->isPublished())->toBeTrue()
         ->and($page->published_at->toDateString())->toBe('2025-06-01');
 });
 
-test('unpublishes a page', function () {
+test('publishing keeps the publication date the page already had', function () {
+    $page = new ContentPage(
+        title: 'Unpublished',
+        path: new PagePath('unpublished'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+        published_at: Carbon::parse('2025-01-01 10:00:00'),
+        draft: true,
+    );
+
+    $page->publish(Carbon::parse('2025-06-01 12:00:00'));
+
+    expect($page->isPublished())->toBeTrue()
+        ->and($page->published_at->toDateString())->toBe('2025-01-01');
+});
+
+test('unpublishing turns the page into a draft and keeps its publication date', function () {
     $page = new ContentPage(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
         created_at: Carbon::now(),
-        published_at: Carbon::now(),
+        published_at: Carbon::parse('2025-01-01 10:00:00'),
+        draft: false,
     );
 
     $page->unpublish();
 
-    expect($page->published_at)->toBeNull();
+    expect($page->isDraft())->toBeTrue()
+        ->and($page->published_at->toDateString())->toBe('2025-01-01');
 });
 
-test('is published when published_at is set', function () {
+test('is published when it is not a draft', function () {
     $page = new ContentPage(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
         created_at: Carbon::now(),
         published_at: Carbon::now(),
+        draft: false,
     );
 
     expect($page->isPublished())->toBeTrue()
         ->and($page->isDraft())->toBeFalse();
 });
 
-test('is draft when published_at is null', function () {
+test('is created as a draft', function () {
     $page = ContentPage::draft('My Post', 'my-post');
 
     expect($page->isDraft())->toBeTrue()
         ->and($page->isPublished())->toBeFalse();
+});
+
+test('changing the publication date does not change the draft status', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+
+    $page->changePublishedAt(Carbon::parse('2025-06-01 12:00:00'));
+
+    expect($page->isDraft())->toBeTrue()
+        ->and($page->published_at->toDateString())->toBe('2025-06-01');
+});
+
+test('a published page cannot have its publication date cleared', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+    $page->publish(Carbon::parse('2025-06-01 12:00:00'));
+
+    $page->changePublishedAt(null);
+
+    expect($page->published_at->toDateString())->toBe('2025-06-01');
 });
 
 test('converts to array without published_at when draft', function () {
@@ -146,6 +183,7 @@ test('converts to array without published_at when draft', function () {
         'path' => 'my-post',
         'cover_image' => null,
         'created_at' => '2025-01-01T00:00:00+00:00',
+        'draft' => true,
         'rss' => true,
     ]);
 });

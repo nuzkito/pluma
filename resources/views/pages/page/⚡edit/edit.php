@@ -151,7 +151,9 @@ new class extends Component
             return;
         }
 
-        $action->__invoke($this->path, $value);
+        $page = $action->__invoke($this->path, $value);
+
+        $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
     }
 
     public function addTag(AddPageTag $addTagAction, CreateTagPage $createTagPage, string $tag)
@@ -195,8 +197,6 @@ new class extends Component
         }
 
         $unpublishPage->__invoke($this->path);
-
-        $this->published_at = null;
     }
 
     public function delete(DeletePage $deletePage)

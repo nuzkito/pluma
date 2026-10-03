@@ -17,6 +17,7 @@ test('generates index without prior generatePage call', function () {
         content: new Markdown('# Hello'),
         created_at: Carbon::now(),
         published_at: Carbon::now(),
+        draft: false,
     );
 
     $generator->generateIndex(new Collection([$page]));

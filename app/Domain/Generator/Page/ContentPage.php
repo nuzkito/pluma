@@ -12,6 +12,7 @@ class ContentPage implements Page
         public Markdown $content,
         public Carbon $created_at,
         public ?Carbon $published_at = null,
+        public bool $draft = true,
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,
@@ -19,11 +20,11 @@ class ContentPage implements Page
 
     public function isPublished(): bool
     {
-        return $this->published_at !== null;
+        return ! $this->draft;
     }
 
     public function isDraft(): bool
     {
-        return ! $this->isPublished();
+        return $this->draft;
     }
 }

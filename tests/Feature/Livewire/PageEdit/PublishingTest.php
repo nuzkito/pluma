@@ -20,7 +20,7 @@ test('publishing a draft page sets published_at and marks as published', functio
         ->and($updated->isPublished())->toBeTrue();
 });
 
-test('unpublishing a published page clears published_at and marks as draft', function () {
+test('unpublishing a published page marks it as draft and keeps published_at', function () {
     $page = aPublishedPage(
         'Published To Unpublish Via Button',
         'published-to-unpublish-via-button',
@@ -30,11 +30,11 @@ test('unpublishing a published page clears published_at and marks as draft', fun
 
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
         ->call('unpublish')
-        ->assertSet('published_at', null);
+        ->assertSet('published_at', '2025-06-15T14:30');
 
     $updated = repository()->findByPath('published-to-unpublish-via-button');
 
     expect($updated)->not->toBeNull()
         ->and($updated->isDraft())->toBeTrue()
-        ->and($updated->published_at)->toBeNull();
+        ->and($updated->published_at?->format('Y-m-d H:i'))->toBe('2025-06-15 14:30');
 });

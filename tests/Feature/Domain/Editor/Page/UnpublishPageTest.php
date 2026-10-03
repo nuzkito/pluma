@@ -3,7 +3,7 @@
 use App\Domain\Editor\Page\PublishPage;
 use App\Domain\Editor\Page\UnpublishPage;
 
-test('unpublish page clears published_at and syncs site generation', function () {
+test('unpublish page turns it into a draft, keeps published_at and syncs site generation', function () {
     $page = aPage('Test Page', 'test-page');
 
     app(PublishPage::class)((string) $page->path);
@@ -15,8 +15,8 @@ test('unpublish page clears published_at and syncs site generation', function ()
 
     $updated = repository()->findByPath((string) $page->path);
 
-    expect($updated->isPublished())->toBeFalse()
-        ->and($updated->published_at)->toBeNull();
+    expect($updated->isDraft())->toBeTrue()
+        ->and($updated->published_at)->not->toBeNull();
 
     expect("site/{$page->path}")->toBeMissingFromDisk();
 });

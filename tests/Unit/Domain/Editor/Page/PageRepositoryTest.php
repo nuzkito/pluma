@@ -108,6 +108,7 @@ test('filters published pages', function () {
         content: new Markdown(''),
         created_at: Carbon::now(),
         published_at: Carbon::now(),
+        draft: false,
     );
 
     $repository->save($draft);
@@ -289,6 +290,36 @@ test('persists and retrieves published_at field', function () {
         ->and($retrieved->published_at->toIso8601String())->toBe($publishedAt->toIso8601String());
 });
 
+test('persists and retrieves the draft flag', function () {
+    Storage::fake('current');
+    disk()->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $repository->save(new ContentPage(
+        title: 'Unpublished Page',
+        path: new PagePath('unpublished-page'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+        published_at: Carbon::parse('2025-03-15 12:00:00'),
+        draft: true,
+    ));
+
+    $retrieved = $repository->findByPath('unpublished-page');
+
+    expect($retrieved->isDraft())->toBeTrue()
+        ->and($retrieved->published_at)->not->toBeNull();
+});
+
+test('reads a page without the draft flag as published', function () {
+    Storage::fake('current');
+    disk()->put('pages/legacy-published.md', "---\ntitle: Legacy Published\npath: legacy-published\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\n---\n");
+
+    $repository = new PageRepository;
+
+    expect($repository->findByPath('legacy-published')->isPublished())->toBeTrue();
+});
+
 test('saves a tag page using the .tag.md suffix', function () {
     Storage::fake('current');
     disk()->makeDirectory('pages');
@@ -380,6 +411,7 @@ test('excludes tag pages from published()', function () {
         content: new Markdown(''),
         created_at: Carbon::now(),
         published_at: Carbon::now(),
+        draft: false,
     ));
     $repository->save(new TagPage(
         path: new PagePath('root-tag'),
