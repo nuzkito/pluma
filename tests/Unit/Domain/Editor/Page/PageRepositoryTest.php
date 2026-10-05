@@ -311,6 +311,26 @@ test('persists and retrieves the draft flag', function () {
         ->and($retrieved->published_at)->not->toBeNull();
 });
 
+test('persists and retrieves the revised_at field', function () {
+    Storage::fake('current');
+    disk()->makeDirectory('pages');
+
+    $repository = new PageRepository;
+
+    $revisedAt = Carbon::parse('2025-04-01 09:00:00');
+    $repository->save(new ContentPage(
+        title: 'Revised Page',
+        path: new PagePath('revised-page'),
+        content: new Markdown(''),
+        created_at: Carbon::now(),
+        published_at: Carbon::parse('2025-03-15 12:00:00'),
+        draft: false,
+        revised_at: $revisedAt,
+    ));
+
+    expect($repository->findByPath('revised-page')->revised_at->toIso8601String())->toBe($revisedAt->toIso8601String());
+});
+
 test('reads a page without the draft flag as published', function () {
     Storage::fake('current');
     disk()->put('pages/legacy-published.md', "---\ntitle: Legacy Published\npath: legacy-published\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\n---\n");

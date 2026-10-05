@@ -16,6 +16,8 @@ interface Page
 
     public ?Carbon $published_at { get; }
 
+    public ?Carbon $revised_at { get; }
+
     public bool $rss { get; }
 
     /** @var array<int, string> */
@@ -24,6 +26,12 @@ interface Page
     public ?string $cover_image { get; }
 
     public function moveToPath(PagePath $newPath): void;
+
+    public function setContent(Markdown $newContent): void;
+
+    public function revise(Carbon $revisedAt): void;
+
+    public function changeRevisedAt(?Carbon $revisedAt): void;
 
     public function isPublished(): bool;
 

@@ -134,6 +134,7 @@ function aPage(
     ?Carbon $created_at = null,
     ?Carbon $published_at = null,
     bool $draft = true,
+    ?Carbon $revised_at = null,
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
@@ -145,6 +146,7 @@ function aPage(
         created_at: $created_at ?? Carbon::now(),
         published_at: $published_at,
         draft: $draft,
+        revised_at: $revised_at,
         rss: $rss,
         tags: $tags,
         cover_image: $cover_image,
@@ -166,6 +168,7 @@ function aPublishedPage(
     string $content = '',
     ?Carbon $created_at = null,
     ?Carbon $published_at = null,
+    ?Carbon $revised_at = null,
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
@@ -177,6 +180,7 @@ function aPublishedPage(
         created_at: $created_at,
         published_at: $published_at ?? Carbon::now(),
         draft: false,
+        revised_at: $revised_at,
         rss: $rss,
         tags: $tags,
         cover_image: $cover_image,
@@ -192,6 +196,7 @@ function aTagPage(
     string $content = '',
     ?Carbon $created_at = null,
     ?string $cover_image = null,
+    ?Carbon $revised_at = null,
 ): TagPage {
     $tagPage = new TagPage(
         path: new PagePath($path ?? config('pluma.tags.pages_path').'/'.Str::slug($title)),
@@ -199,6 +204,7 @@ function aTagPage(
         content: new Markdown($content),
         created_at: $created_at ?? Carbon::now(),
         cover_image: $cover_image,
+        revised_at: $revised_at,
     );
 
     repository()->save($tagPage);

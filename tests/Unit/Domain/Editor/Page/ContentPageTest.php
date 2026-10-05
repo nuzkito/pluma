@@ -165,6 +165,40 @@ test('a published page cannot have its publication date cleared', function () {
     expect($page->published_at->toDateString())->toBe('2025-06-01');
 });
 
+test('revising a published page sets its revision date', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+    $page->publish(Carbon::parse('2025-06-01 12:00:00'));
+
+    $page->revise(Carbon::parse('2025-07-01 09:00:00'));
+
+    expect($page->revised_at->toDateString())->toBe('2025-07-01');
+});
+
+test('revising a draft does not set a revision date', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+
+    $page->revise(Carbon::parse('2025-07-01 09:00:00'));
+
+    expect($page->revised_at)->toBeNull();
+});
+
+test('revising a page on the day of its publication does not set a revision date', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+    $page->publish(Carbon::parse('2025-07-01 09:00:00'));
+
+    $page->revise(Carbon::parse('2025-07-01 18:00:00'));
+
+    expect($page->revised_at)->toBeNull();
+});
+
+test('changing the revision date of a draft is ignored', function () {
+    $page = ContentPage::draft('My Post', 'my-post');
+
+    $page->changeRevisedAt(Carbon::parse('2025-07-01 09:00:00'));
+
+    expect($page->revised_at)->toBeNull();
+});
+
 test('converts to array without published_at when draft', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
@@ -202,6 +236,18 @@ test('converts to array with published_at when published', function () {
     $array = $page->toArray();
 
     expect($array)->toHaveKey('published_at', '2025-06-01T12:00:00+00:00');
+});
+
+test('converts to array with revised_at when revised', function () {
+    $page = new ContentPage(
+        title: 'My Post',
+        path: new PagePath('my-post'),
+        content: new Markdown(''),
+        created_at: Carbon::parse('2025-06-01T12:00:00+00:00'),
+        revised_at: Carbon::parse('2025-07-01T09:00:00+00:00'),
+    );
+
+    expect($page->toArray())->toHaveKey('revised_at', '2025-07-01T09:00:00+00:00');
 });
 
 test('sets tags on a page', function () {

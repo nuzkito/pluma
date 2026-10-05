@@ -4,24 +4,18 @@ namespace App\Domain\Editor\Page;
 
 use Carbon\Carbon;
 
-class UpdatePageContent
+class UpdatePageRevisedAt
 {
     public function __construct(
         private PageRepository $repository,
         private SiteSynchronizer $site,
     ) {}
 
-    public function __invoke(string $path, string $content): Page
+    public function __invoke(string $path, ?string $revisedAt): Page
     {
         $page = $this->repository->findByPath($path);
 
-        if ((string) $page->content === $content) {
-            return $page;
-        }
-
-        $page->setContent(new Markdown($content));
-
-        $page->revise(Carbon::now());
+        $page->changeRevisedAt(filled($revisedAt) ? Carbon::parse($revisedAt) : null);
 
         $this->repository->save($page, $path);
 

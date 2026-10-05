@@ -13,6 +13,9 @@
             @endif
             <h1>{{ $page->title }}</h1>
             <time datetime="{{ $page->published_at->toDateString() }}">{{ $page->published_at->toDateString() }}</time>
+            @if($page->revised_at)
+                <p>Updated on <time datetime="{{ $page->revised_at->toDateString() }}">{{ $page->revised_at->toDateString() }}</time></p>
+            @endif
             @if($page->tags)
                 <ul>
                     @foreach($page->tags as $tag)

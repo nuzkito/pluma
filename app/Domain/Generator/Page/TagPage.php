@@ -25,6 +25,7 @@ class TagPage implements Page
         public Markdown $content,
         public Carbon $created_at,
         public ?string $cover_image = null,
+        public ?Carbon $revised_at = null,
     ) {}
 
     public function isPublished(): bool

@@ -13,6 +13,9 @@
         <img src="{{ rawurlencode($tag->cover_image) }}" alt="{{ $tag->cover_image }}">
     @endif
     <h1>{{ $tag->title }}</h1>
+    @if($tag->revised_at)
+        <p>Updated on <time datetime="{{ $tag->revised_at->toDateString() }}">{{ $tag->revised_at->toDateString() }}</time></p>
+    @endif
     @if(trim((string) $tag->content) !== '')
         <div>{!! $tag->content->html() !!}</div>
     @endif

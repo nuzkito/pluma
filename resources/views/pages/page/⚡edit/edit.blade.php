@@ -11,7 +11,7 @@
                 <flux:badge color="amber">Draft</flux:badge>
             @endif
 
-            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedNewAssets,setCoverImage,deleteAsset">
+            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedRevisedAt,updatedNewAssets,setCoverImage,deleteAsset">
                 <span wire:loading.delay>Saving...</span>
                 <span wire:loading.delay.remove>Saved</span>
             </span>
@@ -57,6 +57,10 @@
 
         <flux:input type="datetime-local" wire:model.live="published_at" label="Published at" />
     @endunless
+
+    @if($isTagPage || $page->isPublished())
+        <flux:input type="datetime-local" wire:model.live="revised_at" label="Revised at" />
+    @endif
 
     <flux:field wire:ignore id="content-drop-zone" class="group">
         <flux:label>Content</flux:label>

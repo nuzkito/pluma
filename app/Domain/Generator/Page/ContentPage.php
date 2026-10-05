@@ -13,6 +13,7 @@ class ContentPage implements Page
         public Carbon $created_at,
         public ?Carbon $published_at = null,
         public bool $draft = true,
+        public ?Carbon $revised_at = null,
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,

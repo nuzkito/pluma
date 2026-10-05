@@ -17,6 +17,7 @@ use App\Domain\Editor\Page\UnpublishPage;
 use App\Domain\Editor\Page\UpdatePageContent;
 use App\Domain\Editor\Page\UpdatePagePath;
 use App\Domain\Editor\Page\UpdatePagePublishedAt;
+use App\Domain\Editor\Page\UpdatePageRevisedAt;
 use App\Domain\Editor\Page\UpdatePageRss;
 use App\Domain\Editor\Page\UpdatePageTitle;
 use Illuminate\Support\Arr;
@@ -41,6 +42,9 @@ new class extends Component
 
     #[Validate('nullable|date')]
     public ?string $published_at;
+
+    #[Validate('nullable|date')]
+    public ?string $revised_at = null;
 
     public array $tags;
 
@@ -72,6 +76,7 @@ new class extends Component
         $this->content = (string) $page->content;
         $this->rss = $page->rss;
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
+        $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
         $this->tags = $page->tags;
         $this->cover_image = $page->cover_image;
         $this->assets = $assetRepo->all($page->path);
@@ -133,7 +138,9 @@ new class extends Component
 
     public function updatedContent(UpdatePageContent $action, string $value)
     {
-        $action->__invoke($this->path, $value);
+        $page = $action->__invoke($this->path, $value);
+
+        $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
     }
 
     public function updatedRss(UpdatePageRss $action, bool $value)
@@ -154,6 +161,13 @@ new class extends Component
         $page = $action->__invoke($this->path, $value);
 
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
+    }
+
+    public function updatedRevisedAt(UpdatePageRevisedAt $action, ?string $value)
+    {
+        $page = $action->__invoke($this->path, $value);
+
+        $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
     }
 
     public function addTag(AddPageTag $addTagAction, CreateTagPage $createTagPage, string $tag)

@@ -14,6 +14,7 @@ class ContentPage implements Page
         public Carbon $created_at,
         public ?Carbon $published_at = null,
         public bool $draft = true,
+        public ?Carbon $revised_at = null,
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,
@@ -96,6 +97,24 @@ class ContentPage implements Page
         $this->published_at = $publishedAt;
     }
 
+    public function revise(Carbon $revisedAt): void
+    {
+        if ($this->published_at?->isSameDay($revisedAt)) {
+            return;
+        }
+
+        $this->changeRevisedAt($revisedAt);
+    }
+
+    public function changeRevisedAt(?Carbon $revisedAt): void
+    {
+        if ($this->isDraft()) {
+            return;
+        }
+
+        $this->revised_at = $revisedAt;
+    }
+
     public function isPublished(): bool
     {
         return ! $this->draft;
@@ -127,6 +146,10 @@ class ContentPage implements Page
 
         if ($this->published_at) {
             $metadata['published_at'] = $this->published_at->toIso8601String();
+        }
+
+        if ($this->revised_at) {
+            $metadata['revised_at'] = $this->revised_at->toIso8601String();
         }
 
         if (! empty($this->tags)) {

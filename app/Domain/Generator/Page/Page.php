@@ -16,6 +16,8 @@ interface Page
 
     public ?Carbon $published_at { get; }
 
+    public ?Carbon $revised_at { get; }
+
     public bool $rss { get; }
 
     /** @var array<int, string> */

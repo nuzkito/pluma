@@ -26,6 +26,7 @@ class TagPage implements Page
         public Markdown $content,
         public Carbon $created_at,
         public ?string $cover_image = null,
+        public ?Carbon $revised_at = null,
     ) {}
 
     public static function create(string $title): self
@@ -58,6 +59,16 @@ class TagPage implements Page
         $this->cover_image = null;
     }
 
+    public function revise(Carbon $revisedAt): void
+    {
+        $this->changeRevisedAt($revisedAt);
+    }
+
+    public function changeRevisedAt(?Carbon $revisedAt): void
+    {
+        $this->revised_at = $revisedAt;
+    }
+
     public function isPublished(): bool
     {
         return $this->published_at !== null;
@@ -73,11 +84,17 @@ class TagPage implements Page
      */
     public function toArray(): array
     {
-        return [
+        $metadata = [
             'title' => $this->title,
             'path' => (string) $this->path,
             'cover_image' => $this->cover_image,
             'created_at' => $this->created_at->toIso8601String(),
         ];
+
+        if ($this->revised_at) {
+            $metadata['revised_at'] = $this->revised_at->toIso8601String();
+        }
+
+        return $metadata;
     }
 }

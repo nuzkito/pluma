@@ -211,6 +211,26 @@ test('generatePage sends the published pages to the page template', function () 
         ->toEqualCanonicalizing(['First Post', 'Second Post']);
 });
 
+test('shows the revision date of a revised page', function () {
+    aPublishedPage(title: 'Revised Post', path: 'revised-post', revised_at: Carbon::parse('2025-07-01 09:00:00'));
+    aPublishedPage(title: 'Unrevised Post', path: 'unrevised-post');
+
+    app(SiteGenerator::class)->generateAll();
+
+    expect(disk()->get('site/revised-post/index.html'))->toContain('Updated on <time datetime="2025-07-01">2025-07-01</time>')
+        ->and(disk()->get('site/unrevised-post/index.html'))->not->toContain('Updated on');
+});
+
+test('shows the revision date of a revised tag page', function () {
+    aTagPage('Laravel', revised_at: Carbon::parse('2025-07-01 09:00:00'));
+    aTagPage('PHP');
+
+    app(SiteGenerator::class)->generateAll();
+
+    expect(disk()->get('site/tags/laravel/index.html'))->toContain('Updated on <time datetime="2025-07-01">2025-07-01</time>')
+        ->and(disk()->get('site/tags/php/index.html'))->not->toContain('Updated on');
+});
+
 test('removes a single file from a generated page', function () {
     $generator = app(SiteGenerator::class);
 
