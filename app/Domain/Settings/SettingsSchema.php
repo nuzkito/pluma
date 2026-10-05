@@ -2,10 +2,14 @@
 
 namespace App\Domain\Settings;
 
+use Composer\InstalledVersions;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class SettingsSchema
 {
+    private const array EXCLUDED_HIGHLIGHT_THEMES = ['ellison'];
+
     /**
      * Every possible setting, in display order.
      *
@@ -13,6 +17,8 @@ class SettingsSchema
      */
     public static function definitions(): array
     {
+        $highlightThemes = self::highlightThemes();
+
         return [
             new SettingDefinition(
                 key: 'editor_url',
@@ -92,6 +98,16 @@ class SettingsSchema
                 type: SettingType::List,
                 group: 'Embedding',
             ),
+
+            new SettingDefinition(
+                key: 'highlight.theme',
+                label: 'Theme',
+                description: 'The colors used to highlight the syntax of code blocks.',
+                type: SettingType::Select,
+                group: 'Syntax highlighting',
+                rules: ['required', 'in:'.implode(',', array_keys($highlightThemes))],
+                options: $highlightThemes,
+            ),
         ];
     }
 
@@ -122,6 +138,19 @@ class SettingsSchema
         return collect(self::definitions())
             ->groupBy(fn (SettingDefinition $definition): string => $definition->group)
             ->map(fn (Collection $definitions): array => $definitions->values()->all())
+            ->all();
+    }
+
+    /** @return array<string, string> */
+    private static function highlightThemes(): array
+    {
+        $directory = InstalledVersions::getInstallPath('tempest/highlight').'/src/Themes/Css';
+
+        return collect(glob($directory.'/*.css'))
+            ->map(fn (string $path): string => basename($path, '.css'))
+            ->reject(fn (string $name): bool => in_array($name, self::EXCLUDED_HIGHLIGHT_THEMES, true))
+            ->sort()
+            ->mapWithKeys(fn (string $name): array => [$name => Str::headline($name)])
             ->all();
     }
 }

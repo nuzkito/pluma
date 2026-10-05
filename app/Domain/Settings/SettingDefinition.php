@@ -6,6 +6,7 @@ class SettingDefinition
 {
     /**
      * @param  list<string>  $rules
+     * @param  array<string, string>  $options
      */
     public function __construct(
         public string $key,
@@ -14,5 +15,6 @@ class SettingDefinition
         public SettingType $type,
         public string $group,
         public array $rules = [],
+        public array $options = [],
     ) {}
 }

@@ -13,6 +13,12 @@ test('image values are handled as strings', function () {
         ->and(SettingType::Image->fromForm('cover.png'))->toBe('cover.png');
 });
 
+test('select values are handled as strings', function () {
+    expect(SettingType::Select->cast('dracula'))->toBe('dracula')
+        ->and(SettingType::Select->forForm('dracula'))->toBe('dracula')
+        ->and(SettingType::Select->fromForm('dracula'))->toBe('dracula');
+});
+
 test('cast coerces boolean values', function () {
     expect(SettingType::Boolean->cast(1))->toBeTrue()
         ->and(SettingType::Boolean->cast(0))->toBeFalse();

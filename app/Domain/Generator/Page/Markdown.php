@@ -4,6 +4,7 @@ namespace App\Domain\Generator\Page;
 
 use Illuminate\Support\Str;
 use League\CommonMark\Extension\Embed\EmbedExtension;
+use Tempest\Highlight\CommonMark\HighlightExtension;
 
 class Markdown
 {
@@ -17,7 +18,9 @@ class Markdown
     public function html(): string
     {
         if (! config('pluma.embedding.enabled')) {
-            return Str::of($this->value)->markdown();
+            return Str::of($this->value)->markdown(extensions: [
+                $this->highlightExtension(),
+            ]);
         }
 
         return Str::of($this->value)->markdown([
@@ -27,6 +30,12 @@ class Markdown
             ],
         ], [
             new EmbedExtension,
+            $this->highlightExtension(),
         ]);
+    }
+
+    private function highlightExtension(): HighlightExtension
+    {
+        return new HighlightExtension(HighlightTheme::highlighter((string) config('pluma.highlight.theme')));
     }
 }

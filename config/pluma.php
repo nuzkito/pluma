@@ -17,4 +17,7 @@ return [
         'enabled' => false,
         'allowed_domains' => ['youtube.com', 'x.com', 'github.com'],
     ],
+    'highlight' => [
+        'theme' => 'highlight-light-lite',
+    ],
 ];

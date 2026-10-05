@@ -15,6 +15,7 @@ enum SettingType: string
     case DateTime = 'datetime';
     case List = 'list';
     case Image = 'image';
+    case Select = 'select';
 
     /**
      * Coerce a value decoded from the settings JSON into the type used in config.
@@ -22,7 +23,7 @@ enum SettingType: string
     public function cast(mixed $value): mixed
     {
         return match ($this) {
-            self::String, self::Image => (string) $value,
+            self::String, self::Image, self::Select => (string) $value,
             self::Boolean => (bool) $value,
             self::Integer => (int) $value,
             self::DateTime => Carbon::parse($value),
@@ -48,7 +49,7 @@ enum SettingType: string
     public function fromForm(mixed $value): mixed
     {
         return match ($this) {
-            self::String, self::Image => (string) $value,
+            self::String, self::Image, self::Select => (string) $value,
             self::Boolean => (bool) $value,
             self::Integer => (int) $value,
             self::DateTime => Carbon::parse($value)->toIso8601String(),

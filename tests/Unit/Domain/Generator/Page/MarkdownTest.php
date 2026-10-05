@@ -50,3 +50,35 @@ test('does not embed content when embedded content is disabled', function () {
 
     expect($result)->not->toContain('<iframe');
 });
+
+test('highlights the syntax of fenced code blocks', function () {
+    $markdown = new Markdown("```php\n\$page = new Page();\n```");
+
+    expect($markdown->html())
+        ->toContain('<pre data-lang="php"')
+        ->toContain('<span style="color: #4285F4;">new</span>');
+});
+
+test('highlights code blocks when embedded content is enabled', function () {
+    config(['pluma.embedding.enabled' => true]);
+
+    $markdown = new Markdown("```php\n\$page = new Page();\n```");
+
+    expect($markdown->html())->toContain('<span style="color: #4285F4;">new</span>');
+});
+
+test('escapes html inside code', function () {
+    $markdown = new Markdown("Inline `<script>` code\n\n```html\n<script>alert(1)</script>\n```");
+
+    expect($markdown->html())->not->toContain('<script>');
+});
+
+test('highlights code blocks with the configured theme', function () {
+    config(['pluma.highlight.theme' => 'dracula']);
+
+    $markdown = new Markdown("```php\n\$page = new Page();\n```");
+
+    expect($markdown->html())
+        ->toContain('background-color: #282A36;')
+        ->toContain('<span style="color: #FF79C6;">new</span>');
+});

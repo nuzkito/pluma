@@ -67,6 +67,24 @@
                                 </flux:field>
                                 @break
 
+                            @case(SettingType::Select)
+                                <flux:field>
+                                    <flux:label>{{ $definition->label }}</flux:label>
+                                    <flux:description>{{ $definition->description }}</flux:description>
+                                    <flux:select wire:model.live="{{ $model }}">
+                                        @foreach($definition->options as $value => $label)
+                                            <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                    @if($definition->key === 'highlight.theme')
+                                        <div id="highlight-theme-preview" class="mt-2 overflow-x-auto rounded-lg text-sm [&_pre]:p-4">
+                                            {!! $this->highlightPreview !!}
+                                        </div>
+                                    @endif
+                                    <flux:error name="{{ $model }}" />
+                                </flux:field>
+                                @break
+
                             @default
                                 <flux:field>
                                     <flux:label>{{ $definition->label }}</flux:label>

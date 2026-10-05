@@ -3,3 +3,8 @@
 img {
     max-width: 100%;
 }
+
+pre {
+    font-family: monospace;
+    padding: 1em;
+}

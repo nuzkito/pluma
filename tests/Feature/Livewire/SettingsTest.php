@@ -312,3 +312,60 @@ describe('image settings', function () {
         expect($saved['title'])->not->toBe('');
     });
 });
+
+describe('syntax highlighting theme', function () {
+    test('offers every available theme', function () {
+        Livewire::test('pages::settings')
+            ->assertSee('Syntax highlighting')
+            ->assertSeeHtml('value="dracula"')
+            ->assertSeeHtml('value="github-dark-default"')
+            ->assertSet('values.highlight.theme', 'highlight-light-lite');
+    });
+
+    test('previews the selected theme without saving it', function () {
+        Livewire::test('pages::settings')
+            ->assertSeeHtml('id="highlight-theme-preview"')
+            ->assertSeeHtml('<span style="color: #4285F4;">final</span>')
+            ->set('values.highlight.theme', 'dracula')
+            ->assertSeeHtml('background-color: #282A36;')
+            ->assertSeeHtml('<span style="color: #FF79C6;">final</span>');
+
+        expect(config('pluma.highlight.theme'))->toBe('highlight-light-lite');
+    });
+
+    test('previews the default theme when the selected one does not exist', function () {
+        Livewire::test('pages::settings')
+            ->set('values.highlight.theme', 'unknown')
+            ->assertSeeHtml('<span style="color: #4285F4;">final</span>');
+    });
+
+    test('saves the selected theme', function () {
+        Livewire::test('pages::settings')
+            ->set('values.highlight.theme', 'dracula')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $saved = json_decode(disk()->get('pluma-settings.json'), true);
+
+        expect($saved['highlight']['theme'])->toBe('dracula')
+            ->and(config('pluma.highlight.theme'))->toBe('dracula');
+    });
+
+    test('rejects a theme that does not exist', function () {
+        Livewire::test('pages::settings')
+            ->set('values.highlight.theme', 'unknown')
+            ->call('save')
+            ->assertHasErrors(['values.highlight.theme']);
+    });
+
+    test('regenerates the pages with the new theme', function () {
+        aPublishedPage('Code', 'code', content: "```php\n\$page = new Page();\n```");
+
+        Livewire::test('pages::settings')
+            ->set('values.highlight.theme', 'dracula')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect(disk()->get('site/code/index.html'))->toContain('<span style="color: #FF79C6;">new</span>');
+    });
+});

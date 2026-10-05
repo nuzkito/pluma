@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Editor\Page\MoveTagPages;
+use App\Domain\Generator\Page\HighlightTheme;
 use App\Domain\Generator\SiteGenerator;
 use App\Domain\Settings\RemoveSettingImage;
 use App\Domain\Settings\SettingDefinition;
@@ -18,6 +19,19 @@ use Livewire\WithFileUploads;
 new class extends Component
 {
     use WithFileUploads;
+
+    private const string HIGHLIGHT_PREVIEW_CODE = <<<'PHP'
+        // Publish the page and regenerate the site
+        final class PublishPage
+        {
+            public function __invoke(ContentPage $page): bool
+            {
+                $page->published_at = now();
+
+                return $this->repository->save($page, retries: 3);
+            }
+        }
+        PHP;
 
     /**
      * @var array<string, mixed>
@@ -93,6 +107,7 @@ new class extends Component
         }
 
         $currentTagsPath = (string) config('pluma.tags.pages_path');
+        $currentHighlightTheme = (string) config('pluma.highlight.theme');
         $newTagsPath = (string) data_get($values, 'tags.pages_path');
 
         $result = $moveTagPages->__invoke($currentTagsPath, $newTagsPath);
@@ -105,7 +120,10 @@ new class extends Component
 
         $settings->save($values);
 
-        if (trim($currentTagsPath, '/') !== trim($newTagsPath, '/')) {
+        $tagsPathChanged = trim($currentTagsPath, '/') !== trim($newTagsPath, '/');
+        $highlightThemeChanged = $currentHighlightTheme !== data_get($values, 'highlight.theme');
+
+        if ($tagsPathChanged || $highlightThemeChanged) {
             $siteGenerator->generateAll();
         } else {
             $siteGenerator->copySiteImages();
@@ -158,6 +176,16 @@ new class extends Component
         }
 
         return $attributes;
+    }
+
+    #[Computed]
+    public function highlightPreview(): string
+    {
+        $highlighter = HighlightTheme::highlighter((string) data_get($this->values, 'highlight.theme'));
+        $code = $highlighter->parse(self::HIGHLIGHT_PREVIEW_CODE, 'php');
+        $theme = $highlighter->getTheme();
+
+        return $theme->preBefore($highlighter).$code.$theme->preAfter($highlighter);
     }
 
     /**
