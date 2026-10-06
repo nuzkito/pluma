@@ -59,6 +59,21 @@ test('highlights the syntax of fenced code blocks', function () {
         ->toContain('<span style="color: #4285F4;">new</span>');
 });
 
+test('wraps fenced code in a code element inside the pre', function () {
+    $markdown = new Markdown("```php\n\$page = new Page();\n```");
+
+    expect($markdown->html())
+        ->toMatch('/<pre [^>]*><code class="language-php">.*<\/code><\/pre>/s');
+});
+
+test('does not add a language class to fenced code without a language', function () {
+    $markdown = new Markdown("```\nplain text\n```");
+
+    expect($markdown->html())
+        ->toMatch('/<pre [^>]*><code>.*<\/code><\/pre>/s')
+        ->not->toContain('language-');
+});
+
 test('highlights code blocks when embedded content is enabled', function () {
     config(['pluma.embedding.enabled' => true]);
 

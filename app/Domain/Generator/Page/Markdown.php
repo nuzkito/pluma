@@ -18,9 +18,7 @@ class Markdown
     public function html(): string
     {
         if (! config('pluma.embedding.enabled')) {
-            return Str::of($this->value)->markdown(extensions: [
-                $this->highlightExtension(),
-            ]);
+            return Str::of($this->value)->markdown(extensions: $this->highlightExtensions());
         }
 
         return Str::of($this->value)->markdown([
@@ -30,12 +28,20 @@ class Markdown
             ],
         ], [
             new EmbedExtension,
-            $this->highlightExtension(),
+            ...$this->highlightExtensions(),
         ]);
     }
 
-    private function highlightExtension(): HighlightExtension
+    /**
+     * @return array{HighlightExtension, SemanticCodeBlockExtension}
+     */
+    private function highlightExtensions(): array
     {
-        return new HighlightExtension(HighlightTheme::highlighter((string) config('pluma.highlight.theme')));
+        $highlighter = HighlightTheme::highlighter((string) config('pluma.highlight.theme'));
+
+        return [
+            new HighlightExtension($highlighter),
+            new SemanticCodeBlockExtension($highlighter),
+        ];
     }
 }
