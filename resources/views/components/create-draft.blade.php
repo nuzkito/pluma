@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\DraftNameGenerator;
 use App\Domain\Editor\Page\PageRepository;
 use Illuminate\Support\Str;
@@ -17,7 +17,7 @@ new class extends Component {
     {
         $title = $generator->__invoke($this->directory);
         $path = trim("{$this->directory}/".Str::slug($title), '/');
-        $page = ContentPage::draft($title, $path);
+        $page = Page::draft($title, $path);
 
         $repository->save($page);
 

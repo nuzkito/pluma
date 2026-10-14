@@ -1,12 +1,14 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository as EditorPageRepository;
-use App\Domain\Editor\Page\TagPage;
+use App\Domain\Editor\Tag\Tag;
+use App\Domain\Editor\Tag\TagRepository as EditorTagRepository;
 use App\Domain\Error;
 use App\Domain\Generator\Page\PageRepository as GeneratorPageRepository;
+use App\Domain\Generator\Tag\TagRepository as GeneratorTagRepository;
 use App\Domain\Ok;
 use App\Domain\Settings\SiteConfigLoader;
 use Carbon\Carbon;
@@ -109,7 +111,9 @@ function initializeSite(): void
 
     app()->instance(SiteConfigLoader::class, new SiteConfigLoader(Storage::disk('current')));
     app()->instance(EditorPageRepository::class, new EditorPageRepository);
-    app()->instance(GeneratorPageRepository::class, new GeneratorPageRepository);
+    app()->instance(EditorTagRepository::class, new EditorTagRepository);
+    app()->instance(GeneratorTagRepository::class, new GeneratorTagRepository);
+    app()->instance(GeneratorPageRepository::class, new GeneratorPageRepository(app(GeneratorTagRepository::class)));
 }
 
 function disk(): Filesystem
@@ -120,6 +124,11 @@ function disk(): Filesystem
 function repository(): EditorPageRepository
 {
     return app(EditorPageRepository::class);
+}
+
+function tags(): EditorTagRepository
+{
+    return app(EditorTagRepository::class);
 }
 
 /**
@@ -138,8 +147,8 @@ function aPage(
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
-): ContentPage {
-    $page = new ContentPage(
+): Page {
+    $page = new Page(
         title: $title,
         path: new PagePath($path ?? Str::slug($title)),
         content: new Markdown($content),
@@ -172,7 +181,7 @@ function aPublishedPage(
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
-): ContentPage {
+): Page {
     return aPage(
         title: $title,
         path: $path,
@@ -188,26 +197,28 @@ function aPublishedPage(
 }
 
 /**
- * Build a tag page and save it to the repository.
+ * Build a tag and save it to the repository.
  */
-function aTagPage(
-    string $title,
-    ?string $path = null,
+function aTag(
+    string $name,
+    ?string $id = null,
+    ?string $slug = null,
     string $content = '',
     ?Carbon $created_at = null,
     ?string $cover_image = null,
-    ?Carbon $revised_at = null,
-): TagPage {
-    $tagPage = new TagPage(
-        path: new PagePath($path ?? config('pluma.tags.pages_path').'/'.Str::slug($title)),
-        title: $title,
+): Tag {
+    $id ??= Str::slug($name);
+
+    $tag = new Tag(
+        id: $id,
+        name: $name,
+        slug: $slug ?? $id,
         content: new Markdown($content),
         created_at: $created_at ?? Carbon::now(),
         cover_image: $cover_image,
-        revised_at: $revised_at,
     );
 
-    repository()->save($tagPage);
+    tags()->save($tag);
 
-    return $tagPage;
+    return $tag;
 }

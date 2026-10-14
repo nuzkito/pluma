@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Editor\Page\TagPage;
 use Livewire\Livewire;
 
 test('root shows root pages and folders', function () {
@@ -21,27 +20,22 @@ test('a directory only shows its own pages', function () {
         ->assertDontSee('Root Page');
 });
 
-test('the tags directory shows its tag pages', function () {
-    repository()->save(TagPage::create('Laravel'));
-
-    Livewire::test('pages::page.index', ['directory' => 'tags'])
-        ->assertSee('Laravel');
-});
-
-test('a tag page links to its edit screen', function () {
-    repository()->save(TagPage::create('Laravel'));
-
-    Livewire::test('pages::page.index', ['directory' => 'tags'])
-        ->assertSeeHtml('href="'.route('pages.edit', 'tags/laravel').'"');
-});
-
-test('tag pages are not shown at the root', function () {
+test('tags are not listed among the pages', function () {
     aPage('Root Page', 'root-page');
-    repository()->save(TagPage::create('Laravel'));
+    aTag('Laravel');
 
     Livewire::test('pages::page.index')
         ->assertSee('Root Page')
         ->assertDontSee('Laravel');
+});
+
+test('the tags of each page are shown by name', function () {
+    aTag('Laravel framework', id: 'laravel');
+    aPage('Root Page', 'root-page', tags: ['laravel', 'Legacy Tag']);
+
+    Livewire::test('pages::page.index')
+        ->assertSee('Laravel framework')
+        ->assertSee('Legacy Tag');
 });
 
 test('shows the pages index', function () {
@@ -68,14 +62,6 @@ test('a directory with pages does not show the empty state', function () {
     aPage('Post Page', 'posts/post-page');
 
     Livewire::test('pages::page.index', ['directory' => 'posts'])
-        ->assertDontSee('There are no pages in this directory.')
-        ->assertDontSeeHtml('wire:click="delete"');
-});
-
-test('a directory with tag pages does not show the empty state', function () {
-    repository()->save(TagPage::create('Laravel'));
-
-    Livewire::test('pages::page.index', ['directory' => 'tags'])
         ->assertDontSee('There are no pages in this directory.')
         ->assertDontSeeHtml('wire:click="delete"');
 });

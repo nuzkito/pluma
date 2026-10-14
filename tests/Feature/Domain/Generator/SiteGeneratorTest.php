@@ -1,7 +1,7 @@
 <?php
 
-use App\Domain\Generator\Page\ContentPage;
 use App\Domain\Generator\Page\Markdown;
+use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PagePath;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
@@ -11,7 +11,7 @@ use Illuminate\View\View;
 test('generates index without prior generatePage call', function () {
     $generator = app(SiteGenerator::class);
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Page',
         path: new PagePath('my-page'),
         content: new Markdown('# Hello'),
@@ -72,75 +72,88 @@ test('does not generate rss feed when rss is disabled', function () {
 });
 
 test('generates a tag page listing only the posts with that tag', function () {
-    $generator = app(SiteGenerator::class);
+    config()->set('pluma.tags.create_pages', true);
 
-    disk()->put(
-        'pages/tagged-post.md',
-        "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - Laravel\n---\n\n# Tagged"
-    );
+    aPublishedPage('Tagged Post', 'tagged-post', tags: ['laravel']);
+    aPublishedPage('Other Post', 'other-post', tags: ['php']);
+    aTag('Laravel', content: 'All about Laravel');
+    aTag('PHP');
 
-    disk()->put(
-        'pages/other-post.md',
-        "---\ntitle: Other Post\npath: other-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\ntags:\n    - PHP\n---\n\n# Other"
-    );
+    app(SiteGenerator::class)->generateAll();
 
-    disk()->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
-    );
-
-    $generator->generateAll();
-
-    expect('site/tags/laravel/index.html')->toExistOnDisk()
-        ->and(disk()->get('site/tags/laravel/index.html'))
+    expect(disk()->get('site/tags/laravel/index.html'))
         ->toContain('Laravel')
         ->toContain('All about Laravel')
         ->toContain('Tagged Post')
         ->not->toContain('Other Post');
 });
 
-test('does not render a description when the tag page has empty content', function () {
-    $generator = app(SiteGenerator::class);
+test('generates the tag pages at their slug under the tag pages path', function () {
+    config()->set('pluma.tags.create_pages', true);
+    config()->set('pluma.tags.pages_path', 'etiquetas');
 
-    disk()->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\n"
-    );
+    aTag('Laravel', slug: 'framework');
 
-    $generator->generateAll();
+    app(SiteGenerator::class)->generateAll();
 
-    expect('site/tags/laravel/index.html')->toExistOnDisk()
-        ->and(disk()->get('site/tags/laravel/index.html'))->not->toContain('<div>');
+    expect('site/etiquetas/framework/index.html')->toExistOnDisk();
 });
 
-test('copies the assets of a tag page next to its generated html', function () {
-    $generator = app(SiteGenerator::class);
+test('does not generate tag pages when they are disabled', function () {
+    config()->set('pluma.tags.create_pages', false);
 
-    disk()->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: Laravel\npath: tags/laravel\ncover_image: header.png\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
-    );
+    aTag('Laravel');
+
+    app(SiteGenerator::class)->generateAll();
+    app(SiteGenerator::class)->generateTagPage('laravel');
+
+    expect('site/tags')->toBeMissingFromDisk();
+});
+
+test('does not render a description when the tag has empty content', function () {
+    config()->set('pluma.tags.create_pages', true);
+
+    aTag('Laravel');
+
+    app(SiteGenerator::class)->generateAll();
+
+    expect(disk()->get('site/tags/laravel/index.html'))->not->toContain('<div>');
+});
+
+test('copies the assets of a tag, stored under its id, next to its generated html', function () {
+    config()->set('pluma.tags.create_pages', true);
+
+    aTag('Laravel', slug: 'framework', cover_image: 'header.png');
 
     disk()->put('assets/tags/laravel/header.png', 'binary');
 
-    $generator->generateAll();
+    app(SiteGenerator::class)->generateAll();
 
-    expect('site/tags/laravel/header.png')->toExistOnDisk()
-        ->and(disk()->get('site/tags/laravel/index.html'))->toContain('src="header.png"');
+    expect('site/tags/framework/header.png')->toExistOnDisk()
+        ->and(disk()->get('site/tags/framework/index.html'))->toContain('src="header.png"');
 });
 
-test('generatePage regenerates the tag page living at that path', function () {
-    $generator = app(SiteGenerator::class);
+test('generateTagPage regenerates the page of the tag with that id', function () {
+    config()->set('pluma.tags.create_pages', true);
 
-    disk()->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
-    );
+    aTag('Laravel', content: 'All about Laravel');
 
-    $generator->generatePage('tags/laravel');
+    app(SiteGenerator::class)->generateTagPage('laravel');
 
-    expect('site/tags/laravel/index.html')->toExistOnDisk()
-        ->and(disk()->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
+    expect(disk()->get('site/tags/laravel/index.html'))->toContain('All about Laravel');
+});
+
+test('removeTagPages removes the generated page of every tag', function () {
+    config()->set('pluma.tags.create_pages', true);
+
+    aTag('Laravel');
+    aPublishedPage('Kept', 'kept');
+
+    app(SiteGenerator::class)->generateAll();
+    app(SiteGenerator::class)->removeTagPages();
+
+    expect('site/tags/laravel')->toBeMissingFromDisk()
+        ->and('site/kept/index.html')->toExistOnDisk();
 });
 
 test('sends the web object to every template', function () {
@@ -153,13 +166,11 @@ test('sends the web object to every template', function () {
 
     disk()->put(
         'pages/tagged-post.md',
-        "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\ntags:\n    - Laravel\n---\n\n# Tagged"
+        "---\ntitle: Tagged Post\npath: tagged-post\ncreated_at: '2025-01-01T10:00:00+00:00'\npublished_at: '2025-01-01T10:00:00+00:00'\nrss: true\ntags:\n    - laravel\n---\n\n# Tagged"
     );
 
-    disk()->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: Laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nAll about Laravel"
-    );
+    config()->set('pluma.tags.create_pages', true);
+    aTag('Laravel');
 
     app(SiteGenerator::class)->generateAll();
 
@@ -219,16 +230,6 @@ test('shows the revision date of a revised page', function () {
 
     expect(disk()->get('site/revised-post/index.html'))->toContain('Updated on <time datetime="2025-07-01">2025-07-01</time>')
         ->and(disk()->get('site/unrevised-post/index.html'))->not->toContain('Updated on');
-});
-
-test('shows the revision date of a revised tag page', function () {
-    aTagPage('Laravel', revised_at: Carbon::parse('2025-07-01 09:00:00'));
-    aTagPage('PHP');
-
-    app(SiteGenerator::class)->generateAll();
-
-    expect(disk()->get('site/tags/laravel/index.html'))->toContain('Updated on <time datetime="2025-07-01">2025-07-01</time>')
-        ->and(disk()->get('site/tags/php/index.html'))->not->toContain('Updated on');
 });
 
 test('removes a single file from a generated page', function () {

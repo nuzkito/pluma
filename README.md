@@ -143,6 +143,35 @@ The slashes between the segments are added for you, and any extra one is removed
 
 Printing it gives you the filename of the image, and `url()` gives you its full URL on the site, already encoded. When there is no cover image, both are empty.
 
+### The `Tag` object
+
+Each tag is a Markdown file in the `tags/` directory of your site, named after its id, which is what the pages store in their `tags` list. Its name and slug can be changed from the editor without touching the pages tagged with it, and its content is the description of the tag.
+
+Sites created with older versions of Pluma reference their tags by name. Run `pluma migrate-tags` once to create the file of each tag and store its id in the pages instead.
+
+The `tag` view receives the tag as `$tag`, and `$page->tags` is a list of them:
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `$tag->name` | `string` | The name of the tag |
+| `$tag->slug` | `string` | The last segment of the URL of its page |
+| `$tag->path` | `PagePath` | The path of its page, relative to the site root |
+| `$tag->content` | `Markdown` | The description of the tag |
+| `$tag->cover_image` | `?string` | The filename of its cover image |
+| `$tag->hasPage()` | `bool` | Whether the site has a page for the tag |
+
+The site only has tag pages when **Create tag pages** is enabled in the settings, so check `hasPage()` before linking to one:
+
+```blade
+@foreach($page->tags as $tag)
+    @if($tag->hasPage())
+        <a href="{{ $web->url->append($tag->path) }}/">{{ $tag->name }}</a>
+    @else
+        {{ $tag->name }}
+    @endif
+@endforeach
+```
+
 ## Local development with Docker
 
 A `Makefile` wraps the most common commands, so you can use the shortcuts below instead of typing the full `docker compose` ones:

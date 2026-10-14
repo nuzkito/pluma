@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Console\Commands\GenerateCommand;
+use App\Console\Commands\MigrateTagsCommand;
 use App\Console\Commands\NewCommand;
 use App\Console\Commands\ServeCommand;
 use Composer\InstalledVersions;
@@ -55,6 +56,7 @@ class PlumaApplication extends IlluminateConsoleApplication
             ServeCommand::class => 'serve',
             NewCommand::class => 'new',
             GenerateCommand::class => 'generate',
+            MigrateTagsCommand::class => 'migrate-tags',
         ];
 
         foreach ($commands as $class => $name) {

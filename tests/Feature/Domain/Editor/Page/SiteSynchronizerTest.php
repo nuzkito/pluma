@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\SiteSynchronizer;
 use App\Domain\Generator\SiteGenerator;
@@ -33,11 +32,11 @@ test('refresh leaves the site untouched for a draft', function () {
 test('refresh also generates the page of each given tag', function () {
     config()->set('pluma.tags.create_pages', true);
 
-    app(CreateTagPage::class)('Laravel');
+    aTag('Laravel');
 
-    $page = aPublishedPage('Tagged Refresh Test', 'tagged-refresh-test', tags: ['Laravel']);
+    $page = aPublishedPage('Tagged Refresh Test', 'tagged-refresh-test', tags: ['laravel']);
 
-    app(SiteSynchronizer::class)->refresh($page, 'Laravel');
+    app(SiteSynchronizer::class)->refresh($page, 'laravel');
 
     expect(disk()->get('site/tags/laravel/index.html'))->toContain('Tagged Refresh Test');
 });

@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 
@@ -64,16 +63,18 @@ test('copies resource files to site directory', function () {
 });
 
 test('generates tag pages with their posts', function () {
+    config()->set('pluma.tags.create_pages', true);
+
     aPublishedPage(
         'Hello World',
         'hello-world',
         content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-        tags: ['Laravel'],
+        tags: ['laravel'],
     );
 
-    repository()->save(TagPage::create('Laravel'));
+    aTag('Laravel');
 
     artisan('pluma:generate')
         ->assertSuccessful();
@@ -87,13 +88,15 @@ test('generates tag pages with their posts', function () {
 test('links page tags to their tag page when create_tag_pages is enabled', function () {
     config()->set('pluma.tags.create_pages', true);
 
+    aTag('Laravel', slug: 'framework');
+
     aPublishedPage(
         'Hello World',
         'hello-world',
         content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-        tags: ['Laravel'],
+        tags: ['laravel'],
     );
 
     artisan('pluma:generate')
@@ -101,11 +104,13 @@ test('links page tags to their tag page when create_tag_pages is enabled', funct
 
     $html = disk()->get('site/hello-world/index.html');
 
-    expect($html)->toContain('href="http://localhost:8001/tags/laravel/"');
+    expect($html)->toContain('href="http://localhost:8001/tags/framework/">Laravel</a>');
 });
 
 test('does not link page tags when create_tag_pages is disabled', function () {
     config()->set('pluma.tags.create_pages', false);
+
+    aTag('Laravel');
 
     aPublishedPage(
         'Hello World',
@@ -113,7 +118,7 @@ test('does not link page tags when create_tag_pages is disabled', function () {
         content: '# Hello World',
         created_at: Carbon::parse('2025-01-01'),
         published_at: Carbon::parse('2025-01-15'),
-        tags: ['Laravel'],
+        tags: ['laravel'],
     );
 
     artisan('pluma:generate')

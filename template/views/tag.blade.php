@@ -1,6 +1,6 @@
 @extends('layout')
 
-@section('title', $tag->title)
+@section('title', $tag->name)
 
 @section('rss', true)
 
@@ -12,10 +12,7 @@
     @if($tag->cover_image)
         <img src="{{ rawurlencode($tag->cover_image) }}" alt="{{ $tag->cover_image }}">
     @endif
-    <h1>{{ $tag->title }}</h1>
-    @if($tag->revised_at)
-        <p>Updated on <time datetime="{{ $tag->revised_at->toDateString() }}">{{ $tag->revised_at->toDateString() }}</time></p>
-    @endif
+    <h1>{{ $tag->name }}</h1>
     @if(trim((string) $tag->content) !== '')
         <div>{!! $tag->content->html() !!}</div>
     @endif

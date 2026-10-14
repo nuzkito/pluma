@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\RemovePageTag;
 use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
@@ -15,7 +15,7 @@ test('removes tag by index', function () {
 
     $result = $action('remove-tag-test', 1);
 
-    expect($result)->toBeInstanceOf(ContentPage::class)
+    expect($result)->toBeInstanceOf(Page::class)
         ->and(repository()->findByPath('remove-tag-test')->tags)->toEqual(['php', 'testing']);
 });
 
@@ -49,7 +49,8 @@ test('removes tag from published page and regenerates site', function () {
     );
 
     mock(SiteGenerator::class, function ($mock) {
-        $mock->shouldReceive('generatePage')->twice();
+        $mock->shouldReceive('generatePage')->once()->with('published-remove-tag-test');
+        $mock->shouldReceive('generateTagPage')->once()->with('php');
         $mock->shouldReceive('regenerateIndex')->once();
     });
 
@@ -63,10 +64,7 @@ test('removes tag from published page and regenerates site', function () {
 test('updates the static tag page when removing a tag from a published page', function () {
     config()->set('pluma.tags.create_pages', true);
 
-    Storage::disk('current')->put(
-        'pages/tags/laravel.tag.md',
-        "---\ntitle: laravel\npath: tags/laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\n"
-    );
+    aTag('Laravel');
 
     aPublishedPage(
         'Published Post',
@@ -78,7 +76,7 @@ test('updates the static tag page when removing a tag from a published page', fu
     );
 
     $generator = app(SiteGenerator::class);
-    $generator->generatePage('tags/laravel');
+    $generator->generateTagPage('laravel');
 
     expect(Storage::disk('current')->get('site/tags/laravel/index.html'))->toContain('Published Post');
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Editor\Page\CreateTagPage;
 use App\Domain\Editor\Page\DeleteDirectory;
 use App\Domain\Editor\Page\PublishPage;
 
@@ -28,15 +27,6 @@ test('does not delete a directory holding pages', function () {
 
     expect(app(DeleteDirectory::class)('posts'))->toBeFalse()
         ->and('pages/posts')->toExistOnDisk();
-});
-
-test('does not delete a directory holding tag pages', function () {
-    config()->set('pluma.tags.create_pages', true);
-
-    app(CreateTagPage::class)('Laravel');
-
-    expect(app(DeleteDirectory::class)('tags'))->toBeFalse()
-        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
 });
 
 test('does not delete a directory holding subdirectories', function () {

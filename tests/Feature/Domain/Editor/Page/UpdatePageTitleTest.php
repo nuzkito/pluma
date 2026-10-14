@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\UpdatePageTitle;
 use App\Domain\Generator\SiteGenerator;
 
@@ -14,7 +14,7 @@ test('returns Ok with page when title is updated successfully', function () {
     $result = $action('original-title', 'New Title');
 
     expect($result)->toBeOk()
-        ->and($result->unwrap())->toBeInstanceOf(ContentPage::class);
+        ->and($result->unwrap())->toBeInstanceOf(Page::class);
 });
 
 test('returns Ok with page when title is updated without path change', function () {

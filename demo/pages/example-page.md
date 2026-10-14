@@ -7,7 +7,7 @@ draft: false
 rss: true
 published_at: '2026-08-13T10:00:00+00:00'
 tags:
-    - 'First Tag'
+    - first-tag
 ---
 
 This page shows how every Markdown element is written and how it looks with the templates of the site. Edit it, delete it or keep it around as a cheat sheet.
@@ -57,7 +57,7 @@ Adding a checkbox to the items turns them into a task list:
 Fence a block with three backticks and write the language right after them:
 
 ```php
-$page = ContentPage::draft('Example Page', 'example-page');
+$page = Page::draft('Example Page', 'example-page');
 
 $repository->save($page);
 ```

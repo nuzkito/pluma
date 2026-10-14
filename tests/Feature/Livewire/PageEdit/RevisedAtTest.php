@@ -46,13 +46,3 @@ test('hides revised_at on a draft', function () {
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
         ->assertDontSee('Revised at');
 });
-
-test('changing revised_at updates a tag page', function () {
-    $tagPage = aTagPage('Laravel');
-
-    Livewire::test('pages::page.edit', ['path' => (string) $tagPage->path])
-        ->set('revised_at', '2025-07-01T09:00')
-        ->assertSet('revised_at', '2025-07-01T09:00');
-
-    expect(repository()->findByPath((string) $tagPage->path)->revised_at?->format('Y-m-d H:i'))->toBe('2025-07-01 09:00');
-});

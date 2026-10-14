@@ -6,6 +6,7 @@ use App\Domain\Generator\AssetProcessor;
 use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\Page\YoutubeNocookieEmbedAdapter;
 use App\Domain\Generator\SiteGenerator;
+use App\Domain\Generator\Tag\TagRepository;
 use App\Domain\Settings\SiteConfigLoader;
 use Embed\Embed;
 use Illuminate\Support\Facades\Storage;
@@ -17,8 +18,13 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singletonIf(
+            TagRepository::class,
+            fn () => new TagRepository,
+        );
+
+        $this->app->singletonIf(
             PageRepository::class,
-            fn () => new PageRepository,
+            fn () => new PageRepository(app(TagRepository::class)),
         );
 
         $this->app->singletonIf(
@@ -30,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
             SiteGenerator::class,
             fn () => new SiteGenerator(
                 app(PageRepository::class),
+                app(TagRepository::class),
                 app(AssetProcessor::class),
             ),
         );

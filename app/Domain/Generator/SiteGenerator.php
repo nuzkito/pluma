@@ -4,7 +4,8 @@ namespace App\Domain\Generator;
 
 use App\Domain\Generator\Page\Page;
 use App\Domain\Generator\Page\PageRepository;
-use App\Domain\Generator\Page\TagPage;
+use App\Domain\Generator\Tag\Tag;
+use App\Domain\Generator\Tag\TagRepository;
 use App\Domain\Settings\SettingsSchema;
 use App\Domain\Settings\SettingType;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -23,6 +24,7 @@ class SiteGenerator
 
     public function __construct(
         private PageRepository $pageRepository,
+        private TagRepository $tagRepository,
         private AssetProcessor $assetProcessor,
     ) {
         $this->disk = Storage::disk('current');
@@ -41,8 +43,10 @@ class SiteGenerator
             $this->writePage($page, $pages);
         }
 
-        foreach ($this->pageRepository->tags() as $tag) {
-            $this->writeTagPage($tag, $pages);
+        if (config('pluma.tags.create_pages')) {
+            foreach ($this->tagRepository->all() as $tag) {
+                $this->writeTagPage($tag, $pages);
+            }
         }
 
         if ($pages->contains(fn ($page) => $page->rss)) {
@@ -65,15 +69,38 @@ class SiteGenerator
             return;
         }
 
-        $publishedPages = $this->pageRepository->published();
+        $this->writePage($page, $this->pageRepository->published());
+    }
 
-        if ($page instanceof TagPage) {
-            $this->writeTagPage($page, $publishedPages);
-
+    public function generateTagPage(string $id): void
+    {
+        if (! config('pluma.tags.create_pages')) {
             return;
         }
 
-        $this->writePage($page, $publishedPages);
+        $tag = $this->tagRepository->find($id);
+
+        if ($tag === null) {
+            return;
+        }
+
+        $this->writeTagPage($tag, $this->pageRepository->published());
+    }
+
+    public function generatePagesTaggedWith(string $id): void
+    {
+        $publishedPages = $this->pageRepository->published();
+
+        foreach ($publishedPages->filter(fn (Page $page) => $page->hasTag($id)) as $page) {
+            $this->writePage($page, $publishedPages);
+        }
+    }
+
+    public function removeTagPages(): void
+    {
+        foreach ($this->tagRepository->all() as $tag) {
+            $this->removePage((string) $tag->path);
+        }
     }
 
     /**
@@ -115,12 +142,12 @@ class SiteGenerator
     /**
      * @param  Collection<int, Page>  $publishedPages
      */
-    private function writeTagPage(TagPage $tag, Collection $publishedPages): void
+    private function writeTagPage(Tag $tag, Collection $publishedPages): void
     {
         $this->prepare();
 
         $posts = $publishedPages
-            ->filter(fn (Page $page) => in_array($tag->title, $page->tags, true))
+            ->filter(fn (Page $page) => $page->hasTag($tag->id))
             ->values();
 
         $tagPath = self::SITE_DIRECTORY."/{$tag->path}";
@@ -135,7 +162,7 @@ class SiteGenerator
 
         $this->disk->put("$tagPath/index.html", $html);
 
-        $this->copyPageAssets((string) $tag->path, $tagPath);
+        $this->copyPageAssets($tag->assetsPath(), $tagPath);
     }
 
     /**

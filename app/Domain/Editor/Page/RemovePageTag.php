@@ -11,7 +11,7 @@ class RemovePageTag
         private SiteSynchronizer $site,
     ) {}
 
-    public function __invoke(string $path, int $index): ContentPage
+    public function __invoke(string $path, int $index): Page
     {
         $page = $this->repository->findByPath($path);
 

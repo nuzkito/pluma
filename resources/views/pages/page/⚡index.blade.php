@@ -1,10 +1,9 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\DeleteDirectory;
 use App\Domain\Editor\Page\DirectoryRepository;
 use App\Domain\Editor\Page\PageRepository;
-use App\Domain\Editor\Page\TagPage;
+use App\Domain\Editor\Tag\TagRepository;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -27,17 +26,15 @@ new class extends Component {
         ]);
     }
 
-    public function render(PageRepository $pages, DirectoryRepository $directories)
+    public function render(PageRepository $pages, DirectoryRepository $directories, TagRepository $tags)
     {
-        $entries = $pages->searchByDirectory($this->directory);
-        $contentPages = $entries->whereInstanceOf(ContentPage::class)->values();
-        $tagPages = $entries->whereInstanceOf(TagPage::class)->sortBy('title')->values();
+        $contentPages = $pages->searchByDirectory($this->directory);
         $subdirectories = $directories->searchByDirectory($this->directory);
-        $isEmpty = $contentPages->isEmpty() && $tagPages->isEmpty();
+        $isEmpty = $contentPages->isEmpty();
 
         return $this->view([
             'pages' => $contentPages,
-            'tags' => $tagPages,
+            'tagNames' => $tags->all()->pluck('name', 'id')->all(),
             'directories' => $subdirectories,
             'isEmpty' => $isEmpty,
             'canBeDeleted' => $isEmpty && $subdirectories->isEmpty() && $this->directory !== '',
@@ -78,29 +75,6 @@ new class extends Component {
         </flux:table>
     @endif
 
-    @if($tags->isNotEmpty())
-        <flux:table>
-            <flux:table.columns>
-                <flux:table.column>Tag</flux:table.column>
-                <flux:table.column>Created</flux:table.column>
-            </flux:table.columns>
-
-            <flux:table.rows>
-                @foreach($tags as $tagPage)
-                    <flux:table.row>
-                        <flux:table.cell align="start">
-                            <a href="{{ route('pages.edit', $tagPage->path) }}" wire:navigate.hover class="flex items-center gap-2 text-blue-600 hover:underline">
-                                <flux:icon name="tag" variant="micro" />
-                                {{ $tagPage->title }}
-                            </a>
-                        </flux:table.cell>
-                        <flux:table.cell>{{ $tagPage->created_at->format('Y-m-d H:i') }}</flux:table.cell>
-                    </flux:table.row>
-                @endforeach
-            </flux:table.rows>
-        </flux:table>
-    @endif
-
     @if($pages->isNotEmpty())
         <flux:table>
             <flux:table.columns>
@@ -126,7 +100,7 @@ new class extends Component {
                         </flux:table.cell>
                         <flux:table.cell>
                             @foreach($page->tags as $tag)
-                                <flux:badge>{{ $tag }}</flux:badge>
+                                <flux:badge>{{ $tagNames[$tag] ?? $tag }}</flux:badge>
                             @endforeach
                         </flux:table.cell>
                         <flux:table.cell>{{ $page->created_at->format('Y-m-d H:i') }}</flux:table.cell>

@@ -85,13 +85,3 @@ test('does not set the revision date when the content of a draft changes', funct
 
     expect(repository()->findByPath('draft-revision-test')->revised_at)->toBeNull();
 });
-
-test('sets the revision date when the content of a tag page changes', function () {
-    Carbon::setTestNow(Carbon::parse('2025-07-01 09:00:00'));
-
-    $tagPage = aTagPage('Laravel', created_at: Carbon::parse('2025-06-01 12:00:00'));
-
-    app(UpdatePageContent::class)((string) $tagPage->path, '# New Content');
-
-    expect(repository()->findByPath((string) $tagPage->path)->revised_at?->format('Y-m-d H:i'))->toBe('2025-07-01 09:00');
-});

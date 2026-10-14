@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\MoveTagPages;
+use App\Domain\Editor\Tag\MoveTagPages;
 use App\Domain\Generator\Page\HighlightTheme;
 use App\Domain\Generator\SiteGenerator;
 use App\Domain\Settings\RemoveSettingImage;
@@ -24,7 +24,7 @@ new class extends Component
         // Publish the page and regenerate the site
         final class PublishPage
         {
-            public function __invoke(ContentPage $page): bool
+            public function __invoke(Page $page): bool
             {
                 $page->published_at = now();
 
@@ -107,6 +107,7 @@ new class extends Component
         }
 
         $currentTagsPath = (string) config('pluma.tags.pages_path');
+        $currentCreateTagPages = (bool) config('pluma.tags.create_pages');
         $currentHighlightTheme = (string) config('pluma.highlight.theme');
         $newTagsPath = (string) data_get($values, 'tags.pages_path');
 
@@ -121,9 +122,14 @@ new class extends Component
         $settings->save($values);
 
         $tagsPathChanged = trim($currentTagsPath, '/') !== trim($newTagsPath, '/');
+        $createTagPagesChanged = $currentCreateTagPages !== (bool) data_get($values, 'tags.create_pages');
         $highlightThemeChanged = $currentHighlightTheme !== data_get($values, 'highlight.theme');
 
-        if ($tagsPathChanged || $highlightThemeChanged) {
+        if ($createTagPagesChanged && ! config('pluma.tags.create_pages')) {
+            $siteGenerator->removeTagPages();
+        }
+
+        if ($tagsPathChanged || $createTagPagesChanged || $highlightThemeChanged) {
             $siteGenerator->generateAll();
         } else {
             $siteGenerator->copySiteImages();

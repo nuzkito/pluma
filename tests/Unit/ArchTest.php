@@ -8,6 +8,10 @@ arch('the generator does not depend on the editor')
     ->expect('App\Domain\Generator')
     ->not->toUse('App\Domain\Editor');
 
+arch('the tag migration is only used by its command, so that it can be removed on its own')
+    ->expect('App\Domain\TagMigration')
+    ->toOnlyBeUsedIn(['App\Domain\TagMigration', 'App\Console\Commands\MigrateTagsCommand']);
+
 arch('no debugging statements are left behind')
     ->expect(['dd', 'ddd', 'dump', 'ray', 'var_dump', 'print_r'])
     ->not->toBeUsed();

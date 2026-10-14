@@ -11,7 +11,7 @@ class UpdatePagePublishedAt
         private SiteSynchronizer $site,
     ) {}
 
-    public function __invoke(string $path, ?string $publishedAt): ContentPage
+    public function __invoke(string $path, ?string $publishedAt): Page
     {
         $page = $this->repository->findByPath($path);
 

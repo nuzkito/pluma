@@ -21,6 +21,7 @@
 
         <flux:navlist>
             <flux:navlist.item href="{{ route('pages.index') }}" class="pl-10" wire:navigate>Pages</flux:navlist.item>
+            <flux:navlist.item href="{{ route('tags.index') }}" icon="tag" wire:navigate>Tags</flux:navlist.item>
             <flux:navlist.item href="{{ route('settings.index') }}" icon="cog-6-tooth" wire:navigate>Settings</flux:navlist.item>
         </flux:navlist>
 

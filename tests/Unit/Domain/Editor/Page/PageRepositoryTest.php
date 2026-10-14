@@ -1,10 +1,9 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository;
-use App\Domain\Editor\Page\TagPage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,7 +22,7 @@ test('saves and retrieves a page', function () {
 
     $repository = new PageRepository;
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Test Page',
         path: new PagePath('test-page'),
         content: new Markdown('# Hello World'),
@@ -47,7 +46,7 @@ test('saves and retrieves a page cover image', function () {
 
     $repository = new PageRepository;
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Test Page',
         path: new PagePath('test-page'),
         content: new Markdown('# Hello World'),
@@ -66,14 +65,14 @@ test('lists all pages sorted by created_at descending', function () {
 
     $repository = new PageRepository;
 
-    $older = new ContentPage(
+    $older = new Page(
         title: 'Older',
         path: new PagePath('older'),
         content: new Markdown(''),
         created_at: Carbon::parse('2025-01-01'),
     );
 
-    $newer = new ContentPage(
+    $newer = new Page(
         title: 'Newer',
         path: new PagePath('newer'),
         content: new Markdown(''),
@@ -95,14 +94,14 @@ test('filters published pages', function () {
 
     $repository = new PageRepository;
 
-    $draft = new ContentPage(
+    $draft = new Page(
         title: 'Draft',
         path: new PagePath('draft'),
         content: new Markdown(''),
         created_at: Carbon::now(),
     );
 
-    $published = new ContentPage(
+    $published = new Page(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
@@ -126,7 +125,7 @@ test('detects duplicate paths', function () {
 
     $repository = new PageRepository;
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Page',
         path: new PagePath('shared-path'),
         content: new Markdown(''),
@@ -146,7 +145,7 @@ test('detects duplicate paths inside a directory', function () {
 
     $repository = new PageRepository;
 
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Post',
         path: new PagePath('posts/shared-path'),
         content: new Markdown(''),
@@ -165,7 +164,7 @@ test('moves page file and assets when path changes', function () {
     disk()->makeDirectory('assets');
 
     $repository = new PageRepository;
-    $page = ContentPage::draft('Test Page', 'test-page');
+    $page = Page::draft('Test Page', 'test-page');
     $repository->save($page);
 
     disk()->put("assets/{$page->path}/image.jpg", 'fake image');
@@ -185,7 +184,7 @@ test('moves page file when path changes with no assets directory', function () {
     disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
-    $page = ContentPage::draft('Test Page', 'test-page');
+    $page = Page::draft('Test Page', 'test-page');
     $repository->save($page);
     $oldPath = (string) $page->path;
 
@@ -202,7 +201,7 @@ test('deletes page file and assets directory', function () {
     disk()->makeDirectory('assets');
 
     $repository = new PageRepository;
-    $page = ContentPage::draft('Test Page', 'test-page');
+    $page = Page::draft('Test Page', 'test-page');
     $repository->save($page);
 
     disk()->put("assets/{$page->path}/image.jpg", 'fake image');
@@ -218,7 +217,7 @@ test('deletes page file when no assets directory exists', function () {
     disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
-    $page = ContentPage::draft('Test Page', 'test-page');
+    $page = Page::draft('Test Page', 'test-page');
     $repository->save($page);
 
     $repository->delete((string) $page->path);
@@ -242,7 +241,7 @@ test('ignores non-markdown files in all()', function () {
     $repository = new PageRepository;
     disk()->put('pages/readme.txt', 'some text');
 
-    $page = ContentPage::draft('Real Page', 'real-page');
+    $page = Page::draft('Real Page', 'real-page');
     $repository->save($page);
 
     expect($repository->all())->toHaveCount(1);
@@ -254,7 +253,7 @@ test('persists and retrieves rss field', function () {
 
     $repository = new PageRepository;
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'RSS Page',
         path: new PagePath('rss-page'),
         content: new Markdown(''),
@@ -274,7 +273,7 @@ test('persists and retrieves published_at field', function () {
     $repository = new PageRepository;
 
     $publishedAt = Carbon::parse('2025-03-15 12:00:00');
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Published Page',
         path: new PagePath('published-page'),
         content: new Markdown(''),
@@ -296,7 +295,7 @@ test('persists and retrieves the draft flag', function () {
 
     $repository = new PageRepository;
 
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Unpublished Page',
         path: new PagePath('unpublished-page'),
         content: new Markdown(''),
@@ -318,7 +317,7 @@ test('persists and retrieves the revised_at field', function () {
     $repository = new PageRepository;
 
     $revisedAt = Carbon::parse('2025-04-01 09:00:00');
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Revised Page',
         path: new PagePath('revised-page'),
         content: new Markdown(''),
@@ -340,125 +339,22 @@ test('reads a page without the draft flag as published', function () {
     expect($repository->findByPath('legacy-published')->isPublished())->toBeTrue();
 });
 
-test('saves a tag page using the .tag.md suffix', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $repository->save(TagPage::create('Cosas varias'));
-
-    expect('pages/tags/cosas-varias.tag.md')->toExistOnDisk();
-});
-
-test('moves the tag page file when it is saved with an old path', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $tagPage = TagPage::create('Cosas varias');
-    $repository->save($tagPage);
-
-    $tagPage->moveToPath(new PagePath('topics/cosas-varias'));
-    $repository->save($tagPage, 'tags/cosas-varias');
-
-    expect('pages/topics/cosas-varias.tag.md')->toExistOnDisk()
-        ->and('pages/tags/cosas-varias.tag.md')->toBeMissingFromDisk();
-});
-
-test('includes tag pages, typed as TagPage, alongside content pages', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $repository->save(ContentPage::draft('Regular Page', 'regular-page'));
-    $repository->save(new TagPage(
-        path: new PagePath('root-tag'),
-        title: 'Root Tag',
-        content: new Markdown(''),
-        created_at: Carbon::now(),
-    ));
-
-    $all = $repository->all();
-
-    expect($all)->toHaveCount(2)
-        ->and($all->whereInstanceOf(ContentPage::class)->pluck('title')->all())->toBe(['Regular Page'])
-        ->and($all->whereInstanceOf(TagPage::class)->pluck('title')->all())->toBe(['Root Tag']);
-});
-
-test('reads a tag page from its directory', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    Carbon::setTestNow(Carbon::parse('2025-01-01 10:00:00'));
-    $repository->save(TagPage::create('Cosas varias'));
-
-    $tags = $repository->searchByDirectory('tags');
-
-    expect($tags)->toHaveCount(1)
-        ->and($tags->first())->toBeInstanceOf(TagPage::class)
-        ->and($tags->first()->title)->toBe('Cosas varias')
-        ->and((string) $tags->first()->path)->toBe('tags/cosas-varias')
-        ->and($tags->first()->created_at->toIso8601String())->toBe(Carbon::parse('2025-01-01 10:00:00')->toIso8601String());
-});
-
-test('a tag page only shows up in its own directory', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $repository->save(ContentPage::draft('Root Page', 'root-page'));
-    $repository->save(TagPage::create('Cosas varias'));
-
-    expect($repository->searchByDirectory('')->pluck('title')->all())->toBe(['Root Page'])
-        ->and($repository->searchByDirectory('tags')->pluck('title')->all())->toBe(['Cosas varias']);
-});
-
-test('excludes tag pages from published()', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $repository->save(new ContentPage(
-        title: 'Published',
-        path: new PagePath('published'),
-        content: new Markdown(''),
-        created_at: Carbon::now(),
-        published_at: Carbon::now(),
-        draft: false,
-    ));
-    $repository->save(new TagPage(
-        path: new PagePath('root-tag'),
-        title: 'Root Tag',
-        content: new Markdown(''),
-        created_at: Carbon::now(),
-    ));
-
-    expect($repository->published()->pluck('title')->all())->toBe(['Published']);
-});
-
 test('searchByDirectory returns only pages directly in that directory', function () {
     Storage::fake('current');
     disk()->makeDirectory('pages');
 
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Root Page', 'root-page'));
+    $repository->save(Page::draft('Root Page', 'root-page'));
 
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Posts Page',
         path: new PagePath('posts/posts-page'),
         content: new Markdown(''),
         created_at: Carbon::now(),
     ));
 
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Nested Page',
         path: new PagePath('posts/2025/nested-page'),
         content: new Markdown(''),
@@ -477,9 +373,9 @@ test('all() is equivalent to searchByDirectory() at the root', function () {
 
     $repository = new PageRepository;
 
-    $repository->save(ContentPage::draft('Root One', 'root-one'));
+    $repository->save(Page::draft('Root One', 'root-one'));
 
-    $repository->save(new ContentPage(
+    $repository->save(new Page(
         title: 'Posts Page',
         path: new PagePath('posts/posts-page'),
         content: new Markdown(''),
@@ -489,45 +385,4 @@ test('all() is equivalent to searchByDirectory() at the root', function () {
     expect($repository->all()->pluck('title')->all())
         ->toBe($repository->searchByDirectory('')->pluck('title')->all())
         ->and($repository->all())->toHaveCount(1);
-});
-
-test('findByPath resolves a tag page from its path', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $repository->save(TagPage::create('Cosas varias'));
-
-    $found = $repository->findByPath('tags/cosas-varias');
-
-    expect($found)->toBeInstanceOf(TagPage::class)
-        ->and($found->title)->toBe('Cosas varias');
-});
-
-test('keeps the cover image of a tag page between saves', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    $tagPage = TagPage::create('Cosas varias');
-    $tagPage->changeCoverImage('header.png');
-
-    $repository->save($tagPage);
-
-    expect($repository->findByPath('tags/cosas-varias')->cover_image)->toBe('header.png');
-});
-
-test('tagExists reflects whether a tag page file is present', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages');
-
-    $repository = new PageRepository;
-
-    expect($repository->tagExists('tags/cosas-varias'))->toBeFalse();
-
-    $repository->save(TagPage::create('Cosas varias'));
-
-    expect($repository->tagExists('tags/cosas-varias'))->toBeTrue();
 });

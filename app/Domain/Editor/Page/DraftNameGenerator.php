@@ -11,9 +11,8 @@ class DraftNameGenerator
     public function __invoke(string $directory): string
     {
         $existingDrafts = $this->repository->searchByDirectory($directory)
-            ->whereInstanceOf(ContentPage::class)
-            ->filter(fn (ContentPage $page) => Str::of($page->title)->startsWith('Draft'))
-            ->map(fn (ContentPage $page) => $page->title);
+            ->filter(fn (Page $page) => Str::of($page->title)->startsWith('Draft'))
+            ->map(fn (Page $page) => $page->title);
 
         if ($existingDrafts->isEmpty()) {
             return 'Draft';

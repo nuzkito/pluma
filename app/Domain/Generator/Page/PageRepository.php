@@ -2,6 +2,8 @@
 
 namespace App\Domain\Generator\Page;
 
+use App\Domain\Generator\Tag\Tag;
+use App\Domain\Generator\Tag\TagRepository;
 use Carbon\Carbon;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
@@ -14,13 +16,13 @@ class PageRepository
 {
     private Filesystem $disk;
 
-    public function __construct()
+    public function __construct(private TagRepository $tags = new TagRepository)
     {
         $this->disk = Storage::disk('current');
     }
 
     /**
-     * @return Collection<int, ContentPage>
+     * @return Collection<int, Page>
      */
     public function all(): Collection
     {
@@ -28,34 +30,17 @@ class PageRepository
             return collect();
         }
 
+        $tags = $this->tags->all();
+
         return collect($this->disk->allFiles('pages'))
             ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
-            ->reject(fn (string $file) => Str::of($file)->endsWith('.tag.md'))
-            ->map($this->fromFile(...))
+            ->map(fn (string $file) => $this->fromFile($file, $tags))
             ->sortByDesc('created_at')
             ->values();
     }
 
     /**
-     * @return Collection<int, TagPage>
-     */
-    public function tags(): Collection
-    {
-        $tagsDirectory = 'pages/'.config('pluma.tags.pages_path');
-
-        if (! $this->disk->exists($tagsDirectory)) {
-            return collect();
-        }
-
-        return collect($this->disk->files($tagsDirectory))
-            ->filter(fn (string $file) => Str::of($file)->endsWith('.tag.md'))
-            ->map($this->tagPageFromFile(...))
-            ->sortBy('title')
-            ->values();
-    }
-
-    /**
-     * @return Collection<int, ContentPage>
+     * @return Collection<int, Page>
      */
     public function published(): Collection
     {
@@ -66,20 +51,17 @@ class PageRepository
     {
         $pagePath = "pages/$path.md";
 
-        if ($this->disk->exists($pagePath)) {
-            return $this->fromFile($pagePath);
+        if (! $this->disk->exists($pagePath)) {
+            return null;
         }
 
-        $tagPagePath = "pages/$path.tag.md";
-
-        if ($this->disk->exists($tagPagePath)) {
-            return $this->tagPageFromFile($tagPagePath);
-        }
-
-        return null;
+        return $this->fromFile($pagePath, $this->tags->all());
     }
 
-    private function fromFile(string $filePath): ContentPage
+    /**
+     * @param  Collection<string, Tag>  $tags
+     */
+    private function fromFile(string $filePath, Collection $tags): Page
     {
         $raw = $this->disk->get($filePath);
         $parser = new FrontMatterParser(new SymfonyYamlFrontMatterParser);
@@ -87,7 +69,7 @@ class PageRepository
         $metadata = $parsed->getFrontMatter();
         $content = $parsed->getContent();
 
-        return new ContentPage(
+        return new Page(
             title: $metadata['title'],
             path: new PagePath($metadata['path']),
             content: new Markdown($content),
@@ -96,26 +78,11 @@ class PageRepository
             draft: $metadata['draft'] ?? false,
             revised_at: isset($metadata['revised_at']) ? Carbon::parse($metadata['revised_at']) : null,
             rss: $metadata['rss'] ?? false,
-            tags: $metadata['tags'] ?? [],
+            tags: array_map(
+                fn (string $id) => $tags->get($id) ?? Tag::undefined($id),
+                $metadata['tags'] ?? [],
+            ),
             cover_image: $metadata['cover_image'] ?? null,
-        );
-    }
-
-    private function tagPageFromFile(string $filePath): TagPage
-    {
-        $raw = $this->disk->get($filePath);
-        $parser = new FrontMatterParser(new SymfonyYamlFrontMatterParser);
-        $parsed = $parser->parse($raw);
-        $metadata = $parsed->getFrontMatter();
-        $content = $parsed->getContent();
-
-        return new TagPage(
-            title: $metadata['title'],
-            path: new PagePath($metadata['path']),
-            content: new Markdown($content),
-            created_at: Carbon::parse($metadata['created_at']),
-            cover_image: $metadata['cover_image'] ?? null,
-            revised_at: isset($metadata['revised_at']) ? Carbon::parse($metadata['revised_at']) : null,
         );
     }
 }

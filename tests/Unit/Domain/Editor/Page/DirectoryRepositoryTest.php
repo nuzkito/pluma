@@ -34,16 +34,6 @@ test('lists immediate subdirectories of a nested directory', function () {
         ->and($directories->first()->name())->toBe('2024');
 });
 
-test('includes the tag pages directory', function () {
-    Storage::fake('current');
-    disk()->makeDirectory('pages/tags');
-
-    $directories = (new DirectoryRepository)->searchByDirectory('');
-
-    expect($directories->map(fn (Directory $directory) => $directory->path)->all())
-        ->toContain('tags');
-});
-
 test('deletes an empty directory', function () {
     Storage::fake('current');
     disk()->makeDirectory('pages/tags');
@@ -56,7 +46,7 @@ test('deletes an empty directory', function () {
 
 test('keeps a directory that holds files or subdirectories', function () {
     Storage::fake('current');
-    disk()->put('pages/tags/laravel.tag.md', 'content');
+    disk()->put('pages/tags/laravel.md', 'content');
     disk()->makeDirectory('pages/posts/2025');
 
     $repository = new DirectoryRepository;
@@ -64,7 +54,7 @@ test('keeps a directory that holds files or subdirectories', function () {
     expect($repository->deleteIfEmpty('tags'))->toBeFalse()
         ->and($repository->deleteIfEmpty('posts'))->toBeFalse()
         ->and($repository->deleteIfEmpty('missing'))->toBeFalse()
-        ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
+        ->and('pages/tags/laravel.md')->toExistOnDisk();
 });
 
 test('creates a directory and reflects its existence', function () {

@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\CreateTagPage;
+use App\Domain\Generator\SiteGenerator;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -80,27 +80,29 @@ test('validates that urls are required and valid', function () {
 });
 
 describe('tag pages path', function () {
-    test('moves the existing tag pages to the new directory', function () {
-        config()->set('pluma.tags.create_pages', true);
+    test('keeps the assets of the tags in place', function () {
+        aTag('Laravel');
 
-        app(CreateTagPage::class)('Laravel');
+        disk()->put('assets/tags/laravel/cover.png', 'image');
 
         Livewire::test('pages::settings')
             ->set('values.tags.pages_path', 'topics')
             ->call('save')
             ->assertHasNoErrors();
 
-        expect('pages/topics/laravel.tag.md')->toExistOnDisk()
-            ->and('pages/tags/laravel.tag.md')->toBeMissingFromDisk()
-            ->and(disk()->get('pages/topics/laravel.tag.md'))->toContain('path: topics/laravel');
+        expect('assets/tags/laravel/cover.png')->toExistOnDisk()
+            ->and('assets/topics')->toBeMissingFromDisk()
+            ->and('tags/laravel.md')->toExistOnDisk();
     });
 
     test('regenerates the tag pages in the new directory of the site', function () {
         config()->set('pluma.tags.create_pages', true);
 
-        app(CreateTagPage::class)('Laravel');
+        aTag('Laravel');
+        app(SiteGenerator::class)->generateTagPage('laravel');
 
         Livewire::test('pages::settings')
+            ->set('values.tags.create_pages', true)
             ->set('values.tags.pages_path', 'topics')
             ->call('save')
             ->assertHasNoErrors();
@@ -112,18 +114,18 @@ describe('tag pages path', function () {
     test('regenerates the pages so their tag links point to the new directory', function () {
         config()->set('pluma.tags.create_pages', true);
 
+        aTag('Laravel');
         aPublishedPage(
             'Tagged Post',
             'tagged-post',
             content: '# Tagged',
             created_at: Carbon::parse('2025-01-01'),
             published_at: Carbon::parse('2025-01-15'),
-            tags: ['Laravel'],
+            tags: ['laravel'],
         );
 
-        app(CreateTagPage::class)('Laravel');
-
         Livewire::test('pages::settings')
+            ->set('values.tags.create_pages', true)
             ->set('values.tags.pages_path', 'topics')
             ->call('save')
             ->assertHasNoErrors();
@@ -134,9 +136,7 @@ describe('tag pages path', function () {
     });
 
     test('rejects a path that collides with an existing directory', function () {
-        config()->set('pluma.tags.create_pages', true);
-
-        app(CreateTagPage::class)('Laravel');
+        aTag('Laravel');
 
         disk()->makeDirectory('pages/topics');
 
@@ -149,8 +149,36 @@ describe('tag pages path', function () {
         $saved = json_decode(disk()->get('pluma-settings.json'), true);
 
         expect($saved['tags']['pages_path'])->toBe('tags')
-            ->and($saved['title'])->not->toBe('Not saved')
-            ->and('pages/tags/laravel.tag.md')->toExistOnDisk();
+            ->and($saved['title'])->not->toBe('Not saved');
+    });
+});
+
+describe('create tag pages', function () {
+    test('enabling it generates the page of every tag', function () {
+        aTag('Laravel');
+
+        Livewire::test('pages::settings')
+            ->set('values.tags.create_pages', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect('site/tags/laravel/index.html')->toExistOnDisk();
+    });
+
+    test('disabling it removes the page of every tag and the links to them', function () {
+        config()->set('pluma.tags.create_pages', true);
+
+        aTag('Laravel');
+        aPublishedPage('Tagged Post', 'tagged-post', tags: ['laravel']);
+        app(SiteGenerator::class)->generateAll();
+
+        Livewire::test('pages::settings')
+            ->set('values.tags.create_pages', false)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        expect('site/tags/laravel')->toBeMissingFromDisk()
+            ->and(disk()->get('site/tagged-post/index.html'))->not->toContain('/tags/laravel/');
     });
 });
 

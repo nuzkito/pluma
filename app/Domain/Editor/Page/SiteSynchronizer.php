@@ -12,7 +12,7 @@ class SiteSynchronizer
     public function __construct(private SiteGenerator $generator) {}
 
     /**
-     * Regenerate a published page, the pages of the given tags, and the index.
+     * Regenerate a published page, the pages of the tags with the given ids, and the index.
      *
      * Drafts are not part of the generated site, so nothing is written for them.
      */
@@ -25,7 +25,7 @@ class SiteSynchronizer
         $this->generator->generatePage((string) $page->path);
 
         foreach ($tags as $tag) {
-            $this->generator->generatePage((string) TagPage::create($tag)->path);
+            $this->generator->generateTagPage($tag);
         }
 
         $this->refreshIndex();

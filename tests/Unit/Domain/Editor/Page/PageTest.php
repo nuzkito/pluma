@@ -1,12 +1,12 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
 use App\Domain\Editor\Page\Markdown;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\PagePath;
 use Carbon\Carbon;
 
 test('creates a draft with slug path and empty content', function () {
-    $page = ContentPage::draft('My New Post', 'my-new-post');
+    $page = Page::draft('My New Post', 'my-new-post');
 
     expect($page->title)->toBe('My New Post')
         ->and((string) $page->path)->toBe('my-new-post')
@@ -16,7 +16,7 @@ test('creates a draft with slug path and empty content', function () {
 });
 
 test('renames the page', function () {
-    $page = ContentPage::draft('Original Title', 'original-title');
+    $page = Page::draft('Original Title', 'original-title');
 
     $page->rename('Updated Title');
 
@@ -25,7 +25,7 @@ test('renames the page', function () {
 });
 
 test('renaming a page inside a directory keeps the directory', function () {
-    $page = ContentPage::draft('Draft', 'posts/draft');
+    $page = Page::draft('Draft', 'posts/draft');
 
     $page->rename('My New Post');
 
@@ -34,7 +34,7 @@ test('renaming a page inside a directory keeps the directory', function () {
 });
 
 test('renaming does not change a manually customized path', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Original Title',
         path: new PagePath('posts/custom-path'),
         content: new Markdown(''),
@@ -48,7 +48,7 @@ test('renaming does not change a manually customized path', function () {
 });
 
 test('moves the page to a new path', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->moveToPath(new PagePath('custom-path'));
 
@@ -56,7 +56,7 @@ test('moves the page to a new path', function () {
 });
 
 test('sets the page content', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->setContent(new Markdown('New content'));
 
@@ -64,7 +64,7 @@ test('sets the page content', function () {
 });
 
 test('sets the page content to empty string', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Test',
         path: new PagePath('test'),
         content: new Markdown('Some content'),
@@ -77,7 +77,7 @@ test('sets the page content to empty string', function () {
 });
 
 test('toggles the rss flag', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->toggleRss(false);
 
@@ -87,7 +87,7 @@ test('toggles the rss flag', function () {
 test('publishes a page', function () {
     Carbon::setTestNow(Carbon::parse('2025-06-01 12:00:00'));
 
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
     $page->publish(Carbon::now());
 
     expect($page->isPublished())->toBeTrue()
@@ -95,7 +95,7 @@ test('publishes a page', function () {
 });
 
 test('publishing keeps the publication date the page already had', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Unpublished',
         path: new PagePath('unpublished'),
         content: new Markdown(''),
@@ -111,7 +111,7 @@ test('publishing keeps the publication date the page already had', function () {
 });
 
 test('unpublishing turns the page into a draft and keeps its publication date', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
@@ -127,7 +127,7 @@ test('unpublishing turns the page into a draft and keeps its publication date', 
 });
 
 test('is published when it is not a draft', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'Published',
         path: new PagePath('published'),
         content: new Markdown(''),
@@ -141,14 +141,14 @@ test('is published when it is not a draft', function () {
 });
 
 test('is created as a draft', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     expect($page->isDraft())->toBeTrue()
         ->and($page->isPublished())->toBeFalse();
 });
 
 test('changing the publication date does not change the draft status', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->changePublishedAt(Carbon::parse('2025-06-01 12:00:00'));
 
@@ -157,7 +157,7 @@ test('changing the publication date does not change the draft status', function 
 });
 
 test('a published page cannot have its publication date cleared', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
     $page->publish(Carbon::parse('2025-06-01 12:00:00'));
 
     $page->changePublishedAt(null);
@@ -166,7 +166,7 @@ test('a published page cannot have its publication date cleared', function () {
 });
 
 test('revising a published page sets its revision date', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
     $page->publish(Carbon::parse('2025-06-01 12:00:00'));
 
     $page->revise(Carbon::parse('2025-07-01 09:00:00'));
@@ -175,7 +175,7 @@ test('revising a published page sets its revision date', function () {
 });
 
 test('revising a draft does not set a revision date', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->revise(Carbon::parse('2025-07-01 09:00:00'));
 
@@ -183,7 +183,7 @@ test('revising a draft does not set a revision date', function () {
 });
 
 test('revising a page on the day of its publication does not set a revision date', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
     $page->publish(Carbon::parse('2025-07-01 09:00:00'));
 
     $page->revise(Carbon::parse('2025-07-01 18:00:00'));
@@ -192,7 +192,7 @@ test('revising a page on the day of its publication does not set a revision date
 });
 
 test('changing the revision date of a draft is ignored', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->changeRevisedAt(Carbon::parse('2025-07-01 09:00:00'));
 
@@ -202,7 +202,7 @@ test('changing the revision date of a draft is ignored', function () {
 test('converts to array without published_at when draft', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -225,7 +225,7 @@ test('converts to array without published_at when draft', function () {
 test('converts to array with published_at when published', function () {
     $now = Carbon::parse('2025-06-01T12:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown(''),
@@ -239,7 +239,7 @@ test('converts to array with published_at when published', function () {
 });
 
 test('converts to array with revised_at when revised', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown(''),
@@ -251,7 +251,7 @@ test('converts to array with revised_at when revised', function () {
 });
 
 test('sets tags on a page', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->withTags(['php', 'laravel']);
 
@@ -259,7 +259,7 @@ test('sets tags on a page', function () {
 });
 
 test('strips keys from tags array', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->withTags([1 => 'php', 3 => 'laravel']);
 
@@ -269,7 +269,7 @@ test('strips keys from tags array', function () {
 test('toArray includes tags when present', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -285,7 +285,7 @@ test('toArray includes tags when present', function () {
 test('toArray excludes empty tags array', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -299,13 +299,13 @@ test('toArray excludes empty tags array', function () {
 });
 
 test('cover image is null by default', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     expect($page->cover_image)->toBeNull();
 });
 
 test('changes the cover image', function () {
-    $page = ContentPage::draft('My Post', 'my-post');
+    $page = Page::draft('My Post', 'my-post');
 
     $page->changeCoverImage('header.png');
 
@@ -313,7 +313,7 @@ test('changes the cover image', function () {
 });
 
 test('removes the cover image', function () {
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown(''),
@@ -329,7 +329,7 @@ test('removes the cover image', function () {
 test('toArray includes cover_image when present', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),
@@ -345,7 +345,7 @@ test('toArray includes cover_image when present', function () {
 test('toArray includes a null cover_image when not set', function () {
     $createdAt = Carbon::parse('2025-01-01T00:00:00+00:00');
 
-    $page = new ContentPage(
+    $page = new Page(
         title: 'My Post',
         path: new PagePath('my-post'),
         content: new Markdown('Some content'),

@@ -20,10 +20,10 @@
                 <ul>
                     @foreach($page->tags as $tag)
                         <li>
-                            @if(config('pluma.tags.create_pages'))
-                                <a href="{{ $web->url->append(config('pluma.tags.pages_path'))->append(\Illuminate\Support\Str::slug($tag)) }}/">{{ $tag }}</a>
+                            @if($tag->hasPage())
+                                <a href="{{ $web->url->append($tag->path) }}/">{{ $tag->name }}</a>
                             @else
-                                {{ $tag }}
+                                {{ $tag->name }}
                             @endif
                         </li>
                     @endforeach

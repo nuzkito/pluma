@@ -49,12 +49,11 @@ class PageRepository
     }
 
     /**
-     * @return Collection<int, ContentPage>
+     * @return Collection<int, Page>
      */
     public function published(): Collection
     {
         return $this->all()
-            ->whereInstanceOf(ContentPage::class)
             ->filter->isPublished()
             ->values();
     }
@@ -65,12 +64,6 @@ class PageRepository
 
         if ($this->disk->exists($contentPagePath)) {
             return $this->fromFile($contentPagePath);
-        }
-
-        $tagPagePath = self::BASE_DIRECTORY."/$path.tag.md";
-
-        if ($this->disk->exists($tagPagePath)) {
-            return $this->fromFile($tagPagePath);
         }
 
         return null;
@@ -84,7 +77,7 @@ class PageRepository
         $newFilePath = self::BASE_DIRECTORY."/{$page->filename()}";
 
         if ($oldPath !== null && $oldPath !== $page->path->__toString()) {
-            $oldFilePath = $this->filePathAt($page, $oldPath);
+            $oldFilePath = self::BASE_DIRECTORY."/$oldPath.md";
 
             if ($this->disk->exists($oldFilePath)) {
                 $this->disk->move($oldFilePath, $newFilePath);
@@ -111,21 +104,6 @@ class PageRepository
             ->isNotEmpty();
     }
 
-    public function tagExists(string $slug): bool
-    {
-        return $this->disk->exists(self::BASE_DIRECTORY."/$slug.tag.md");
-    }
-
-    /**
-     * The file a page occupies when it lives at the given path.
-     */
-    private function filePathAt(Page $page, string $path): string
-    {
-        $extension = $page instanceof TagPage ? '.tag.md' : '.md';
-
-        return self::BASE_DIRECTORY."/$path$extension";
-    }
-
     private function toMarkdownFile(Page $page): string
     {
         $yaml = Yaml::dump($page->toArray());
@@ -141,18 +119,7 @@ class PageRepository
         $metadata = $parsed->getFrontMatter();
         $content = $parsed->getContent();
 
-        if (Str::of($filePath)->endsWith('.tag.md')) {
-            return new TagPage(
-                path: new PagePath($metadata['path']),
-                title: $metadata['title'],
-                content: new Markdown($content),
-                created_at: Carbon::parse($metadata['created_at']),
-                cover_image: $metadata['cover_image'] ?? null,
-                revised_at: isset($metadata['revised_at']) ? Carbon::parse($metadata['revised_at']) : null,
-            );
-        }
-
-        return new ContentPage(
+        return new Page(
             title: $metadata['title'],
             path: new PagePath($metadata['path']),
             content: new Markdown($content),

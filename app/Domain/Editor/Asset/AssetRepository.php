@@ -57,22 +57,34 @@ class AssetRepository
      */
     public function all(PagePath $pagePath): array
     {
+        return array_map(fn (string $filename) => [
+            'filename' => $filename,
+            'url' => route('assets.show', [$pagePath->__toString(), $filename]),
+        ], $this->filenames($pagePath));
+    }
+
+    /** @return array<int, string> */
+    public function filenames(PagePath $pagePath): array
+    {
         $assetsPath = "assets/{$pagePath}";
 
         if (! $this->disk->exists($assetsPath)) {
             return [];
         }
 
-        $assets = [];
+        return array_map(basename(...), $this->disk->files($assetsPath));
+    }
 
-        foreach ($this->disk->files($assetsPath) as $file) {
-            $assets[] = [
-                'filename' => basename($file),
-                'url' => route('assets.show', [$pagePath->__toString(), basename($file)]),
-            ];
+    public function moveDirectory(PagePath $from, PagePath $to): void
+    {
+        $oldDirectory = "assets/{$from}";
+        $newDirectory = "assets/{$to}";
+
+        if (! $this->disk->exists($oldDirectory)) {
+            return;
         }
 
-        return $assets;
+        $this->disk->move($oldDirectory, $newDirectory);
     }
 
     private function assetPath(PagePath $pagePath, string $filename): string

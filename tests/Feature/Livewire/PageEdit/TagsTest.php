@@ -16,43 +16,38 @@ test('adding first tag to draft page saves it correctly', function () {
     expect($updated->tags)->toBe(['first-tag']);
 });
 
-test('adding a tag creates its tag page file', function () {
-    config()->set('pluma.tags.create_pages', true);
-
+test('adding a tag creates its file and shows it by name', function () {
     $page = aPage('Page Creating Tag', 'page-creating-tag');
 
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
         ->call('addTag', 'Cosas varias')
-        ->assertOk();
+        ->assertOk()
+        ->assertSet('tags', ['cosas-varias'])
+        ->assertSeeHtml('Cosas varias');
 
-    expect('pages/tags/cosas-varias.tag.md')->toExistOnDisk();
+    expect('tags/cosas-varias.md')->toExistOnDisk();
 });
 
-test('adding a tag does not create its tag page file when the option is disabled', function () {
-    config()->set('pluma.tags.create_pages', false);
-
-    $page = aPage('Page Without Tag Page', 'page-without-tag-page');
-
-    Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-        ->call('addTag', 'Cosas varias')
-        ->assertOk();
-
-    expect(repository()->findByPath('page-without-tag-page')->tags)->toBe(['Cosas varias'])
-        ->and('pages/tags/cosas-varias.tag.md')->toBeMissingFromDisk();
-});
-
-test('adding a tag whose page already exists does not fail', function () {
-    config()->set('pluma.tags.create_pages', true);
-
+test('adding a tag that already exists reuses it', function () {
     $page = aPage('Page Reusing Tag', 'page-reusing-tag');
 
-    disk()->put('pages/tags/laravel.tag.md', "---\ntitle: Laravel\npath: laravel\ncreated_at: '2025-01-01T10:00:00+00:00'\n---\n\nExisting description");
+    aTag('Laravel', content: 'Existing description');
 
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
         ->call('addTag', 'Laravel')
         ->assertOk();
 
-    expect(disk()->get('pages/tags/laravel.tag.md'))->toContain('Existing description');
+    expect(repository()->findByPath('page-reusing-tag')->tags)->toBe(['laravel'])
+        ->and(disk()->get('tags/laravel.md'))->toContain('Existing description');
+});
+
+test('tags are shown by their current name', function () {
+    aTag('Laravel framework', id: 'laravel');
+    $page = aPage('Tagged Page', 'tagged-page', tags: ['laravel', 'Legacy Tag']);
+
+    Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+        ->assertSeeHtml('Laravel framework')
+        ->assertSeeHtml('Legacy Tag');
 });
 
 test('adding second tag to page with existing tag results in two tags', function () {

@@ -1,6 +1,6 @@
 ---
-title: 'First Tag'
-path: tags/first-tag
+name: 'First Tag'
+slug: first-tag
 cover_image: null
 created_at: '2026-08-13T10:00:00+00:00'
 ---

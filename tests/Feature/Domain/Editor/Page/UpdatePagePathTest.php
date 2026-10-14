@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Editor\Page\ContentPage;
+use App\Domain\Editor\Page\Page;
 use App\Domain\Editor\Page\UpdatePagePath;
 use App\Domain\Generator\SiteGenerator;
 
@@ -14,7 +14,7 @@ test('returns Ok with page when path is updated successfully', function () {
     $result = $action('path-update-test', 'new-path');
 
     expect($result)->toBeOk()
-        ->and($result->unwrap())->toBeInstanceOf(ContentPage::class);
+        ->and($result->unwrap())->toBeInstanceOf(Page::class);
 });
 
 test('returns Error when new path already exists for another page', function () {

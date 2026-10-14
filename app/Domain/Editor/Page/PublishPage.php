@@ -11,7 +11,7 @@ class PublishPage
         private SiteSynchronizer $site,
     ) {}
 
-    public function __invoke(string $pagePath): ContentPage
+    public function __invoke(string $pagePath): Page
     {
         $page = $this->repository->findByPath($pagePath);
 

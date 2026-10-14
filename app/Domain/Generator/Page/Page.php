@@ -2,28 +2,39 @@
 
 namespace App\Domain\Generator\Page;
 
+use App\Domain\Generator\Tag\Tag;
 use Carbon\Carbon;
 
-interface Page
+class Page
 {
-    public string $title { get; }
+    /**
+     * @param  array<int, Tag>  $tags
+     */
+    public function __construct(
+        public string $title,
+        public PagePath $path,
+        public Markdown $content,
+        public Carbon $created_at,
+        public ?Carbon $published_at = null,
+        public bool $draft = true,
+        public ?Carbon $revised_at = null,
+        public bool $rss = false,
+        public array $tags = [],
+        public ?string $cover_image = null,
+    ) {}
 
-    public PagePath $path { get; }
+    public function isPublished(): bool
+    {
+        return ! $this->draft;
+    }
 
-    public Markdown $content { get; }
+    public function isDraft(): bool
+    {
+        return $this->draft;
+    }
 
-    public Carbon $created_at { get; }
-
-    public ?Carbon $published_at { get; }
-
-    public ?Carbon $revised_at { get; }
-
-    public bool $rss { get; }
-
-    /** @var array<int, string> */
-    public array $tags { get; }
-
-    public ?string $cover_image { get; }
-
-    public function isPublished(): bool;
+    public function hasTag(string $id): bool
+    {
+        return collect($this->tags)->contains(fn (Tag $tag) => $tag->id === $id);
+    }
 }
