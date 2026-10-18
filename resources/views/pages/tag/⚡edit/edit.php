@@ -2,6 +2,7 @@
 
 use App\Domain\Editor\Asset\AssetRepository;
 use App\Domain\Editor\Tag\ChangeTagCoverImage;
+use App\Domain\Editor\Tag\DeleteTag;
 use App\Domain\Editor\Tag\DeleteTagAsset;
 use App\Domain\Editor\Tag\RenameTag;
 use App\Domain\Editor\Tag\Tag;
@@ -101,6 +102,13 @@ new class extends Component
         );
 
         $this->newAssets = [];
+    }
+
+    public function delete(DeleteTag $deleteTag)
+    {
+        $deleteTag($this->tagId);
+
+        return $this->redirectRoute('tags.index', navigate: true);
     }
 
     public function deleteAsset(DeleteTagAsset $deleteTagAsset, string $filename)

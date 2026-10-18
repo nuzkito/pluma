@@ -136,6 +136,18 @@ test('deleting the cover image asset clears it from the tag and the generated si
         ->and('site/tags/laravel/header.png')->toBeMissingFromDisk();
 });
 
+test('deleting the tag removes it from its pages and goes back to the list of tags', function () {
+    aTag('Laravel');
+    aPage('Tagged Post', 'tagged-post', tags: ['laravel']);
+
+    Livewire::test('pages::tag.edit', ['id' => 'laravel'])
+        ->call('delete')
+        ->assertRedirect(route('tags.index'));
+
+    expect(tags()->find('laravel'))->toBeNull()
+        ->and(repository()->findByPath('tagged-post')->tags)->toBe([]);
+});
+
 test('serves the assets of a tag', function () {
     aTag('Laravel');
 

@@ -91,6 +91,12 @@ class TagRepository
         $this->disk->put(self::DIRECTORY_WHERE_TAGS_ARE_STORED."/{$tag->filename()}", "---\n$yaml---\n\n{$tag->content}");
     }
 
+    public function delete(Tag $tag): void
+    {
+        $this->disk->delete(self::DIRECTORY_WHERE_TAGS_ARE_STORED."/{$tag->filename()}");
+        $this->disk->deleteDirectory("assets/{$tag->assetsPath()}");
+    }
+
     private function fromFile(string $filePath): Tag
     {
         $parser = new FrontMatterParser(new SymfonyYamlFrontMatterParser);

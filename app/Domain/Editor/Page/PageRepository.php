@@ -58,6 +58,18 @@ class PageRepository
             ->values();
     }
 
+    /**
+     * @return Collection<int, Page>
+     */
+    public function taggedWith(string $id): Collection
+    {
+        return collect($this->disk->allFiles(self::BASE_DIRECTORY))
+            ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
+            ->map($this->fromFile(...))
+            ->filter(fn (Page $page) => $page->hasTag($id))
+            ->values();
+    }
+
     public function findByPath(string $path): ?Page
     {
         $contentPagePath = self::BASE_DIRECTORY."/$path.md";

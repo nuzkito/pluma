@@ -67,6 +67,16 @@ class Page
         $this->tags = array_values($tags);
     }
 
+    public function hasTag(string $id): bool
+    {
+        return in_array($id, $this->tags, true);
+    }
+
+    public function removeTag(string $id): void
+    {
+        $this->withTags(array_filter($this->tags, fn (string $tag) => $tag !== $id));
+    }
+
     public function changeCoverImage(string $coverImage): void
     {
         $this->cover_image = $coverImage;
