@@ -147,6 +147,7 @@ function aPage(
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
+    ?string $type = null,
 ): Page {
     $page = new Page(
         title: $title,
@@ -159,6 +160,7 @@ function aPage(
         rss: $rss,
         tags: $tags,
         cover_image: $cover_image,
+        type: $type,
     );
 
     repository()->save($page);
@@ -181,6 +183,7 @@ function aPublishedPage(
     bool $rss = false,
     array $tags = [],
     ?string $cover_image = null,
+    ?string $type = null,
 ): Page {
     return aPage(
         title: $title,
@@ -193,6 +196,7 @@ function aPublishedPage(
         rss: $rss,
         tags: $tags,
         cover_image: $cover_image,
+        type: $type,
     );
 }
 

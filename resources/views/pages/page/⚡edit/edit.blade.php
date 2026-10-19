@@ -9,7 +9,7 @@
                 <flux:badge color="amber">Draft</flux:badge>
             @endif
 
-            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedRss,updatedPublishedAt,updatedRevisedAt,updatedNewAssets,setCoverImage,deleteAsset">
+            <span class="text-xs text-gray-400" wire:loading.class="opacity-50" wire:target="addTag,removeTag,publish,unpublish,delete,updatedTitle,updatedPath,updatedContent,updatedType,updatedRss,updatedPublishedAt,updatedRevisedAt,updatedNewAssets,setCoverImage,deleteAsset">
                 <span wire:loading.delay>Saving...</span>
                 <span wire:loading.delay.remove>Saved</span>
             </span>
@@ -27,6 +27,17 @@
     <flux:input type="text" id="title" wire:model.live.blur="title" label="Title" />
 
     <flux:input type="text" id="path" wire:model.live.blur="path" label="Path" />
+
+    <flux:field>
+        <flux:label>Type</flux:label>
+        <flux:input type="text" id="type" wire:model.live.blur="type" list="available-types" />
+        <datalist id="available-types">
+            @foreach($this->availableTypes as $typeName)
+                <option value="{{ $typeName }}">{{ $typeName }}</option>
+            @endforeach
+        </datalist>
+        <flux:error name="type" />
+    </flux:field>
 
     @if(config('pluma.rss.enabled'))
         <flux:checkbox wire:model.live="rss" label="Include in RSS feed" />

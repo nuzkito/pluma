@@ -21,6 +21,8 @@ Route::livewire('/tags/{id}/edit', 'pages::tag.edit')->name('tags.edit');
 
 Route::get('/tags/{id}/assets/{filename}', ShowTagAssetController::class)->name('tags.assets.show');
 
+Route::livewire('/types', 'pages::type.index')->name('types.index');
+
 Route::livewire('/directories/create', 'pages::page.create-directory')->name('directories.create');
 
 Route::livewire('/pages/{directory?}', 'pages::page.index')->where('directory', '.*')->name('pages.index');

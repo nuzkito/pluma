@@ -63,11 +63,45 @@ class PageRepository
      */
     public function taggedWith(string $id): Collection
     {
-        return collect($this->disk->allFiles(self::BASE_DIRECTORY))
-            ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
-            ->map($this->fromFile(...))
+        return $this->everyPage()
             ->filter(fn (Page $page) => $page->hasTag($id))
             ->values();
+    }
+
+    /**
+     * @return Collection<int, Page>
+     */
+    public function ofType(string $type): Collection
+    {
+        return $this->everyPage()
+            ->filter(fn (Page $page) => $page->type === $type)
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function types(?string $excludePath = null): Collection
+    {
+        return $this->everyPage()
+            ->reject(fn (Page $page) => (string) $page->path === $excludePath)
+            ->pluck('type')
+            ->filter()
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+    }
+
+    /**
+     * @return Collection<string, int>
+     */
+    public function typeCounts(): Collection
+    {
+        return $this->everyPage()
+            ->pluck('type')
+            ->filter()
+            ->countBy()
+            ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE);
     }
 
     public function findByPath(string $path): ?Page
@@ -116,6 +150,21 @@ class PageRepository
             ->isNotEmpty();
     }
 
+    /**
+     * @return Collection<int, Page>
+     */
+    private function everyPage(): Collection
+    {
+        if (! $this->disk->exists(self::BASE_DIRECTORY)) {
+            return collect();
+        }
+
+        return collect($this->disk->allFiles(self::BASE_DIRECTORY))
+            ->filter(fn (string $file) => Str::of($file)->endsWith('.md'))
+            ->map($this->fromFile(...))
+            ->values();
+    }
+
     private function toMarkdownFile(Page $page): string
     {
         $yaml = Yaml::dump($page->toArray());
@@ -142,6 +191,7 @@ class PageRepository
             rss: $metadata['rss'] ?? false,
             tags: $metadata['tags'] ?? [],
             cover_image: $metadata['cover_image'] ?? null,
+            type: $metadata['type'] ?? null,
         );
     }
 

@@ -21,6 +21,7 @@ class Page
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,
+        public ?string $type = null,
     ) {}
 
     public function isPublished(): bool

@@ -17,6 +17,7 @@ use App\Domain\Editor\Page\UpdatePagePublishedAt;
 use App\Domain\Editor\Page\UpdatePageRevisedAt;
 use App\Domain\Editor\Page\UpdatePageRss;
 use App\Domain\Editor\Page\UpdatePageTitle;
+use App\Domain\Editor\Page\UpdatePageType;
 use App\Domain\Editor\Tag\Tag;
 use App\Domain\Editor\Tag\TagRepository;
 use Illuminate\Support\Arr;
@@ -37,6 +38,9 @@ new class extends Component
     public string $path;
 
     public string $content;
+
+    #[Validate('nullable|string|max:255')]
+    public ?string $type = null;
 
     public bool $rss = false;
 
@@ -69,6 +73,7 @@ new class extends Component
         $this->path = (string) $page->path;
         $this->oldPath = (string) $page->path;
         $this->content = (string) $page->content;
+        $this->type = $page->type;
         $this->rss = $page->rss;
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
         $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
@@ -96,6 +101,15 @@ new class extends Component
             ->reject(fn (Tag $tag) => in_array($tag->id, $this->tags, true))
             ->pluck('name')
             ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function availableTypes(): array
+    {
+        return app(PageRepository::class)->types(excludePath: $this->path)->all();
     }
 
     public function render(PageRepository $repository, AssetRepository $assetRepo)
@@ -141,6 +155,15 @@ new class extends Component
         $page = $action->__invoke($this->path, $value);
 
         $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
+    }
+
+    public function updatedType(UpdatePageType $action, ?string $value)
+    {
+        $this->validateOnly('type');
+
+        $page = $action($this->path, $value);
+
+        $this->type = $page->type;
     }
 
     public function updatedRss(UpdatePageRss $action, bool $value)

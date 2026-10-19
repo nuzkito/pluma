@@ -83,6 +83,7 @@ class PageRepository
                 $metadata['tags'] ?? [],
             ),
             cover_image: $metadata['cover_image'] ?? null,
+            type: $metadata['type'] ?? null,
         );
     }
 }

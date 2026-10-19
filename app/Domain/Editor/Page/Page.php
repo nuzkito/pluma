@@ -18,6 +18,7 @@ class Page
         public bool $rss = false,
         public array $tags = [],
         public ?string $cover_image = null,
+        public ?string $type = null,
     ) {}
 
     public static function draft(string $title, string $path): self
@@ -85,6 +86,13 @@ class Page
     public function removeCoverImage(): void
     {
         $this->cover_image = null;
+    }
+
+    public function changeType(?string $type): void
+    {
+        $type = trim((string) $type);
+
+        $this->type = $type === '' ? null : $type;
     }
 
     public function publish(Carbon $publishedAt): void
@@ -160,6 +168,10 @@ class Page
 
         if ($this->revised_at) {
             $metadata['revised_at'] = $this->revised_at->toIso8601String();
+        }
+
+        if ($this->type !== null) {
+            $metadata['type'] = $this->type;
         }
 
         if (! empty($this->tags)) {
