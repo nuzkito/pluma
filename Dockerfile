@@ -17,6 +17,30 @@ WORKDIR /pluma
 
 ENTRYPOINT ["npm"]
 
+# Browser stage: used only by the `browser` service in docker-compose.yml, so
+# agents can test the editor in Chrome and Firefox with Puppeteer.
+FROM node:24-trixie-slim AS browser
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends chromium firefox-esr fonts-liberation socat \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g puppeteer-core@25.14.0 \
+    && npm cache clean --force
+
+ENV NODE_PATH=/usr/local/lib/node_modules \
+    CHROME_PATH=/usr/bin/chromium \
+    FIREFOX_PATH=/usr/bin/firefox-esr \
+    HOME=/tmp
+
+# The app builds its URLs with localhost (the editor, the site preview and the
+# Vite dev server in public/hot), so forward those ports to the containers that
+# serve them; the browsers then load the same URLs as one on the host.
+CMD ["sh", "-c", "\
+    socat TCP-LISTEN:8000,fork,reuseaddr TCP:pluma:8000 & \
+    socat TCP-LISTEN:8001,fork,reuseaddr TCP:pluma:8001 & \
+    socat TCP-LISTEN:5173,fork,reuseaddr TCP:node:5173 & \
+    wait"]
+
 # Composer stage: PHP with Composer, the tools it needs to fetch packages and
 # the extensions composer.json requires (gd), so the platform check passes.
 # The build below uses it, and so does the `composer` service in

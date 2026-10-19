@@ -13,6 +13,7 @@ Everything runs in Docker, so don't assume PHP, Composer, Node or npm are availa
 - `docker compose up` — start the development environment: it scaffolds a test site with `pluma new`, runs `pluma serve` and the Vite dev server. Editor on http://localhost:8000, site preview on http://localhost:8001, Vite on http://localhost:5173.
 - `docker compose run --rm node run build` — compile the assets into `public/build/`.
 - `docker compose run --rm --entrypoint php composer vendor/bin/pest --tia --parallel` — run the tests.
+- `docker compose exec -T browser node - < script.js` — run a Puppeteer script (CommonJS, `require('puppeteer-core')`) to test the app in a real browser. Launch Chrome with `puppeteer.launch({ browser: 'chrome', executablePath: process.env.CHROME_PATH, args: ['--no-sandbox'] })` or Firefox with `puppeteer.launch({ browser: 'firefox', executablePath: process.env.FIREFOX_PATH })`. The app is reachable on the same localhost URLs as from the host.
 
 `public/build/` is committed and the Vite dev server keeps the compiled assets in memory, so always build before committing frontend changes.
 

@@ -56,6 +56,17 @@ services:
     # reaches it from the host.
     command: ["run", "dev", "--", "--host"]
 
+  browser:
+    build:
+      context: .
+      target: browser
+    init: true
+    user: "1000:1000"
+    volumes:
+      - .:/pluma
+    working_dir: /pluma
+    shm_size: 1gb
+
 volumes:
   composer-cache:
   npm-cache:
