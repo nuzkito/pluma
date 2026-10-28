@@ -43,3 +43,13 @@ test('creates .gitignore that ignores site directory', function () {
 
     expect($gitignoreContent)->toContain('site/');
 });
+
+test('creates the page and post types', function () {
+    Storage::fake('current');
+
+    artisan('pluma:new')
+        ->assertSuccessful();
+
+    expect('types/page.md')->toExistOnDisk()
+        ->and('types/post.md')->toExistOnDisk();
+});

@@ -4,6 +4,7 @@ use App\Domain\Editor\Page\DeleteDirectory;
 use App\Domain\Editor\Page\DirectoryRepository;
 use App\Domain\Editor\Page\PageRepository;
 use App\Domain\Editor\Tag\TagRepository;
+use App\Domain\Editor\Type\TypeRepository;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -26,7 +27,7 @@ new class extends Component {
         ]);
     }
 
-    public function render(PageRepository $pages, DirectoryRepository $directories, TagRepository $tags)
+    public function render(PageRepository $pages, DirectoryRepository $directories, TagRepository $tags, TypeRepository $types)
     {
         $contentPages = $pages->searchByDirectory($this->directory);
         $subdirectories = $directories->searchByDirectory($this->directory);
@@ -35,6 +36,7 @@ new class extends Component {
         return $this->view([
             'pages' => $contentPages,
             'tagNames' => $tags->all()->pluck('name', 'id')->all(),
+            'typeNames' => $types->all()->pluck('name', 'id')->all(),
             'directories' => $subdirectories,
             'isEmpty' => $isEmpty,
             'canBeDeleted' => $isEmpty && $subdirectories->isEmpty() && $this->directory !== '',
@@ -101,7 +103,7 @@ new class extends Component {
                         </flux:table.cell>
                         <flux:table.cell>
                             @if($page->type)
-                                <flux:badge>{{ $page->type }}</flux:badge>
+                                <flux:badge>{{ $typeNames[$page->type] ?? $page->type }}</flux:badge>
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>

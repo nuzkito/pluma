@@ -20,6 +20,7 @@ use App\Domain\Editor\Page\UpdatePageTitle;
 use App\Domain\Editor\Page\UpdatePageType;
 use App\Domain\Editor\Tag\Tag;
 use App\Domain\Editor\Tag\TagRepository;
+use App\Domain\Editor\Type\TypeRepository;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -73,7 +74,7 @@ new class extends Component
         $this->path = (string) $page->path;
         $this->oldPath = (string) $page->path;
         $this->content = (string) $page->content;
-        $this->type = $page->type;
+        $this->type = $this->typeName($page);
         $this->rss = $page->rss;
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
         $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
@@ -109,7 +110,7 @@ new class extends Component
     #[Computed]
     public function availableTypes(): array
     {
-        return app(PageRepository::class)->types(excludePath: $this->path)->all();
+        return app(TypeRepository::class)->all()->pluck('name')->all();
     }
 
     public function render(PageRepository $repository, AssetRepository $assetRepo)
@@ -163,7 +164,7 @@ new class extends Component
 
         $page = $action($this->path, $value);
 
-        $this->type = $page->type;
+        $this->type = $this->typeName($page);
     }
 
     public function updatedRss(UpdatePageRss $action, bool $value)
@@ -253,5 +254,14 @@ new class extends Component
         $page = $changePageCoverImage->__invoke($this->path, $filename);
 
         $this->cover_image = $page->cover_image;
+    }
+
+    private function typeName(Page $page): ?string
+    {
+        if ($page->type === null) {
+            return null;
+        }
+
+        return app(TypeRepository::class)->find($page->type)?->name ?? $page->type;
     }
 };

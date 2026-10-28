@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Editor\Tag\MoveTagPages;
+use App\Domain\Editor\Type\TypeRepository;
 use App\Domain\Generator\Page\HighlightTheme;
 use App\Domain\Generator\SiteGenerator;
 use App\Domain\Settings\RemoveSettingImage;
@@ -10,6 +11,7 @@ use App\Domain\Settings\SettingsSchema;
 use App\Domain\Settings\SettingType;
 use App\Domain\Settings\UploadSettingImage;
 use Flux\Flux;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -64,6 +66,12 @@ new class extends Component
             }
 
             data_set($this->values, $definition->key, $definition->type->forForm(config("pluma.{$definition->key}")));
+        }
+
+        foreach (SettingsSchema::ofType(SettingType::PageType) as $definition) {
+            if (! array_key_exists((string) data_get($this->values, $definition->key), $this->typeOptions)) {
+                data_set($this->values, $definition->key, '');
+            }
         }
     }
 
@@ -160,6 +168,12 @@ new class extends Component
                 continue;
             }
 
+            if ($definition->type === SettingType::PageType) {
+                $rules["values.{$definition->key}"] = ['nullable', Rule::in(array_keys($this->typeOptions))];
+
+                continue;
+            }
+
             if ($definition->rules !== []) {
                 $rules["values.{$definition->key}"] = $definition->rules;
             }
@@ -192,6 +206,17 @@ new class extends Component
         $theme = $highlighter->getTheme();
 
         return $theme->preBefore($highlighter).$code.$theme->preAfter($highlighter);
+    }
+
+    /**
+     * The name of every type of the site, keyed by id.
+     *
+     * @return array<string, string>
+     */
+    #[Computed]
+    public function typeOptions(): array
+    {
+        return app(TypeRepository::class)->all()->pluck('name', 'id')->all();
     }
 
     /**

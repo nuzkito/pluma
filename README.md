@@ -172,6 +172,16 @@ The site only has tag pages when **Create tag pages** is enabled in the settings
 @endforeach
 ```
 
+### Types
+
+Each type is a Markdown file in the `types/` directory of your site, named after its id, which is what a page stores in its `type`. New sites come with a `page` and a `post` type. `$page->type` holds the id, so templates can rely on it:
+
+```blade
+@foreach($pages->where('type', 'post') as $post)
+    <a href="{{ $web->url->append($post->path) }}/">{{ $post->title }}</a>
+@endforeach
+```
+
 ## Local development with Docker
 
 A `Makefile` wraps the most common commands, so you can use the shortcuts below instead of typing the full `docker compose` ones:

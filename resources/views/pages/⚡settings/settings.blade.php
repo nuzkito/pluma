@@ -85,6 +85,20 @@
                                 </flux:field>
                                 @break
 
+                            @case(SettingType::PageType)
+                                <flux:field>
+                                    <flux:label>{{ $definition->label }}</flux:label>
+                                    <flux:description>{{ $definition->description }}</flux:description>
+                                    <flux:select wire:model="{{ $model }}">
+                                        <flux:select.option value="">No type</flux:select.option>
+                                        @foreach($this->typeOptions as $value => $label)
+                                            <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                    <flux:error name="{{ $model }}" />
+                                </flux:field>
+                                @break
+
                             @default
                                 <flux:field>
                                     <flux:label>{{ $definition->label }}</flux:label>

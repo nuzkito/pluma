@@ -10,6 +10,9 @@ return [
         'create_pages' => false,
         'pages_path' => 'tags',
     ],
+    'types' => [
+        'default' => '',
+    ],
     'rss' => [
         'enabled' => false,
     ],

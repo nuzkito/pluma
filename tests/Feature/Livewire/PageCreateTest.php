@@ -24,6 +24,24 @@ describe('create draft', function () {
             ->and($page->tags)->toBe([]);
     });
 
+    test('the draft gets the default type', function () {
+        config()->set('pluma.types.default', 'page');
+
+        Livewire::test('create-draft')
+            ->call('create');
+
+        expect(repository()->all()->first()->type)->toBe('page');
+    });
+
+    test('the draft has no type when the default type is empty or no longer exists', function (string $defaultType) {
+        config()->set('pluma.types.default', $defaultType);
+
+        Livewire::test('create-draft')
+            ->call('create');
+
+        expect(repository()->all()->first()->type)->toBeNull();
+    })->with(['empty' => '', 'deleted' => 'recipe']);
+
     test('redirects to edit page after creation', function () {
         Livewire::test('create-draft')
             ->call('create')

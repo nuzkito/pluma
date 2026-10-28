@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Generator\SiteGenerator;
+use App\Domain\Settings\SiteConfigLoader;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
@@ -396,4 +397,45 @@ describe('syntax highlighting theme', function () {
 
         expect(disk()->get('site/code/index.html'))->toContain('<span style="color: #FF79C6;">new</span>');
     });
+});
+
+test('a new site has post as the default type and every type of the site is offered', function () {
+    app(SiteConfigLoader::class)->load();
+
+    Livewire::test('pages::settings')
+        ->assertSet('values.types.default', 'post')
+        ->assertSeeHtmlInOrder(['No type', 'Page', 'Post']);
+});
+
+test('saves the default type', function (string $defaultType) {
+    Livewire::test('pages::settings')
+        ->set('values.types.default', $defaultType)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(json_decode(disk()->get('pluma-settings.json'), true)['types']['default'])->toBe($defaultType)
+        ->and(config('pluma.types.default'))->toBe($defaultType);
+})->with(['a type' => 'page', 'no type' => '']);
+
+test('rejects a default type that does not exist', function () {
+    Livewire::test('pages::settings')
+        ->set('values.types.default', 'recipe')
+        ->call('save')
+        ->assertHasErrors('values.types.default');
+});
+
+test('a default type that no longer exists shows as no type', function () {
+    config()->set('pluma.types.default', 'recipe');
+
+    Livewire::test('pages::settings')
+        ->assertSet('values.types.default', '');
+});
+
+test('a site without a default type in its settings has no type', function () {
+    disk()->put('pluma-settings.json', json_encode(['title' => 'Old Site']));
+
+    app(SiteConfigLoader::class)->load();
+
+    Livewire::test('pages::settings')
+        ->assertSet('values.types.default', '');
 });

@@ -21,7 +21,7 @@ class Page
         public ?string $type = null,
     ) {}
 
-    public static function draft(string $title, string $path): self
+    public static function draft(string $title, string $path, ?string $type = null): self
     {
         return new Page(
             title: $title,
@@ -29,6 +29,7 @@ class Page
             content: new Markdown(''),
             created_at: Carbon::now(),
             rss: true,
+            type: $type,
         );
     }
 
@@ -88,11 +89,9 @@ class Page
         $this->cover_image = null;
     }
 
-    public function changeType(?string $type): void
+    public function changeType(?string $typeId): void
     {
-        $type = trim((string) $type);
-
-        $this->type = $type === '' ? null : $type;
+        $this->type = $typeId;
     }
 
     public function publish(Carbon $publishedAt): void

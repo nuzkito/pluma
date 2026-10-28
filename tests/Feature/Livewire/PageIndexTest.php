@@ -120,9 +120,11 @@ test('a directory url resolves the index for that directory', function () {
         ->assertSee('Inside Posts');
 });
 
-test('the type of each page is shown', function () {
-    aPage('Root Page', 'root-page', type: 'Article');
+test('the type of each page is shown by its name', function () {
+    aType('Article', id: 'long-read');
+    aPage('Root Page', 'root-page', type: 'long-read');
 
     Livewire::test('pages::page.index')
-        ->assertSee('Article');
+        ->assertSee('Article')
+        ->assertDontSee('long-read');
 });

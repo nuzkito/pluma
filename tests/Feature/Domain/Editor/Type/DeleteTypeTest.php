@@ -1,23 +1,26 @@
 <?php
 
-use App\Domain\Editor\Page\DeleteType;
+use App\Domain\Editor\Type\DeleteType;
 use App\Domain\Generator\SiteGenerator;
 
 use function Pest\Laravel\mock;
 
-test('removes the type from every page that has it', function () {
+test('deletes the type and removes it from every page that has it', function () {
+    aType('Note');
     aPage('First Note', 'first-note', type: 'note');
     aPage('Second Note', 'nested/second-note', type: 'note');
-    aPage('An Article', 'an-article', type: 'article');
+    aPage('A Post', 'a-post', type: 'post');
 
     app(DeleteType::class)('note');
 
-    expect(repository()->findByPath('first-note')->type)->toBeNull()
+    expect('types/note.md')->toBeMissingFromDisk()
+        ->and(repository()->findByPath('first-note')->type)->toBeNull()
         ->and(repository()->findByPath('nested/second-note')->type)->toBeNull()
-        ->and(repository()->findByPath('an-article')->type)->toBe('article');
+        ->and(repository()->findByPath('a-post')->type)->toBe('post');
 });
 
 test('regenerates the published pages that had the type and the index', function () {
+    aType('Note');
     aPublishedPage('Published Note', 'published-note', type: 'note');
     aPage('Draft Note', 'draft-note', type: 'note');
 
@@ -30,7 +33,8 @@ test('regenerates the published pages that had the type and the index', function
 });
 
 test('leaves the generated site alone when no page has the type', function () {
-    aPublishedPage('Published Article', 'published-article', type: 'article');
+    aType('Note');
+    aPublishedPage('A Post', 'a-post', type: 'post');
 
     mock(SiteGenerator::class, function ($mock) {
         $mock->shouldNotReceive('generatePage');
@@ -39,5 +43,6 @@ test('leaves the generated site alone when no page has the type', function () {
 
     app(DeleteType::class)('note');
 
-    expect(repository()->findByPath('published-article')->type)->toBe('article');
+    expect('types/note.md')->toBeMissingFromDisk()
+        ->and(repository()->findByPath('a-post')->type)->toBe('post');
 });

@@ -8,6 +8,9 @@
         "create_pages": true,
         "pages_path": "tags"
     },
+    "types": {
+        "default": "post"
+    },
     "rss": {
         "enabled": true
     },

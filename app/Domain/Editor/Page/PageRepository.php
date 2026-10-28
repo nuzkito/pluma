@@ -79,29 +79,14 @@ class PageRepository
     }
 
     /**
-     * @return Collection<int, string>
-     */
-    public function types(?string $excludePath = null): Collection
-    {
-        return $this->everyPage()
-            ->reject(fn (Page $page) => (string) $page->path === $excludePath)
-            ->pluck('type')
-            ->filter()
-            ->unique()
-            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
-    }
-
-    /**
      * @return Collection<string, int>
      */
-    public function typeCounts(): Collection
+    public function countByType(): Collection
     {
         return $this->everyPage()
             ->pluck('type')
             ->filter()
-            ->countBy()
-            ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE);
+            ->countBy();
     }
 
     public function findByPath(string $path): ?Page

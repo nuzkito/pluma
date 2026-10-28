@@ -77,6 +77,14 @@ class SettingsSchema
             ),
 
             new SettingDefinition(
+                key: 'types.default',
+                label: 'Default type',
+                description: 'The type given to new pages.',
+                type: SettingType::PageType,
+                group: 'Types',
+            ),
+
+            new SettingDefinition(
                 key: 'rss.enabled',
                 label: 'Enable RSS feed',
                 description: 'Generate an RSS feed for the site.',

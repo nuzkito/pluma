@@ -6,6 +6,8 @@ use App\Domain\Editor\Page\PagePath;
 use App\Domain\Editor\Page\PageRepository as EditorPageRepository;
 use App\Domain\Editor\Tag\Tag;
 use App\Domain\Editor\Tag\TagRepository as EditorTagRepository;
+use App\Domain\Editor\Type\Type;
+use App\Domain\Editor\Type\TypeRepository;
 use App\Domain\Error;
 use App\Domain\Generator\Page\PageRepository as GeneratorPageRepository;
 use App\Domain\Generator\Tag\TagRepository as GeneratorTagRepository;
@@ -112,6 +114,7 @@ function initializeSite(): void
     app()->instance(SiteConfigLoader::class, new SiteConfigLoader(Storage::disk('current')));
     app()->instance(EditorPageRepository::class, new EditorPageRepository);
     app()->instance(EditorTagRepository::class, new EditorTagRepository);
+    app()->instance(TypeRepository::class, new TypeRepository);
     app()->instance(GeneratorTagRepository::class, new GeneratorTagRepository);
     app()->instance(GeneratorPageRepository::class, new GeneratorPageRepository(app(GeneratorTagRepository::class)));
 }
@@ -129,6 +132,11 @@ function repository(): EditorPageRepository
 function tags(): EditorTagRepository
 {
     return app(EditorTagRepository::class);
+}
+
+function types(): TypeRepository
+{
+    return app(TypeRepository::class);
 }
 
 /**
@@ -225,4 +233,16 @@ function aTag(
     tags()->save($tag);
 
     return $tag;
+}
+
+/**
+ * Build a type and save it to the repository.
+ */
+function aType(string $name, ?string $id = null): Type
+{
+    $type = new Type(id: $id ?? Str::slug($name), name: $name);
+
+    types()->save($type);
+
+    return $type;
 }

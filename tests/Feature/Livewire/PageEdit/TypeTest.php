@@ -2,21 +2,22 @@
 
 use Livewire\Livewire;
 
-test('edit page loads the existing type', function () {
-    $page = aPage('Typed Page', 'typed-page', type: 'article');
+test('edit page loads the name of the existing type', function () {
+    $page = aPage('Typed Page', 'typed-page', type: 'post');
 
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-        ->assertSet('type', 'article');
+        ->assertSet('type', 'Post');
 });
 
-test('changing the type saves it on the page', function () {
+test('changing the type saves its id on the page and shows its name', function () {
     $page = aPage('Change Type Page', 'change-type-page');
 
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-        ->set('type', 'article')
-        ->assertHasNoErrors();
+        ->set('type', 'page')
+        ->assertHasNoErrors()
+        ->assertSet('type', 'Page');
 
-    expect(repository()->findByPath('change-type-page')->type)->toBe('article');
+    expect(repository()->findByPath('change-type-page')->type)->toBe('page');
 });
 
 test('rejects a type longer than 255 characters', function () {
@@ -29,23 +30,15 @@ test('rejects a type longer than 255 characters', function () {
     expect(repository()->findByPath('long-type-page')->type)->toBeNull();
 });
 
-test('the types used by other pages are offered once each, sorted alphabetically', function () {
-    aPage('Note One', 'note-one', type: 'note');
-    aPage('Note Two', 'nested/note-two', type: 'note');
-    aPage('Article', 'article', type: 'Article');
-    aPage('Untyped', 'untyped');
+test('every type is offered sorted by name', function () {
+    aType('Article');
 
     $page = aPage('Edited Page', 'edited-page');
 
-    $component = Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-        ->assertSeeHtmlInOrder(['<option value="Article">Article</option>', '<option value="note">note</option>']);
-
-    expect(substr_count($component->html(), '<option value="note">'))->toBe(1);
-});
-
-test('the type of the edited page is not offered when no other page uses it', function () {
-    $page = aPage('Only Recipe', 'only-recipe', type: 'recipe');
-
     Livewire::test('pages::page.edit', ['path' => (string) $page->path])
-        ->assertDontSeeHtml('<option value="recipe">');
+        ->assertSeeHtmlInOrder([
+            '<option value="Article">Article</option>',
+            '<option value="Page">Page</option>',
+            '<option value="Post">Post</option>',
+        ]);
 });

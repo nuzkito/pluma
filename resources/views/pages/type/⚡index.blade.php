@@ -1,19 +1,15 @@
 <?php
 
-use App\Domain\Editor\Page\DeleteType;
 use App\Domain\Editor\Page\PageRepository;
+use App\Domain\Editor\Type\TypeRepository;
 use Livewire\Component;
 
 new class extends Component {
-    public function delete(DeleteType $deleteType, string $type)
-    {
-        $deleteType($type);
-    }
-
-    public function render(PageRepository $pages)
+    public function render(TypeRepository $types, PageRepository $pages)
     {
         return $this->view([
-            'types' => $pages->typeCounts(),
+            'types' => $types->all(),
+            'pageCounts' => $pages->countByType(),
         ]);
     }
 };
@@ -25,24 +21,20 @@ new class extends Component {
     @if($types->isNotEmpty())
         <flux:table>
             <flux:table.columns>
-                <flux:table.column>Type</flux:table.column>
+                <flux:table.column>Name</flux:table.column>
                 <flux:table.column>Pages</flux:table.column>
-                <flux:table.column></flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
-                @foreach($types as $type => $count)
-                    <flux:table.row :key="$type">
-                        <flux:table.cell>{{ $type }}</flux:table.cell>
-                        <flux:table.cell>{{ $count }}</flux:table.cell>
-                        <flux:table.cell align="end">
-                            <flux:button
-                                wire:click="delete({{ \Illuminate\Support\Js::from($type) }})"
-                                variant="danger"
-                                size="sm"
-                                icon="trash"
-                            >Delete</flux:button>
+                @foreach($types as $type)
+                    <flux:table.row :key="$type->id">
+                        <flux:table.cell align="start">
+                            <a href="{{ route('types.edit', $type->id) }}" wire:navigate.hover class="flex items-center gap-2 text-blue-600 hover:underline">
+                                <flux:icon name="squares-2x2" variant="micro" />
+                                {{ $type->name }}
+                            </a>
                         </flux:table.cell>
+                        <flux:table.cell>{{ $pageCounts->get($type->id, 0) }}</flux:table.cell>
                     </flux:table.row>
                 @endforeach
             </flux:table.rows>

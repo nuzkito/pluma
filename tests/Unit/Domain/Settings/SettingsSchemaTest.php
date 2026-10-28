@@ -6,7 +6,7 @@ use App\Domain\Settings\SettingType;
 test('grouped keys definitions by group preserving declaration order', function () {
     $grouped = SettingsSchema::grouped();
 
-    expect(array_keys($grouped))->toBe(['General', 'Tags', 'RSS', 'Embedding', 'Syntax highlighting'])
+    expect(array_keys($grouped))->toBe(['General', 'Tags', 'Types', 'RSS', 'Embedding', 'Syntax highlighting'])
         ->and(array_merge(...array_values($grouped)))->toEqual(SettingsSchema::definitions());
 });
 

@@ -19,6 +19,12 @@ test('select values are handled as strings', function () {
         ->and(SettingType::Select->fromForm('dracula'))->toBe('dracula');
 });
 
+test('page type values are handled as strings', function () {
+    expect(SettingType::PageType->cast('post'))->toBe('post')
+        ->and(SettingType::PageType->forForm('post'))->toBe('post')
+        ->and(SettingType::PageType->fromForm(null))->toBe('');
+});
+
 test('cast coerces boolean values', function () {
     expect(SettingType::Boolean->cast(1))->toBeTrue()
         ->and(SettingType::Boolean->cast(0))->toBeFalse();
