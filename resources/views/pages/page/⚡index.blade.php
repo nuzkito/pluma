@@ -80,6 +80,7 @@ new class extends Component {
             <flux:table.columns>
                 <flux:table.column>Title</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
                 <flux:table.column>Tags</flux:table.column>
                 <flux:table.column>Created</flux:table.column>
                 <flux:table.column>Published</flux:table.column>
@@ -96,6 +97,11 @@ new class extends Component {
                                 <flux:badge color="emerald">Published</flux:badge>
                             @else
                                 <flux:badge color="amber">Draft</flux:badge>
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            @if($page->type)
+                                <flux:badge>{{ $page->type }}</flux:badge>
                             @endif
                         </flux:table.cell>
                         <flux:table.cell>

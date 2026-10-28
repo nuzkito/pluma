@@ -119,3 +119,10 @@ test('a directory url resolves the index for that directory', function () {
         ->assertSuccessful()
         ->assertSee('Inside Posts');
 });
+
+test('the type of each page is shown', function () {
+    aPage('Root Page', 'root-page', type: 'Article');
+
+    Livewire::test('pages::page.index')
+        ->assertSee('Article');
+});
