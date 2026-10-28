@@ -1,4 +1,4 @@
-.PHONY: up stop down logs install build test
+.PHONY: up stop down logs install update build test
 
 # Start the development environment (editor, site preview and Vite dev server).
 up:
@@ -20,6 +20,11 @@ logs:
 install:
 	docker compose run --rm composer install
 	docker compose run --rm node install
+
+# Update the PHP and frontend dependencies to the latest versions.
+update:
+	docker compose run --rm composer update
+	docker compose run --rm node update
 
 # Compile the assets into public/build/.
 build:

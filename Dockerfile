@@ -110,7 +110,7 @@ RUN cp -a /pluma/demo/. /site/
 FROM alpine:3.23
 
 RUN apk add --no-cache \
-        php85 \
+        php85>=8.5.12 \
         php85-ctype \
         php85-curl \
         php85-dom \
