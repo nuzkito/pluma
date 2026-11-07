@@ -1,9 +1,5 @@
 @extends('layout')
 
-@section('title', $web->title)
-
-@section('rss', true)
-
 @section('content')
 <header>
     @if($web->cover_image->isDefined())

@@ -18,7 +18,7 @@ class SiteGenerator
 {
     private const string SITE_DIRECTORY = 'site';
 
-    private const string ASSETS_DIRECTORY = 'assets';
+    public const string ASSETS_DIRECTORY = 'assets';
 
     private Filesystem $disk;
 
@@ -26,6 +26,7 @@ class SiteGenerator
         private PageRepository $pageRepository,
         private TagRepository $tagRepository,
         private AssetProcessor $assetProcessor,
+        private HeadTags $headTags,
     ) {
         $this->disk = Storage::disk('current');
     }
@@ -114,8 +115,11 @@ class SiteGenerator
 
         $this->disk->makeDirectory($pagePath);
 
+        $web = $this->web();
+        $this->headTags->forPage($web, $page, $publishedPages);
+
         $html = $this->renderView('page', [
-            'web' => $this->web(),
+            'web' => $web,
             'page' => $page,
             'pages' => $publishedPages,
         ]);
@@ -154,8 +158,11 @@ class SiteGenerator
 
         $this->disk->makeDirectory($tagPath);
 
+        $web = $this->web();
+        $this->headTags->forTag($web, $tag, $publishedPages);
+
         $html = $this->renderView('tag', [
-            'web' => $this->web(),
+            'web' => $web,
             'tag' => $tag,
             'pages' => $posts,
         ]);
@@ -172,8 +179,11 @@ class SiteGenerator
     {
         $this->prepare();
 
+        $web = $this->web();
+        $this->headTags->forIndex($web, $pages);
+
         $html = $this->renderView('index', [
-            'web' => $this->web(),
+            'web' => $web,
             'pages' => $pages,
         ]);
 
@@ -187,8 +197,11 @@ class SiteGenerator
     {
         $this->prepare();
 
+        $web = $this->web();
+        $this->headTags->forNotFound($web, $pages);
+
         $html = $this->renderView('404', [
-            'web' => $this->web(),
+            'web' => $web,
             'pages' => $pages,
         ]);
 

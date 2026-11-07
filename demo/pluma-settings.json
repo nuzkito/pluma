@@ -4,6 +4,14 @@
     "title": "Pluma",
     "description": "This is the default description",
     "cover_image": "cover-image.svg",
+    "language": "en",
+    "author": "",
+    "favicon": "",
+    "apple_touch_icon": "",
+    "twitter": {
+        "site": "",
+        "creator": ""
+    },
     "tags": {
         "create_pages": true,
         "pages_path": "tags"

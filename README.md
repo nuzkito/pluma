@@ -79,6 +79,50 @@ The templates of your site live in the `views/` directory and are plain [Blade](
 
 `layout` is not rendered on its own: the other views extend it, and it receives their variables.
 
+### Head tags
+
+Pluma fills the `<head>` of every document with [Laravel Head](https://laravel.com/docs/head). Put the `@head` directive inside the `<head>` of your layout to render the tags:
+
+```blade
+<head>
+    <meta charset="UTF-8">
+    @head
+</head>
+```
+
+The tags are built from the page, tag or site being rendered:
+
+| Tag | `index` | `page` | `tag` | `404` |
+| --- | --- | --- | --- | --- |
+| `<title>`, `og:title` | Site title | Page title | Tag name | `Page not found` |
+| `description`, `og:description` | Site description | The start of the page content, or the site description | The start of the tag content, or the site description | Site description |
+| `og:image`, `twitter:image` | Site cover image | Page cover image, or the site cover image | Tag cover image, or the site cover image | Site cover image |
+| `canonical`, `og:url` | Site URL | Page URL | Tag page URL | — |
+| `og:type` | `website` | `article` | `website` | `website` |
+
+| `og:image:width`, `og:image:height`, `og:image:type` | The size and type of the image, as the site serves it once optimized. SVG images only get the type | | | |
+| JSON-LD | `WebSite` | `Article` and `BreadcrumbList` | `CollectionPage` and `BreadcrumbList` | — |
+
+Every document also gets:
+
+- `og:site_name` and `og:locale`, from the title and the language of the site.
+- A Twitter card: `summary_large_image` when there is an image, `summary` when there is not. It includes `twitter:site` and `twitter:creator` when the X accounts are set in the settings.
+- `<meta name="author">` when the author is set in the settings. The `Article` and `WebSite` schemas name the author too.
+- The favicon and the Apple touch icon, when they are set in the settings.
+- The link to the RSS feed, when the site publishes one.
+
+Pages add `article:published_time` and, when they have been revised, `article:modified_time`. Their breadcrumbs start at the site home and include every published page whose path contains theirs: `blog/my-post` lists `blog` when it is a published page. The `404` page is marked as `noindex` and has no structured data.
+
+Empty values are left out of every tag and schema, so the site does not need every setting.
+
+To change or add tags, call `Head` from your views. The views run before the layout, so the calls reach `@head`:
+
+```blade
+@php(Head::title($page->title.' - '.$web->title)->meta('keywords', 'laravel, php'))
+```
+
+The tags that depend only on the design of the template, such as the viewport, can be written as plain HTML in the layout.
+
 ### The `$pages` collection
 
 `$pages` is a collection of pages, and every view receives one. What it holds depends on the view:
@@ -107,6 +151,12 @@ In `page` the collection also includes the page being rendered, so filter it out
 | `$web->title` | `string` | The title of the site |
 | `$web->description` | `string` | A short summary of the site |
 | `$web->cover_image` | `CoverImage` | The cover image of the site, always present |
+| `$web->language` | `string` | The language tag of the site content, such as `en` or `es-ES` |
+| `$web->author` | `string` | The author of the site, empty when it is not set |
+| `$web->favicon` | `CoverImage` | The favicon of the site, always present |
+| `$web->apple_touch_icon` | `CoverImage` | The Apple touch icon of the site, always present |
+| `$web->twitter_site` | `string` | The X account of the site, with its leading `@`, empty when it is not set |
+| `$web->twitter_creator` | `string` | The X account of the author, with its leading `@`, empty when it is not set |
 
 For example, to show the title of your site:
 
@@ -133,7 +183,7 @@ The slashes between the segments are added for you, and any extra one is removed
 
 ### The `CoverImage` object
 
-`$web->cover_image` is always a `CoverImage`, even when the site has no cover image configured. Ask it with `isDefined()`:
+`$web->cover_image`, `$web->favicon` and `$web->apple_touch_icon` are always a `CoverImage`, even when the site has no image configured. Ask it with `isDefined()`:
 
 ```blade
 @if($web->cover_image->isDefined())

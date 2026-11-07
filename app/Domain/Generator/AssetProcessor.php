@@ -16,6 +16,31 @@ class AssetProcessor
         $this->disk = Storage::disk('current');
     }
 
+    public function imageDetails(string $source): ?ImageDetails
+    {
+        if (! $this->disk->exists($source)) {
+            return null;
+        }
+
+        $type = $this->disk->mimeType($source) ?: null;
+
+        if ($type === null || ! str_starts_with($type, 'image/') || str_starts_with($type, 'image/svg')) {
+            return new ImageDetails(type: $type);
+        }
+
+        $size = @getimagesize($this->disk->path($source));
+
+        if ($size === false) {
+            return new ImageDetails(type: $type);
+        }
+
+        [$width, $height] = $this->imageOptimizer->isOptimizable($source)
+            ? $this->imageOptimizer->optimizedSize($size[0], $size[1])
+            : [$size[0], $size[1]];
+
+        return new ImageDetails($width, $height, $type);
+    }
+
     public function copy(string $source, string $destination): void
     {
         if (! $this->imageOptimizer->isOptimizable($source)) {

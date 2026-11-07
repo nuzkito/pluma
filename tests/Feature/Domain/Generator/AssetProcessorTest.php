@@ -41,3 +41,39 @@ test('copies unmodified image-extension files that cannot be decoded', function 
 
     expect(disk()->get('site/hello-world/broken.png'))->toBe('binary');
 });
+
+test('describes an image with the size of the copy it writes', function () {
+    disk()->put('assets/photo.jpg', UploadedFile::fake()->image('photo.jpg', 3000, 2000)->getContent());
+    $processor = new AssetProcessor(new ImageOptimizer);
+    $processor->copy('assets/photo.jpg', 'site/photo.jpg');
+
+    $details = $processor->imageDetails('assets/photo.jpg');
+
+    expect($details->width)->toBe(1600)
+        ->and($details->height)->toBe(1067)
+        ->and($details->type)->toBe('image/jpeg')
+        ->and(array_slice(getimagesize(disk()->path('site/photo.jpg')), 0, 2))->toBe([1600, 1067]);
+});
+
+test('describes a file that is not an image only by its type', function () {
+    disk()->put('assets/document.pdf', '%PDF-1.4 content');
+
+    $details = (new AssetProcessor(new ImageOptimizer))->imageDetails('assets/document.pdf');
+
+    expect($details->width)->toBeNull()
+        ->and($details->type)->toBe('application/pdf');
+});
+
+test('describes an svg image only by its type', function () {
+    disk()->put('assets/logo.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>');
+
+    $details = (new AssetProcessor(new ImageOptimizer))->imageDetails('assets/logo.svg');
+
+    expect($details->width)->toBeNull()
+        ->and($details->height)->toBeNull()
+        ->and($details->type)->toBe('image/svg+xml');
+});
+
+test('does not describe an image that does not exist', function () {
+    expect((new AssetProcessor(new ImageOptimizer))->imageDetails('assets/missing.png'))->toBeNull();
+});

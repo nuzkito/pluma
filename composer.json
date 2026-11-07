@@ -14,6 +14,7 @@
         "embed/embed": "^4.4",
         "intervention/image": "^4.0",
         "laravel/framework": "^13.0",
+        "laravel/head": "^0.2.2",
         "laravel/tinker": "^3.0.0",
         "league/commonmark": "^2.8",
         "livewire/flux": "^2",

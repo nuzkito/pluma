@@ -1,7 +1,5 @@
 @extends('layout')
 
-@section('title', $page->title)
-
 @section('content')
     <nav>
         <a href="{{ $web->url }}">Go back</a>

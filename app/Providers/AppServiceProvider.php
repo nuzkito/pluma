@@ -3,14 +3,17 @@
 namespace App\Providers;
 
 use App\Domain\Generator\AssetProcessor;
+use App\Domain\Generator\HeadTags;
 use App\Domain\Generator\Page\PageRepository;
 use App\Domain\Generator\Page\YoutubeNocookieEmbedAdapter;
 use App\Domain\Generator\SiteGenerator;
 use App\Domain\Generator\Tag\TagRepository;
 use App\Domain\Settings\SiteConfigLoader;
 use Embed\Embed;
+use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Head\Facades\Head;
 use League\CommonMark\Extension\Embed\Bridge\OscaroteroEmbedAdapter;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
                 app(PageRepository::class),
                 app(TagRepository::class),
                 app(AssetProcessor::class),
+                app(HeadTags::class),
             ),
         );
 
@@ -60,5 +64,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->make(SiteConfigLoader::class)->load();
+
+        AliasLoader::getInstance()->alias('Head', Head::class);
     }
 }

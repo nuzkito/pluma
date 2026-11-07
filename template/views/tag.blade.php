@@ -1,9 +1,5 @@
 @extends('layout')
 
-@section('title', $tag->name)
-
-@section('rss', true)
-
 @section('content')
 <nav>
     <a href="{{ $web->url }}">Go back</a>

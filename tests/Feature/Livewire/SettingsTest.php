@@ -80,6 +80,49 @@ test('validates that urls are required and valid', function () {
         ->assertHasErrors(['values.url']);
 });
 
+test('rejects an invalid language tag', function () {
+    Livewire::test('pages::settings')
+        ->set('values.language', 'not a language')
+        ->call('save')
+        ->assertHasErrors(['values.language']);
+});
+
+test('rejects an invalid x username', function (string $key) {
+    Livewire::test('pages::settings')
+        ->set("values.$key", 'not a username!')
+        ->call('save')
+        ->assertHasErrors(["values.$key"]);
+})->with(['twitter.site', 'twitter.creator']);
+
+test('saves the metadata of the site', function () {
+    Livewire::test('pages::settings')
+        ->set('values.language', 'es-ES')
+        ->set('values.author', 'Jane Doe')
+        ->set('values.twitter.site', '@pluma')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $saved = json_decode(disk()->get('pluma-settings.json'), true);
+
+    expect($saved['language'])->toBe('es-ES')
+        ->and($saved['author'])->toBe('Jane Doe')
+        ->and($saved['twitter']['site'])->toBe('@pluma');
+});
+
+test('accepts an svg favicon', function () {
+    Livewire::test('pages::settings')
+        ->set('newImages.favicon', UploadedFile::fake()->createWithContent('favicon.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>'))
+        ->assertHasNoErrors()
+        ->assertSet('images.favicon', 'favicon.svg');
+});
+
+test('rejects a favicon that is not a png, svg or ico file', function () {
+    Livewire::test('pages::settings')
+        ->set('newImages.favicon', UploadedFile::fake()->image('favicon.jpg'))
+        ->assertHasErrors(['newImages.favicon'])
+        ->assertSet('images.favicon', '');
+});
+
 describe('tag pages path', function () {
     test('keeps the assets of the tags in place', function () {
         aTag('Laravel');

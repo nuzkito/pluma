@@ -6,14 +6,15 @@ use App\Domain\Settings\SettingType;
 test('grouped keys definitions by group preserving declaration order', function () {
     $grouped = SettingsSchema::grouped();
 
-    expect(array_keys($grouped))->toBe(['General', 'Tags', 'Types', 'RSS', 'Embedding', 'Syntax highlighting'])
+    expect(array_keys($grouped))->toBe(['General', 'Metadata', 'Tags', 'Types', 'RSS', 'Embedding', 'Syntax highlighting'])
         ->and(array_merge(...array_values($grouped)))->toEqual(SettingsSchema::definitions());
 });
 
 test('grouped places each definition in its declared group', function () {
     $grouped = SettingsSchema::grouped();
 
-    expect(array_column($grouped['General'], 'key'))->toBe(['editor_url', 'url', 'title', 'description', 'cover_image'])
+    expect(array_column($grouped['General'], 'key'))->toBe(['editor_url', 'url', 'title', 'description', 'cover_image', 'language'])
+        ->and(array_column($grouped['Metadata'], 'key'))->toBe(['author', 'favicon', 'apple_touch_icon', 'twitter.site', 'twitter.creator'])
         ->and(array_column($grouped['Tags'], 'key'))->toBe(['tags.create_pages', 'tags.pages_path'])
         ->and(array_column($grouped['RSS'], 'key'))->toBe(['rss.enabled'])
         ->and(array_column($grouped['Embedding'], 'key'))->toBe(['embedding.enabled', 'embedding.allowed_domains'])
@@ -29,7 +30,7 @@ test('find returns null for an unknown key', function () {
 });
 
 test('ofType returns every definition of the given type', function () {
-    expect(array_column(SettingsSchema::ofType(SettingType::Image), 'key'))->toBe(['cover_image'])
+    expect(array_column(SettingsSchema::ofType(SettingType::Image), 'key'))->toBe(['cover_image', 'favicon', 'apple_touch_icon'])
         ->and(array_column(SettingsSchema::ofType(SettingType::List), 'key'))->toBe(['embedding.allowed_domains']);
 });
 

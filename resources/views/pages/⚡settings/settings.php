@@ -163,7 +163,9 @@ new class extends Component
 
         foreach (SettingsSchema::definitions() as $definition) {
             if ($definition->type === SettingType::Image) {
-                $rules["newImages.{$definition->key}"] = ['nullable', 'image', 'max:12288'];
+                $rules["newImages.{$definition->key}"] = $definition->rules !== []
+                    ? $definition->rules
+                    : ['nullable', 'image', 'max:12288'];
 
                 continue;
             }

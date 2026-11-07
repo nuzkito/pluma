@@ -18,6 +18,18 @@ class ImageOptimizer
         return in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), self::OPTIMIZABLE_EXTENSIONS, true);
     }
 
+    /**
+     * @return array{int, int} The width and the height.
+     */
+    public function optimizedSize(int $width, int $height): array
+    {
+        if ($width <= self::MAX_WIDTH) {
+            return [$width, $height];
+        }
+
+        return [self::MAX_WIDTH, max(1, (int) round(self::MAX_WIDTH * $height / $width))];
+    }
+
     public function optimize(string $source, string $destination): void
     {
         Image::fromStorage($source, 'current')

@@ -47,3 +47,11 @@ test('identifies optimizable extensions', function () {
         ->and($optimizer->isOptimizable('icon.svg'))->toBeFalse()
         ->and($optimizer->isOptimizable('notes.txt'))->toBeFalse();
 });
+
+test('calculates the size it gives to an image wider than the maximum width', function () {
+    expect((new ImageOptimizer)->optimizedSize(3000, 2000))->toBe([1600, 1067]);
+});
+
+test('calculates the same size for an image narrower than the maximum width', function () {
+    expect((new ImageOptimizer)->optimizedSize(400, 300))->toBe([400, 300]);
+});

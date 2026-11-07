@@ -15,6 +15,16 @@ class Markdown
         return $this->value;
     }
 
+    public function excerpt(int $length = 160): string
+    {
+        $text = html_entity_decode(strip_tags(Str::markdown($this->value)), ENT_QUOTES | ENT_HTML5);
+
+        return Str::of($text)
+            ->squish()
+            ->limit($length)
+            ->toString();
+    }
+
     public function html(): string
     {
         if (! config('pluma.embedding.enabled')) {

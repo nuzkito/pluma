@@ -6,6 +6,14 @@ return [
     'title' => '',
     'description' => '',
     'cover_image' => '',
+    'language' => 'en',
+    'author' => '',
+    'favicon' => '',
+    'apple_touch_icon' => '',
+    'twitter' => [
+        'site' => '',
+        'creator' => '',
+    ],
     'tags' => [
         'create_pages' => false,
         'pages_path' => 'tags',
