@@ -58,8 +58,8 @@ pluma serve
 ```
 
 By default, urls are:
-- Editor UI: http://localhost:8000
-- Site preview: http://localhost:8001
+- Editor UI: http://127.0.0.1:8000
+- Site preview: http://127.0.0.1:8001
 
 You can config urls and ports in the `pluma-settings.json` file, or from the settings screen of the editor.
 
@@ -269,9 +269,9 @@ docker compose up
 
 This scaffolds a test site with `pluma new` inside the container, starts `pluma serve` and runs the Vite dev server:
 
-- Editor: http://localhost:8000
-- Site preview: http://localhost:8001
-- Vite dev server: http://localhost:5173
+- Editor: http://127.0.0.1:8000
+- Site preview: http://127.0.0.1:8001
+- Vite dev server: http://127.0.0.1:5173
 
 The repository is bind-mounted into the containers, so code changes are picked up on the next request, and changes to the CSS and JS under `resources/` are rebuilt on the fly by `npm run dev`.
 

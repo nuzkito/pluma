@@ -13,7 +13,7 @@ use Uri\Rfc3986\Uri;
 
 class ServeCommand extends Command
 {
-    protected $signature = 'pluma:serve {--host=localhost : The host both servers bind to}';
+    protected $signature = 'pluma:serve {--host=127.0.0.1 : The host both servers bind to}';
 
     protected $description = 'Generate the site and start the development server';
 

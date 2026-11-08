@@ -104,7 +104,7 @@ test('links page tags to their tag page when create_tag_pages is enabled', funct
 
     $html = disk()->get('site/hello-world/index.html');
 
-    expect($html)->toContain('href="http://localhost:8001/tags/framework/">Laravel</a>');
+    expect($html)->toContain('href="http://127.0.0.1:8001/tags/framework/">Laravel</a>');
 });
 
 test('does not link page tags when create_tag_pages is disabled', function () {

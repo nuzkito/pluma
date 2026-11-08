@@ -1,6 +1,6 @@
 {
-    "editor_url": "http://localhost:8000",
-    "url": "http://localhost:8001",
+    "editor_url": "http://127.0.0.1:8000",
+    "url": "http://127.0.0.1:8001",
     "title": "Pluma",
     "description": "This is the default description",
     "cover_image": "cover-image.svg",

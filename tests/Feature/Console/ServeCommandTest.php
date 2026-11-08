@@ -27,7 +27,7 @@ test('generates the site and starts the development servers', function () {
         ->and('site/hello-world/index.html')->toExistOnDisk();
 });
 
-test('binds both servers to localhost by default, with the ports from the configured urls', function () {
+test('binds both servers to 127.0.0.1 by default, with the ports from the configured urls', function () {
     aPublishedPage(
         'Hello World',
         'hello-world',
@@ -42,11 +42,11 @@ test('binds both servers to localhost by default, with the ports from the config
         ->assertSuccessful();
 
     Process::assertRan(function ($process) {
-        return str_contains($process->command, '--host=localhost --port=8000');
+        return str_contains($process->command, '--host=127.0.0.1 --port=8000');
     });
 
     Process::assertRan(function ($process) {
-        return str_contains($process->command, 'localhost:8001');
+        return str_contains($process->command, '127.0.0.1:8001');
     });
 
     Process::assertRan(function ($process) {
@@ -107,7 +107,7 @@ test('passes the bound host and the hosts of the configured urls to both servers
         ->assertSuccessful();
 
     Process::assertRanTimes(function ($process) {
-        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === '192.168.1.10,localhost,preview.test';
+        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === '192.168.1.10,127.0.0.1,preview.test';
     }, 2);
 });
 
@@ -118,6 +118,6 @@ test('does not allow wildcard bind addresses as hosts', function (string $host) 
         ->assertSuccessful();
 
     Process::assertRanTimes(function ($process) {
-        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === 'localhost';
+        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === '127.0.0.1';
     }, 2);
 })->with(['0.0.0.0', '::']);

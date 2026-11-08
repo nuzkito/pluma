@@ -2,9 +2,9 @@ services:
   pluma:
     build: .
     ports:
-      - "8000:8000" # Editor
-      - "8001:8001" # Site preview
-      - "5173:5173" # Vite dev server
+      - "127.0.0.1:8000:8000" # Editor
+      - "127.0.0.1:8001:8001" # Site preview
+      - "127.0.0.1:5173:5173" # Vite dev server
     volumes:
       # Use the development environment's code (including vendor/, .env and
       # public/build) so changes are reflected while developing.
@@ -62,7 +62,7 @@ services:
       - npm-cache:/tmp/npm
     environment:
       # The host the browser uses to reach the dev server, written to public/hot.
-      VITE_DEV_SERVER_HOST: localhost
+      VITE_DEV_SERVER_HOST: 127.0.0.1
     user: "1000:1000"
     # Started by `up` so assets are rebuilt while developing. `--host` makes
     # Vite listen on every interface, so the published port reaches it from

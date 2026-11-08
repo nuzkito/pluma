@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'editor_url' => 'http://localhost:8000',
-    'url' => 'http://localhost:8001',
+    'editor_url' => 'http://127.0.0.1:8000',
+    'url' => 'http://127.0.0.1:8001',
     'allowed_hosts' => env('PLUMA_ALLOWED_HOSTS', ''),
     'title' => '',
     'description' => '',
