@@ -41,17 +41,13 @@ test('binds both servers to 127.0.0.1 by default, with the ports from the config
     artisan('pluma:serve')
         ->assertSuccessful();
 
-    Process::assertRan(function ($process) {
-        return str_contains($process->command, '--host=127.0.0.1 --port=8000');
-    });
+    Process::assertRan(fn ($process) => $process->command === [
+        PHP_BINARY, 'artisan', 'serve', '--host=127.0.0.1', '--port=8000', '--no-reload',
+    ]);
 
-    Process::assertRan(function ($process) {
-        return str_contains($process->command, '127.0.0.1:8001');
-    });
-
-    Process::assertRan(function ($process) {
-        return str_contains($process->command, 'resources/preview-server.php');
-    });
+    Process::assertRan(fn ($process) => $process->command === [
+        PHP_BINARY, '-S', '127.0.0.1:8001', '-t', disk()->path('site'), base_path('resources/preview-server.php'),
+    ]);
 });
 
 test('binds both servers to the host given by the --host option', function () {
@@ -68,13 +64,9 @@ test('binds both servers to the host given by the --host option', function () {
     artisan('pluma:serve', ['--host' => '0.0.0.0'])
         ->assertSuccessful();
 
-    Process::assertRan(function ($process) {
-        return str_contains($process->command, '--host=0.0.0.0 --port=8000');
-    });
+    Process::assertRan(fn ($process) => $process->command[3] === '--host=0.0.0.0');
 
-    Process::assertRan(function ($process) {
-        return str_contains($process->command, '0.0.0.0:8001');
-    });
+    Process::assertRan(fn ($process) => $process->command[2] === '0.0.0.0:8001');
 });
 
 test('passes CURRENT_PATH as process environment variable', function () {
@@ -121,3 +113,37 @@ test('does not allow wildcard bind addresses as hosts', function (string $host) 
         return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === '127.0.0.1';
     }, 2);
 })->with(['0.0.0.0', '::']);
+
+test('wraps an IPv6 host in brackets for the preview server', function () {
+    Process::fake();
+
+    artisan('pluma:serve', ['--host' => '::1'])
+        ->assertSuccessful();
+
+    Process::assertRan(fn ($process) => $process->command[3] === '--host=::1');
+
+    Process::assertRan(fn ($process) => $process->command[2] === '[::1]:8001');
+});
+
+test('passes a site directory with spaces as a single argument', function () {
+    initializeSite('my site');
+
+    Process::fake();
+
+    artisan('pluma:serve')
+        ->assertSuccessful();
+
+    Process::assertRan(fn ($process) => $process->command[3] === '-t'
+        && $process->command[4] === disk()->path('site')
+        && str_contains($process->command[4], ' '));
+});
+
+test('fails without starting the servers when the host is not a valid host name or IP address', function (string $host) {
+    Process::fake();
+
+    artisan('pluma:serve', ['--host' => $host])
+        ->expectsOutputToContain('is not a valid host name or IP address')
+        ->assertFailed();
+
+    Process::assertNothingRan();
+})->with(['localhost;id', '$(id)', '"localhost"', 'local host', '']);

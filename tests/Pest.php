@@ -104,10 +104,12 @@ expect()->extend('toBeMissingFromDisk', function () {
 
 /**
  * Scaffold a new site on a faked disk, and rebind the repositories that hold on to the old one.
+ *
+ * @param  string  $fakeDiskName  The directory under storage/framework/testing/disks that holds the site.
  */
-function initializeSite(): void
+function initializeSite(string $fakeDiskName = 'current'): void
 {
-    Storage::fake('current');
+    Storage::set('current', Storage::fake($fakeDiskName));
     artisan('pluma:new');
     Storage::disk('current')->makeDirectory('pages');
 
