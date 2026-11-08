@@ -46,11 +46,35 @@ test('lets the server handle existing files', function () {
     expect($result)->toBeFalse();
 });
 
-test('lets the server handle directories containing an index', function (string $uri) {
-    [$result] = runPreviewServer($this->documentRoot, $uri);
+test('serves the index of directories containing one', function (string $uri, string $index) {
+    [$result, $output] = runPreviewServer($this->documentRoot, $uri);
 
-    expect($result)->toBeFalse();
-})->with(['/', '/hello-world/', '/hello-world']);
+    expect($result)->not->toBeFalse()
+        ->and($output)->toBe($index);
+})->with([
+    ['/', 'home'],
+    ['/hello-world/', 'hello'],
+    ['/hello-world', 'hello'],
+]);
+
+test('serves PHP files as their source instead of executing them', function (string $filename) {
+    $source = '<?php echo "EXEC:".(6*7);';
+    file_put_contents($this->documentRoot.'/'.$filename, $source);
+
+    [$result, $output] = runPreviewServer($this->documentRoot, '/'.$filename);
+
+    expect($result)->not->toBeFalse()
+        ->and($output)->toBe($source);
+})->with(['x.php', 'x.PHP', 'x.phtml']);
+
+test('serves the index.html of a directory that also contains an index.php', function () {
+    file_put_contents($this->documentRoot.'/hello-world/index.php', '<?php echo "EXEC:".(6*7);');
+
+    [$result, $output] = runPreviewServer($this->documentRoot, '/hello-world/');
+
+    expect($result)->not->toBeFalse()
+        ->and($output)->toBe('hello');
+});
 
 test('renders the 404 page for paths that do not exist', function () {
     [$result, $output] = runPreviewServer($this->documentRoot, '/pagina-inventada');

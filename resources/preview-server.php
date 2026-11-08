@@ -29,12 +29,26 @@ if (! in_array($requestHost, $allowedHosts, true)) {
 $path = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $file = $_SERVER['DOCUMENT_ROOT'].$path;
 
+$phpExtensions = ['php', 'php3', 'php4', 'php5', 'php6', 'php7', 'php8', 'phtml', 'phar', 'pht', 'phps'];
+
 if (is_file($file)) {
-    return false;
+    if (! in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), $phpExtensions, true)) {
+        return false;
+    }
+
+    header('Content-Type: text/plain; charset=utf-8');
+    readfile($file);
+
+    return true;
 }
 
-if (is_dir($file) && is_file(rtrim($file, '/').'/index.html')) {
-    return false;
+$directoryIndex = rtrim($file, '/').'/index.html';
+
+if (is_dir($file) && is_file($directoryIndex)) {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile($directoryIndex);
+
+    return true;
 }
 
 http_response_code(404);
