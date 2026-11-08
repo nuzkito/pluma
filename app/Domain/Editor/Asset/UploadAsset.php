@@ -23,6 +23,10 @@ class UploadAsset
     {
         $page = $this->pageRepository->findByPath($pagePath);
 
+        if ($page === null) {
+            return [];
+        }
+
         return array_values(array_map(function (UploadedFile $file) use ($pagePath, $page) {
             $filename = $file->getClientOriginalName();
 
@@ -32,7 +36,7 @@ class UploadAsset
                 file: $file,
             ));
 
-            if ($page?->isPublished()) {
+            if ($page->isPublished()) {
                 $this->siteGenerator->copyPageFile($pagePath, $filename);
             }
 

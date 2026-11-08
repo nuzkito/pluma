@@ -52,3 +52,26 @@ test('leaves the generated site alone when the page is a draft', function () {
 
     expect(app(UpdatePagePath::class)('draft-move-test', 'moved-draft'))->toBeOk();
 });
+
+test('returns Error and keeps the page when the new path has invalid segments', function (string $newPath) {
+    aPage('Invalid Path Test', 'invalid-path-test');
+
+    $result = app(UpdatePagePath::class)('invalid-path-test', $newPath);
+
+    expect($result)->toBeError()
+        ->and('pages/invalid-path-test.md')->toExistOnDisk();
+})->with([
+    'parent directory' => '../outside',
+    'empty segment' => 'a//b',
+    'current directory' => 'a/./b',
+    'leading slash' => '/outside',
+    'backslash' => 'a\\b',
+    'control character' => "a\nb",
+]);
+
+test('accepts nested paths with characters other than a slug', function () {
+    aPage('Nested Path Test', 'nested-path-test');
+
+    expect(app(UpdatePagePath::class)('nested-path-test', 'blog/Mi Página_2'))->toBeOk()
+        ->and('pages/blog/Mi Página_2.md')->toExistOnDisk();
+});

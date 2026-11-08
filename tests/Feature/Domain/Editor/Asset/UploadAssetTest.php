@@ -92,3 +92,10 @@ test('does not copy the uploaded files to the generated site when the page is a 
 
     expect("site/{$page->path}/notes.txt")->toBeMissingFromDisk();
 });
+
+test('does not save any file when the page does not exist', function () {
+    $result = app(UploadAsset::class)('missing-page', [UploadedFile::fake()->createWithContent('notes.txt', 'text content')]);
+
+    expect($result)->toBe([])
+        ->and('assets/missing-page')->toBeMissingFromDisk();
+});

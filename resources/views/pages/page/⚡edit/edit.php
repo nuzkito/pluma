@@ -24,6 +24,7 @@ use App\Domain\Editor\Type\TypeRepository;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -57,6 +58,7 @@ new class extends Component
 
     public array $assets;
 
+    #[Locked]
     public string $oldPath;
 
     #[Validate(['newAssets.*' => 'file|max:12288'])]
@@ -116,7 +118,7 @@ new class extends Component
     public function render(PageRepository $repository, AssetRepository $assetRepo)
     {
         return $this->view([
-            'page' => $repository->findByPath($this->path),
+            'page' => $repository->findByPath($this->oldPath),
         ]);
     }
 
@@ -153,7 +155,7 @@ new class extends Component
 
     public function updatedContent(UpdatePageContent $action, string $value)
     {
-        $page = $action->__invoke($this->path, $value);
+        $page = $action->__invoke($this->oldPath, $value);
 
         $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
     }
@@ -162,26 +164,26 @@ new class extends Component
     {
         $this->validateOnly('type');
 
-        $page = $action($this->path, $value);
+        $page = $action($this->oldPath, $value);
 
         $this->type = $this->typeName($page);
     }
 
     public function updatedRss(UpdatePageRss $action, bool $value)
     {
-        $action->__invoke($this->path, $value);
+        $action->__invoke($this->oldPath, $value);
     }
 
     public function updatedPublishedAt(UpdatePagePublishedAt $action, ?string $value)
     {
-        $page = $action->__invoke($this->path, $value);
+        $page = $action->__invoke($this->oldPath, $value);
 
         $this->published_at = $page->published_at?->format('Y-m-d\TH:i');
     }
 
     public function updatedRevisedAt(UpdatePageRevisedAt $action, ?string $value)
     {
-        $page = $action->__invoke($this->path, $value);
+        $page = $action->__invoke($this->oldPath, $value);
 
         $this->revised_at = $page->revised_at?->format('Y-m-d\TH:i');
     }
@@ -192,42 +194,42 @@ new class extends Component
             return;
         }
 
-        $page = $addTagAction->__invoke($this->path, $tag);
+        $page = $addTagAction->__invoke($this->oldPath, $tag);
 
         $this->tags = $page->tags;
     }
 
     public function removeTag(RemovePageTag $removeTagAction, int $index)
     {
-        $page = $removeTagAction->__invoke($this->path, $index);
+        $page = $removeTagAction->__invoke($this->oldPath, $index);
 
         $this->tags = $page->tags;
     }
 
     public function publish(PublishPage $publishPage)
     {
-        $page = $publishPage->__invoke($this->path);
+        $page = $publishPage->__invoke($this->oldPath);
 
         $this->published_at = $page->published_at->format('Y-m-d\TH:i');
     }
 
     public function unpublish(UnpublishPage $unpublishPage)
     {
-        $unpublishPage->__invoke($this->path);
+        $unpublishPage->__invoke($this->oldPath);
     }
 
     public function delete(DeletePage $deletePage)
     {
-        $deletePage->__invoke($this->path);
+        $deletePage->__invoke($this->oldPath);
 
         return redirect()->route('pages.index', [
-            'directory' => Str::contains($this->path, '/') ? Str::beforeLast($this->path, '/') : '',
+            'directory' => Str::contains($this->oldPath, '/') ? Str::beforeLast($this->oldPath, '/') : '',
         ]);
     }
 
     public function updatedNewAssets(UploadAsset $uploadAsset)
     {
-        $newAssets = $uploadAsset->__invoke($this->path, $this->newAssets);
+        $newAssets = $uploadAsset->__invoke($this->oldPath, $this->newAssets);
 
         $this->assets = Arr::sort(
             array_values([...$this->assets, ...$newAssets]),
@@ -239,7 +241,7 @@ new class extends Component
 
     public function deleteAsset(DeleteAsset $deleteAsset, string $filename)
     {
-        $deleteAsset->__invoke($this->path, $filename);
+        $deleteAsset->__invoke($this->oldPath, $filename);
 
         $this->assets = array_filter($this->assets, fn ($a) => $a['filename'] !== $filename)
             |> array_values(...);
@@ -251,7 +253,7 @@ new class extends Component
 
     public function setCoverImage(ChangePageCoverImage $changePageCoverImage, string $filename)
     {
-        $page = $changePageCoverImage->__invoke($this->path, $filename);
+        $page = $changePageCoverImage->__invoke($this->oldPath, $filename);
 
         $this->cover_image = $page->cover_image;
     }

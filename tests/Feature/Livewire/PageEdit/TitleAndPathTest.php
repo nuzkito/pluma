@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 
 test('edit page shows current title in title field', function () {
@@ -115,4 +116,23 @@ test('slug-based page title change that would conflict with another slug is reje
     expect(repository()->findByPath('existing-title'))->not->toBeNull();
     $updated = repository()->findByPath('different-title');
     expect((string) $updated->path)->toBe('different-title');
+});
+
+test('the client cannot change the saved path of the page', function () {
+    $page = aPage('Locked Path Test', 'locked-path-test');
+
+    Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+        ->set('oldPath', '../views');
+})->throws(CannotUpdateLockedPropertyException::class);
+
+test('an invalid path shows an error and later changes still go to the saved page', function () {
+    $page = aPage('Invalid Path Edit', 'invalid-path-edit', content: '# Old Content');
+
+    Livewire::test('pages::page.edit', ['path' => (string) $page->path])
+        ->set('path', '../outside')
+        ->assertHasErrors('path')
+        ->assertSet('oldPath', 'invalid-path-edit')
+        ->set('content', '# New Content');
+
+    expect((string) repository()->findByPath('invalid-path-edit')->content)->toBe('# New Content');
 });

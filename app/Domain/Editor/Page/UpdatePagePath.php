@@ -15,6 +15,10 @@ class UpdatePagePath
 
     public function __invoke(string $path, string $newPath): Result
     {
+        if (! PagePath::isValid($newPath)) {
+            return new Error('The path cannot contain empty, "." or ".." segments, backslashes or control characters.');
+        }
+
         if ($this->repository->pathExists($newPath, $path)) {
             return new Error('A page with this path already exists.');
         }
