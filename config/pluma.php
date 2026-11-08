@@ -29,6 +29,9 @@ return [
         'enabled' => false,
         'allowed_domains' => ['youtube.com', 'x.com', 'github.com'],
     ],
+    'html' => [
+        'allow_style_tags' => false,
+    ],
     'highlight' => [
         'theme' => 'highlight-light-lite',
     ],

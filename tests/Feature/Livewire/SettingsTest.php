@@ -442,6 +442,17 @@ describe('syntax highlighting theme', function () {
     });
 });
 
+test('regenerates the pages when style tags are allowed', function () {
+    aPublishedPage('Styled', 'styled', content: "<style>\np { color: red; }\n</style>");
+
+    Livewire::test('pages::settings')
+        ->set('values.html.allow_style_tags', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(disk()->get('site/styled/index.html'))->toContain("<style>\np { color: red; }\n</style>");
+});
+
 test('a new site has post as the default type and every type of the site is offered', function () {
     app(SiteConfigLoader::class)->load();
 

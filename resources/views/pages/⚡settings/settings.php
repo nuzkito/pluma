@@ -117,6 +117,7 @@ new class extends Component
         $currentTagsPath = (string) config('pluma.tags.pages_path');
         $currentCreateTagPages = (bool) config('pluma.tags.create_pages');
         $currentHighlightTheme = (string) config('pluma.highlight.theme');
+        $currentAllowStyleTags = (bool) config('pluma.html.allow_style_tags');
         $newTagsPath = (string) data_get($values, 'tags.pages_path');
 
         $result = $moveTagPages->__invoke($currentTagsPath, $newTagsPath);
@@ -132,12 +133,13 @@ new class extends Component
         $tagsPathChanged = trim($currentTagsPath, '/') !== trim($newTagsPath, '/');
         $createTagPagesChanged = $currentCreateTagPages !== (bool) data_get($values, 'tags.create_pages');
         $highlightThemeChanged = $currentHighlightTheme !== data_get($values, 'highlight.theme');
+        $allowStyleTagsChanged = $currentAllowStyleTags !== (bool) data_get($values, 'html.allow_style_tags');
 
         if ($createTagPagesChanged && ! config('pluma.tags.create_pages')) {
             $siteGenerator->removeTagPages();
         }
 
-        if ($tagsPathChanged || $createTagPagesChanged || $highlightThemeChanged) {
+        if ($tagsPathChanged || $createTagPagesChanged || $highlightThemeChanged || $allowStyleTagsChanged) {
             $siteGenerator->generateAll();
         } else {
             $siteGenerator->copySiteImages();

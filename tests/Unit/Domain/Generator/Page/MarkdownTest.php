@@ -97,3 +97,35 @@ test('highlights code blocks with the configured theme', function () {
         ->toContain('background-color: #282A36;')
         ->toContain('<span style="color: #FF79C6;">new</span>');
 });
+
+test('escapes style tags by default', function () {
+    $markdown = new Markdown("<style>\np { color: red; }\n</style>");
+
+    expect($markdown->html())
+        ->not->toContain('<style>')
+        ->toContain('&lt;style>');
+});
+
+test('renders style tags as html when they are allowed', function (bool $embeddingEnabled) {
+    config([
+        'pluma.html.allow_style_tags' => true,
+        'pluma.embedding.enabled' => $embeddingEnabled,
+    ]);
+
+    $markdown = new Markdown("<style>\np { color: red; }\n</style>\n\n<script>alert(1)</script>");
+
+    expect($markdown->html())
+        ->toContain("<style>\np { color: red; }\n</style>")
+        ->not->toContain('<script>');
+})->with([
+    'without embedded content' => false,
+    'with embedded content' => true,
+]);
+
+test('leaves style blocks out of the excerpt when style tags are allowed', function () {
+    config(['pluma.html.allow_style_tags' => true]);
+
+    $markdown = new Markdown("<style>\np { color: red; }\n</style>\n\nThe page text.");
+
+    expect($markdown->excerpt())->toBe('The page text.');
+});

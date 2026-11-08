@@ -6,7 +6,7 @@ use App\Domain\Settings\SettingType;
 test('grouped keys definitions by group preserving declaration order', function () {
     $grouped = SettingsSchema::grouped();
 
-    expect(array_keys($grouped))->toBe(['General', 'Metadata', 'Tags', 'Types', 'RSS', 'Embedding', 'Syntax highlighting'])
+    expect(array_keys($grouped))->toBe(['General', 'Metadata', 'Tags', 'Types', 'RSS', 'Embedding', 'HTML', 'Syntax highlighting'])
         ->and(array_merge(...array_values($grouped)))->toEqual(SettingsSchema::definitions());
 });
 
@@ -18,6 +18,7 @@ test('grouped places each definition in its declared group', function () {
         ->and(array_column($grouped['Tags'], 'key'))->toBe(['tags.create_pages', 'tags.pages_path'])
         ->and(array_column($grouped['RSS'], 'key'))->toBe(['rss.enabled'])
         ->and(array_column($grouped['Embedding'], 'key'))->toBe(['embedding.enabled', 'embedding.allowed_domains'])
+        ->and(array_column($grouped['HTML'], 'key'))->toBe(['html.allow_style_tags'])
         ->and(array_column($grouped['Syntax highlighting'], 'key'))->toBe(['highlight.theme']);
 });
 

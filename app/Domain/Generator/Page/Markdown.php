@@ -8,6 +8,18 @@ use Tempest\Highlight\CommonMark\HighlightExtension;
 
 class Markdown
 {
+    private const array DISALLOWED_TAGS = [
+        'title',
+        'textarea',
+        'style',
+        'xmp',
+        'iframe',
+        'noembed',
+        'noframes',
+        'script',
+        'plaintext',
+    ];
+
     public function __construct(public readonly string $value) {}
 
     public function __toString(): string
@@ -17,7 +29,9 @@ class Markdown
 
     public function excerpt(int $length = 160): string
     {
-        $text = html_entity_decode(strip_tags(Str::markdown($this->value)), ENT_QUOTES | ENT_HTML5);
+        $html = Str::markdown($this->value, $this->rawHtmlOptions());
+        $htmlWithoutStyles = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html);
+        $text = html_entity_decode(strip_tags($htmlWithoutStyles), ENT_QUOTES | ENT_HTML5);
 
         return Str::of($text)
             ->squish()
@@ -27,11 +41,14 @@ class Markdown
 
     public function html(): string
     {
+        $options = $this->rawHtmlOptions();
+
         if (! config('pluma.embedding.enabled')) {
-            return Str::of($this->value)->markdown(extensions: $this->highlightExtensions());
+            return Str::of($this->value)->markdown($options, $this->highlightExtensions());
         }
 
         return Str::of($this->value)->markdown([
+            ...$options,
             'embed' => [
                 'adapter' => app(YoutubeNocookieEmbedAdapter::class),
                 'allowed_domains' => config('pluma.embedding.allowed_domains'),
@@ -40,6 +57,30 @@ class Markdown
             new EmbedExtension,
             ...$this->highlightExtensions(),
         ]);
+    }
+
+    /**
+     * @return array{disallowed_raw_html: array{disallowed_tags: list<string>}}
+     */
+    private function rawHtmlOptions(): array
+    {
+        return [
+            'disallowed_raw_html' => [
+                'disallowed_tags' => $this->disallowedTags(),
+            ],
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function disallowedTags(): array
+    {
+        if (! config('pluma.html.allow_style_tags')) {
+            return self::DISALLOWED_TAGS;
+        }
+
+        return array_values(array_diff(self::DISALLOWED_TAGS, ['style']));
     }
 
     /**
