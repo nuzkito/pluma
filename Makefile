@@ -1,4 +1,4 @@
-.PHONY: up stop down logs install update build test
+.PHONY: up stop down logs install update outdated build test
 
 # Start the development environment (editor, site preview and Vite dev server).
 up:
@@ -25,6 +25,11 @@ install:
 update:
 	docker compose run --rm composer update
 	docker compose run --rm node update
+
+# Show the PHP and frontend dependencies that have newer versions available.
+outdated:
+	docker compose run --rm composer outdated
+	-docker compose run --rm node outdated
 
 # Compile the assets into public/build/.
 build:
