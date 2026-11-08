@@ -29,8 +29,11 @@ class ServeCommand extends Command
 
         $path = $disk->path('/');
         $host = $this->option('host');
-        $editorPort = Uri::parse((string) config('pluma.editor_url'))?->getPort() ?? 8000;
-        $previewPort = Uri::parse((string) config('pluma.url'))?->getPort() ?? 8001;
+        $editorUrl = Uri::parse((string) config('pluma.editor_url'));
+        $previewUrl = Uri::parse((string) config('pluma.url'));
+        $editorPort = $editorUrl?->getPort() ?? 8000;
+        $previewPort = $previewUrl?->getPort() ?? 8001;
+        $allowedHosts = $this->allowedHosts($host, $editorUrl?->getHost(), $previewUrl?->getHost());
         $siteDirectory = $disk->path('site');
         $previewServerPath = base_path('resources/preview-server.php');
 
@@ -44,16 +47,19 @@ class ServeCommand extends Command
             $siteDirectory,
             $previewServerPath,
             $autoloadPath,
+            $allowedHosts,
         ) {
             $pool->path(base_path())
                 ->forever()
                 ->env([
                     'CURRENT_PATH' => $path,
                     'AUTOLOAD_PATH' => $autoloadPath,
+                    'PLUMA_ALLOWED_HOSTS' => $allowedHosts,
                 ])
                 ->tty(Process::supportsTty())
                 ->command("php artisan serve --host=$host --port=$editorPort --no-reload");
             $pool->forever()
+                ->env(['PLUMA_ALLOWED_HOSTS' => $allowedHosts])
                 ->tty(Process::supportsTty())
                 ->command("php -S $host:$previewPort -t $siteDirectory $previewServerPath");
         })->start(function (string $type, string $output, int $key) {
@@ -61,5 +67,16 @@ class ServeCommand extends Command
         })->wait();
 
         return self::SUCCESS;
+    }
+
+    private function allowedHosts(string $boundHost, ?string ...$urlHosts): string
+    {
+        $hosts = [
+            ...explode(',', (string) config('pluma.allowed_hosts')),
+            in_array($boundHost, ['0.0.0.0', '::', '[::]'], true) ? '' : $boundHost,
+            ...$urlHosts,
+        ];
+
+        return implode(',', array_unique(array_filter(array_map(fn (?string $host): string => trim((string) $host), $hosts))));
     }
 }

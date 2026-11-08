@@ -3,6 +3,7 @@
 return [
     'editor_url' => 'http://localhost:8000',
     'url' => 'http://localhost:8001',
+    'allowed_hosts' => env('PLUMA_ALLOWED_HOSTS', ''),
     'title' => '',
     'description' => '',
     'cover_image' => '',

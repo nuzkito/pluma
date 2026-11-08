@@ -97,3 +97,27 @@ test('passes CURRENT_PATH as process environment variable', function () {
         return ($process->environment['CURRENT_PATH'] ?? null) === $expectedPath;
     });
 });
+
+test('passes the bound host and the hosts of the configured urls to both servers as allowed hosts', function () {
+    config(['pluma.url' => 'http://preview.test:8001']);
+
+    Process::fake();
+
+    artisan('pluma:serve', ['--host' => '192.168.1.10'])
+        ->assertSuccessful();
+
+    Process::assertRanTimes(function ($process) {
+        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === '192.168.1.10,localhost,preview.test';
+    }, 2);
+});
+
+test('does not allow wildcard bind addresses as hosts', function (string $host) {
+    Process::fake();
+
+    artisan('pluma:serve', ['--host' => $host])
+        ->assertSuccessful();
+
+    Process::assertRanTimes(function ($process) {
+        return ($process->environment['PLUMA_ALLOWED_HOSTS'] ?? null) === 'localhost';
+    }, 2);
+})->with(['0.0.0.0', '::']);

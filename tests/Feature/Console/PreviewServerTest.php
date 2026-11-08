@@ -9,10 +9,11 @@ use Illuminate\Filesystem\Filesystem;
  *
  * @return array{0: mixed, 1: string}
  */
-function runPreviewServer(string $documentRoot, string $uri): array
+function runPreviewServer(string $documentRoot, string $uri, string $host = 'localhost:8001'): array
 {
     $_SERVER['DOCUMENT_ROOT'] = $documentRoot;
     $_SERVER['REQUEST_URI'] = $uri;
+    $_SERVER['HTTP_HOST'] = $host;
 
     ob_start();
     $result = require base_path('resources/preview-server.php');
@@ -33,6 +34,8 @@ beforeEach(function () {
 
 afterEach(function () {
     (new Filesystem)->deleteDirectory($this->documentRoot);
+
+    putenv('PLUMA_ALLOWED_HOSTS');
 
     http_response_code(200);
 });
@@ -55,4 +58,26 @@ test('renders the 404 page for paths that do not exist', function () {
     expect($result)->not->toBeFalse()
         ->and($output)->toBe('page not found')
         ->and(http_response_code())->toBe(404);
+});
+
+test('forbids requests to an unknown host without serving the file', function (string $uri) {
+    [$result, $output] = runPreviewServer($this->documentRoot, $uri, 'attacker.example:8001');
+
+    expect($result)->not->toBeFalse()
+        ->and($output)->toBe('')
+        ->and(http_response_code())->toBe(403);
+})->with(['/styles.css', '/pagina-inventada']);
+
+test('serves requests to local hosts', function (string $host) {
+    [$result] = runPreviewServer($this->documentRoot, '/styles.css', $host);
+
+    expect($result)->toBeFalse();
+})->with(['localhost', '127.0.0.1:8001', '[::1]:8001']);
+
+test('serves requests to the hosts listed in PLUMA_ALLOWED_HOSTS', function () {
+    putenv('PLUMA_ALLOWED_HOSTS=other.test,pluma.test');
+
+    [$result] = runPreviewServer($this->documentRoot, '/styles.css', 'pluma.test:8001');
+
+    expect($result)->toBeFalse();
 });
