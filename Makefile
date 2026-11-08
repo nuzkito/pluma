@@ -25,6 +25,7 @@ install:
 update:
 	docker compose run --rm composer update
 	docker compose run --rm node update
+	make build
 
 # Show the PHP and frontend dependencies that have newer versions available.
 outdated:
