@@ -161,3 +161,35 @@ test('leaves iframes out of the excerpt when they are allowed', function () {
 
     expect($markdown->excerpt())->toBe('The page text.');
 });
+
+test('escapes script tags by default', function () {
+    $markdown = new Markdown("<script>\nconsole.log('hello');\n</script>");
+
+    expect($markdown->html())
+        ->not->toContain('<script>')
+        ->toContain('&lt;script>');
+});
+
+test('renders script tags as html when they are allowed', function (bool $embeddingEnabled) {
+    config([
+        'pluma.html.allow_script_tags' => true,
+        'pluma.embedding.enabled' => $embeddingEnabled,
+    ]);
+
+    $markdown = new Markdown("<script>\nconsole.log('hello');\n</script>\n\n<iframe src=\"https://example.com\"></iframe>");
+
+    expect($markdown->html())
+        ->toContain("<script>\nconsole.log('hello');\n</script>")
+        ->not->toContain('<iframe');
+})->with([
+    'without embedded content' => false,
+    'with embedded content' => true,
+]);
+
+test('leaves script blocks out of the excerpt when script tags are allowed', function () {
+    config(['pluma.html.allow_script_tags' => true]);
+
+    $markdown = new Markdown("<script>\nconsole.log('hello');\n</script>\n\nThe page text.");
+
+    expect($markdown->excerpt())->toBe('The page text.');
+});

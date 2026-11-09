@@ -18,7 +18,7 @@ test('grouped places each definition in its declared group', function () {
         ->and(array_column($grouped['Tags'], 'key'))->toBe(['tags.create_pages', 'tags.pages_path'])
         ->and(array_column($grouped['RSS'], 'key'))->toBe(['rss.enabled'])
         ->and(array_column($grouped['Embedding'], 'key'))->toBe(['embedding.enabled', 'embedding.allowed_domains'])
-        ->and(array_column($grouped['HTML'], 'key'))->toBe(['html.allow_style_tags', 'html.allow_iframes'])
+        ->and(array_column($grouped['HTML'], 'key'))->toBe(['html.allow_style_tags', 'html.allow_iframes', 'html.allow_script_tags'])
         ->and(array_column($grouped['Syntax highlighting'], 'key'))->toBe(['highlight.theme']);
 });
 

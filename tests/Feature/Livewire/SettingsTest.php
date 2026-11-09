@@ -464,6 +464,17 @@ test('regenerates the pages when iframes are allowed', function () {
     expect(disk()->get('site/framed/index.html'))->toContain('<iframe src="https://example.com"></iframe>');
 });
 
+test('regenerates the pages when script tags are allowed', function () {
+    aPublishedPage('Scripted', 'scripted', content: "<script>\nconsole.log('hello');\n</script>");
+
+    Livewire::test('pages::settings')
+        ->set('values.html.allow_script_tags', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(disk()->get('site/scripted/index.html'))->toContain("<script>\nconsole.log('hello');\n</script>");
+});
+
 test('a new site has post as the default type and every type of the site is offered', function () {
     app(SiteConfigLoader::class)->load();
 

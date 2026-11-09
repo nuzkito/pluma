@@ -173,6 +173,14 @@ class SettingsSchema
             ),
 
             new SettingDefinition(
+                key: 'html.allow_script_tags',
+                label: 'Allow script tags',
+                description: 'Render the <script> tags written in pages as HTML instead of showing them as text.',
+                type: SettingType::Boolean,
+                group: 'HTML',
+            ),
+
+            new SettingDefinition(
                 key: 'highlight.theme',
                 label: 'Theme',
                 description: 'The colors used to highlight the syntax of code blocks.',

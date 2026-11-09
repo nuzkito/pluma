@@ -32,6 +32,7 @@ return [
     'html' => [
         'allow_style_tags' => false,
         'allow_iframes' => false,
+        'allow_script_tags' => false,
     ],
     'highlight' => [
         'theme' => 'highlight-light-lite',

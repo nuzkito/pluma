@@ -119,6 +119,7 @@ new class extends Component
         $currentHighlightTheme = (string) config('pluma.highlight.theme');
         $currentAllowStyleTags = (bool) config('pluma.html.allow_style_tags');
         $currentAllowIframes = (bool) config('pluma.html.allow_iframes');
+        $currentAllowScriptTags = (bool) config('pluma.html.allow_script_tags');
         $newTagsPath = (string) data_get($values, 'tags.pages_path');
 
         $result = $moveTagPages->__invoke($currentTagsPath, $newTagsPath);
@@ -136,12 +137,13 @@ new class extends Component
         $highlightThemeChanged = $currentHighlightTheme !== data_get($values, 'highlight.theme');
         $allowStyleTagsChanged = $currentAllowStyleTags !== (bool) data_get($values, 'html.allow_style_tags');
         $allowIframesChanged = $currentAllowIframes !== (bool) data_get($values, 'html.allow_iframes');
+        $allowScriptTagsChanged = $currentAllowScriptTags !== (bool) data_get($values, 'html.allow_script_tags');
 
         if ($createTagPagesChanged && ! config('pluma.tags.create_pages')) {
             $siteGenerator->removeTagPages();
         }
 
-        if ($tagsPathChanged || $createTagPagesChanged || $highlightThemeChanged || $allowStyleTagsChanged || $allowIframesChanged) {
+        if ($tagsPathChanged || $createTagPagesChanged || $highlightThemeChanged || $allowStyleTagsChanged || $allowIframesChanged || $allowScriptTagsChanged) {
             $siteGenerator->generateAll();
         } else {
             $siteGenerator->copySiteImages();
