@@ -30,8 +30,8 @@ class Markdown
     public function excerpt(int $length = 160): string
     {
         $html = Str::markdown($this->value, $this->rawHtmlOptions());
-        $htmlWithoutStyles = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $html);
-        $text = html_entity_decode(strip_tags($htmlWithoutStyles), ENT_QUOTES | ENT_HTML5);
+        $htmlWithoutStylesAndIframes = preg_replace('/<(style|iframe)\b[^>]*>.*?<\/\1>/is', '', $html);
+        $text = html_entity_decode(strip_tags($htmlWithoutStylesAndIframes), ENT_QUOTES | ENT_HTML5);
 
         return Str::of($text)
             ->squish()
@@ -76,11 +76,12 @@ class Markdown
      */
     private function disallowedTags(): array
     {
-        if (! config('pluma.html.allow_style_tags')) {
-            return self::DISALLOWED_TAGS;
-        }
+        $allowedTags = array_keys(array_filter([
+            'style' => config('pluma.html.allow_style_tags'),
+            'iframe' => config('pluma.html.allow_iframes'),
+        ]));
 
-        return array_values(array_diff(self::DISALLOWED_TAGS, ['style']));
+        return array_values(array_diff(self::DISALLOWED_TAGS, $allowedTags));
     }
 
     /**

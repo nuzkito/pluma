@@ -165,6 +165,14 @@ class SettingsSchema
             ),
 
             new SettingDefinition(
+                key: 'html.allow_iframes',
+                label: 'Allow iframes',
+                description: 'Render the <iframe> tags written in pages as HTML instead of showing them as text.',
+                type: SettingType::Boolean,
+                group: 'HTML',
+            ),
+
+            new SettingDefinition(
                 key: 'highlight.theme',
                 label: 'Theme',
                 description: 'The colors used to highlight the syntax of code blocks.',

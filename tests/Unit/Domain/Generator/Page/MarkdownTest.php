@@ -129,3 +129,35 @@ test('leaves style blocks out of the excerpt when style tags are allowed', funct
 
     expect($markdown->excerpt())->toBe('The page text.');
 });
+
+test('escapes iframes by default', function () {
+    $markdown = new Markdown('<iframe src="https://example.com"></iframe>');
+
+    expect($markdown->html())
+        ->not->toContain('<iframe')
+        ->toContain('&lt;iframe');
+});
+
+test('renders iframes as html when they are allowed', function (bool $embeddingEnabled) {
+    config([
+        'pluma.html.allow_iframes' => true,
+        'pluma.embedding.enabled' => $embeddingEnabled,
+    ]);
+
+    $markdown = new Markdown("<iframe src=\"https://example.com\"></iframe>\n\n<style>\np { color: red; }\n</style>");
+
+    expect($markdown->html())
+        ->toContain('<iframe src="https://example.com"></iframe>')
+        ->not->toContain('<style>');
+})->with([
+    'without embedded content' => false,
+    'with embedded content' => true,
+]);
+
+test('leaves iframes out of the excerpt when they are allowed', function () {
+    config(['pluma.html.allow_iframes' => true]);
+
+    $markdown = new Markdown("<iframe src=\"https://example.com\">Fallback text</iframe>\n\nThe page text.");
+
+    expect($markdown->excerpt())->toBe('The page text.');
+});

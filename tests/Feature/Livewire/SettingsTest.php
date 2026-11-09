@@ -453,6 +453,17 @@ test('regenerates the pages when style tags are allowed', function () {
     expect(disk()->get('site/styled/index.html'))->toContain("<style>\np { color: red; }\n</style>");
 });
 
+test('regenerates the pages when iframes are allowed', function () {
+    aPublishedPage('Framed', 'framed', content: '<iframe src="https://example.com"></iframe>');
+
+    Livewire::test('pages::settings')
+        ->set('values.html.allow_iframes', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(disk()->get('site/framed/index.html'))->toContain('<iframe src="https://example.com"></iframe>');
+});
+
 test('a new site has post as the default type and every type of the site is offered', function () {
     app(SiteConfigLoader::class)->load();
 
