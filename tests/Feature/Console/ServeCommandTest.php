@@ -147,3 +147,26 @@ test('fails without starting the servers when the host is not a valid host name 
 
     Process::assertNothingRan();
 })->with(['localhost;id', '$(id)', '"localhost"', 'local host', '']);
+
+test('shows the output of the preview server while the editor is still running', function () {
+    Process::fake([
+        "*'artisan' 'serve'*" => Process::describe()
+            ->output(['editor 1', 'editor 2', 'editor 3'])
+            ->iterations(3),
+        "*'-S'*" => Process::describe()
+            ->output('preview 1'),
+    ]);
+
+    Process::preventStrayProcesses();
+
+    ob_start();
+
+    try {
+        artisan('pluma:serve')->run();
+    } finally {
+        $output = (string) ob_get_clean();
+    }
+
+    expect($output)->toContain('editor 1', 'preview 1', 'editor 3')
+        ->and(strpos($output, 'preview 1'))->toBeLessThan(strpos($output, 'editor 3'));
+});

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Generator\SiteGenerator;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Console\Command;
+use Illuminate\Process\InvokedProcessPool;
 use Illuminate\Process\Pool;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
@@ -46,7 +47,7 @@ class ServeCommand extends Command
 
         $autoloadPath = dirname((new ReflectionClass(ClassLoader::class))->getFileName(), 2).'/autoload.php';
 
-        Process::pool(function (Pool $pool) use (
+        $servers = Process::pool(function (Pool $pool) use (
             $path,
             $host,
             $editorPort,
@@ -71,9 +72,18 @@ class ServeCommand extends Command
                 ->command([PHP_BINARY, '-S', $this->hostWithPort($host, $previewPort), '-t', $siteDirectory, $previewServerPath]);
         })->start(function (string $type, string $output, int $key) {
             echo $output;
-        })->wait();
+        });
+
+        $this->waitWhileReadingOutput($servers);
 
         return self::SUCCESS;
+    }
+
+    private function waitWhileReadingOutput(InvokedProcessPool $servers): void
+    {
+        while ($servers->running()->isNotEmpty()) {
+            usleep(100_000);
+        }
     }
 
     private function isValidHost(string $host): bool
