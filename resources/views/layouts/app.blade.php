@@ -17,7 +17,7 @@
         class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
         <flux:sidebar.header>
             <flux:sidebar.brand>
-                Pluma
+                Pluma <span class="ml-1.5 text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ \Composer\InstalledVersions::getPrettyVersion('nuzkito/pluma') }}</span>
             </flux:sidebar.brand>
 
             <flux:sidebar.collapse class="lg:hidden" />
