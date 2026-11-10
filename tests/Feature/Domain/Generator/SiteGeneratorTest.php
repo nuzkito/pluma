@@ -183,7 +183,7 @@ test('sends the web object to every template', function () {
         ->and(disk()->get('site/tags/laravel/index.html'))->toContain('https://example.com/styles.css')
         ->and(disk()->get('site/feed.xml'))
         ->toContain('<title>My Site</title>')
-        ->toContain('<link>https://example.com</link>')
+        ->toContain('<link>https://example.com/</link>')
         ->toContain('<description>A site about things</description>');
 });
 
